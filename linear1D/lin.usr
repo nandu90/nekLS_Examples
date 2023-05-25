@@ -1,4 +1,3 @@
-      include "experimental/avm.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -16,8 +15,7 @@ c-----------------------------------------------------------------------
       udiff = cpfld(ifield,1)
 
       if(ifield.eq.3)then
-        udiff = avm_vdiff(ix,iy,iz,e,1.0,2)
-        if(udiff.eq.0)udiff = 1e-8
+        udiff = 0.0       !must be zero for avm
       endif
 
       return
@@ -146,6 +144,12 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
+
+      integer i
+
+      do i=1,ldimt
+        write(*,*)nid,i,ifsvv(i),ifavm(i)
+      enddo
 
       return
       end
