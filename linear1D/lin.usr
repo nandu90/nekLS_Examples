@@ -1,0 +1,213 @@
+      include "experimental/avm.f"
+c-----------------------------------------------------------------------
+      subroutine uservp(ix,iy,iz,eg) ! set variable properties
+      implicit none
+      integer ix,iy,iz,eg,e
+     
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      real avm_vdiff
+
+      e = gllel(eg)
+
+      utrans = 1.0
+      udiff = cpfld(ifield,1)
+
+      if(ifield.eq.3)then
+        udiff = avm_vdiff(ix,iy,iz,e,1.0,2)
+        if(udiff.eq.0)udiff = 1e-8
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userf(ix,iy,iz,eg) ! set acceleration term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+
+      ffx = 0.0
+      ffy = 0.0
+      ffz = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq(ix,iy,iz,eg) ! set source term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+      
+      qvol   = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc(ix,iy,iz,iside,eg) ! set up boundary conditions
+      implicit none
+      integer ix,iy,iz,iside,eg
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      ux   = 0.0
+      uy   = 0.0
+      uz   = 0.0
+      temp = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric(ix,iy,iz,eg) ! set up initial conditions
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      
+      real x1
+
+      e = gllel(eg)
+
+      ux = 1.0
+      uy = 0.0
+      uz = 0.0
+
+      if(ifield .eq. 3)then
+C     Initializes Level-set contour field
+         x1 = xm1(ix,iy,iz,e)
+         temp = sin(PI*x1)
+
+         if(x1 .ge. 0.35 .and. x1 .le. 0.55)then
+            temp =1.0
+         elseif(x1 .gt. 0.7 .and. x1 .lt. 0.9)then
+            temp = sqrt(1. - ((x1-0.8)/0.1)**2.)
+         elseif(x1 .gt. 0.08 .and. x1 .le. 0.15)then
+            temp = (1./0.0049)*x1**2. - (0.16/0.0049)*x1 + 0.0064/0.0049
+         elseif(x1 .gt. 0.15 .and. x1 .le. 0.22)then
+            temp = (1./0.0049)*x1**2. - (0.44/0.0049)*x1 + 0.0484/0.0049
+         else
+            temp = 0.
+         endif
+      else
+C     Initializes Temperature
+         temp = 0.0
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      if(istep.eq.0)then
+        call outfld('  ')
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userqtl ! Set thermal divergence
+
+      call userqtl_scig 
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat()   ! This routine to modify element vertices
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      ifflow = .false.
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2()  ! This routine to modify mesh coordinates
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine enorm(errs,el2)
+      include 'SIZE'
+      include 'TOTAL'
+
+      real el2
+      real errs(lx1,ly1,lz1,nelv)
+      real err2(lx1,ly1,lz1,nelv)
+      
+      nxyz = lx1*ly1*lz1
+      ntot = nelv*nxyz
+      
+      CALL COL3    (err2,errs,errs,ntot)
+      CALL COL2    (err2,bm1,ntot)
+      el2 = GLSUM (err2,ntot)/VOLVM1
+      el2 = SQRT  (el2)
+
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine getexact(exact,phi)
+      include 'SIZE'
+      include 'TOTAL'
+
+c      real errs(lx1,ly1,lz1,lelt)
+      real exact(lx1,ly1,lz1,lelt)
+      real phi(lx1,ly1,lz1,lelt)
+
+      nxyz = lx1*ly1*lz1
+      ntot = nelv*nxyz
+
+      do i=1,ntot
+         x1 = xm1(i,1,1,1)
+         if(x1 .ge. 0.35 .and. x1 .le. 0.55)then
+            exact(i,1,1,1) =1.0
+         elseif(x1 .gt. 0.7 .and. x1 .lt. 0.9)then
+            exact(i,1,1,1) = sqrt(1. - ((x1-0.8)/0.1)**2.)
+         elseif(x1 .gt. 0.08 .and. x1 .le. 0.15)then
+            exact(i,1,1,1) = (1./0.0049)*x1**2. -
+     &           (0.16/0.0049)*x1 + 0.0064/0.0049
+         elseif(x1 .gt. 0.15 .and. x1 .le. 0.22)then
+            exact(i,1,1,1) = (1./0.0049)*x1**2. -
+     &           (0.44/0.0049)*x1 + 0.0484/0.0049
+         else
+            exact(i,1,1,1) = 0.
+         endif
+      enddo
+
+c      call sub3(errs,exact,phi,ntot)
+
+      return
+      end
+c---------------------------------------------------------------------      
