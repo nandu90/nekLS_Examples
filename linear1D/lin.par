@@ -2,12 +2,12 @@
 # nek parameter file
 #
 [GENERAL]
-#stopAt = numSteps
-stopAt = endTime
-#numSteps = 0 #200000
-endTime = 1.0
+stopAt = numSteps
+#stopAt = endTime
+numSteps = 4000 #200000
+#endTime = 1.0
 
-dt = 5.0e-04
+dt = 2.5e-04
 timeStepper = bdf2
 
 writeControl = runTime
@@ -34,7 +34,20 @@ regularization = none
 
 [SCALAR01]
 density = 1.0
-diffusivity = 1e-2 #dummy
+diffusivity = 1e-8 #dummy
 residualTol = 1e-8
 regularization = avm
 
+[SCALAR02]
+#solver = none
+density = 1.0
+diffusivity = 1e-8 #dummy
+residualTol = 1e-8
+regularization = svv
+
+[SCALAR03]
+#solver=none
+density = 1.0
+diffusivity = 1e-8 #dummy
+residualTol = 1e-8
+regularization = svv
