@@ -1,0 +1,196 @@
+c-----------------------------------------------------------------------
+      subroutine uservp(ix,iy,iz,eg) ! set variable properties
+      implicit none
+      integer ix,iy,iz,eg,e
+     
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+
+      utrans = 1.0
+      udiff = cpfld(ifield,1)
+
+      if(ifavm(ifield-1))then
+        udiff = 1e-10       !must be tiny for hyperbolic
+      elseif(ifsvv(ifield-1))then
+        udiff = 1e-10      !must be tiny for hyperbolic
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userf(ix,iy,iz,eg) ! set acceleration term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+
+      ffx = 0.0
+      ffy = 0.0
+      ffz = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq(ix,iy,iz,eg) ! set source term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+      
+      qvol   = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc(ix,iy,iz,iside,eg) ! set up boundary conditions
+      implicit none
+      integer ix,iy,iz,iside,eg
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      ux   = 0.0
+      uy   = 0.0
+      uz   = 0.0
+      temp = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric(ix,iy,iz,eg) ! set up initial conditions
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      
+      integer ix,iy,iz,eg,e
+      real rcen(5,5)
+
+      real thet,ucx,ucy,x1,y1,xlim,ylim
+
+      e = gllel(eg)
+
+      thet = 0. !(45./180.)*PI
+
+      ucx = 0.5*cos(thet)-0.5*sin(thet)
+      ucy = 0.5*sin(thet)+0.5*cos(thet)
+
+      ux = (PI)*(ucy-ym1(ix,iy,iz,e))
+      uy = (PI)*(xm1(ix,iy,iz,e)-ucx)
+      uz = 0.0
+
+      x1 = 0.5
+      y1 = 0.75
+      rcen(1,1) = x1*cos(thet)-0.5*sin(thet)
+      rcen(1,2) = 0.5*sin(thet)+y1*cos(thet)
+
+      temp = sqrt((xm1(ix,iy,iz,e)-rcen(1,1))**2.
+     &        +(ym1(ix,iy,iz,e)-rcen(1,2))**2.)-0.15
+
+      if(temp.le.0.)then
+        temp = 1.
+      else
+        temp = 0.
+      endif
+
+      x = xm1(ix,iy,iz,e)
+      y = ym1(ix,iy,iz,e)
+
+      x1 = 0.5
+      y1 = 0.85
+      xlim = x1*cos(thet)-0.5*sin(thet)
+      ylim = 0.5*sin(thet)+y1*cos(thet)
+
+      if(abs(x-xlim) .lt. 0.05/2. .and. y .lt. ylim)then
+        temp = 0.
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      if(istep.eq.0)then
+        call outfld('  ')
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userqtl ! Set thermal divergence
+
+      call userqtl_scig 
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat()   ! This routine to modify element vertices
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      ifflow = .false.
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2()  ! This routine to modify mesh coordinates
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'AVM'
+      include 'SVV'
+
+c---------------------------------------------------      
+c     This section to specify user defined parameters
+c     for AVM/SVV. Leave commented to use default parameters
+c     parameters. 
+
+c     scalar 1      
+      ! avm_c1(2) = 1.0
+      ! avm_ncut(2) = 1.0
+      ! icont(2) = .false.
+
+c     scalar 2      
+      svv_c0(3) = 1.0
+      ! svvcut(3) = (lx1-1.0)/2.0
+      ! svv_k0(3) = 1.5
+      ! svv_k1(3) = 1.5
+      ! ifnlsvv(3) = .false.
+
+c     scalar 3
+      svv_c0(4) = 1.0
+      ! svvcut(4) = (lx1-1.0)/2.0
+      ! svv_k0(4) = 1.5
+      ! svv_k1(4) = 1.5
+      ifnlsvv(4) = .true.
+c--------------------------------------------------
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      
+      return
+      end
+c---------------------------------------------------------------------
