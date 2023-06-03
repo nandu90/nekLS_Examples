@@ -1,7 +1,3 @@
-      ! include 'experimental/utilities.f'
-      ! include 'experimental/lineplot.f'
-      ! include 'experimental/limits.f'
-
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -114,22 +110,8 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
 
-      real pta(3), ptb(3)
-
       if(istep.eq.0)then
         call outfld('  ')
-      endif
-      
-      if(istep.eq.nsteps)then
-        pta(1) = 0.0
-        pta(2) = 0.25
-        pta(3) = 0.0
-
-        ptb(1) = 1.0
-        ptb(2) = 0.25
-        ptb(3) = 0.0
-
-        ! call lineplot(pta,ptb,1001)
       endif
 
       return
@@ -157,23 +139,33 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
+      include 'AVM'
       include 'SVV'
-      include 'AVMSVV'
-      
-      integer i
 
+c---------------------------------------------------      
+c     This section to specify user defined parameters
+c     for AVM/SVV. Leave commented to use default parameters
+c     parameters. 
+
+c     scalar 1      
       ! avm_c1(2) = 1.0
       ! avm_ncut(2) = 1.0
+      ! icont(2) = .false.
 
-      ! svv_c0(2) = 0.1
-      ! svvcut(2) = (lx1-1.0)/2.0
-      ! svv_k0(2) = 1.5
-      ! svv_k1(2) = 1.5
-      ! ifnlsvv(2) = .false.
+c     scalar 2      
+      ! svv_c0(3) = 0.1
+      ! svvcut(3) = (lx1-1.0)/2.0
+      ! svv_k0(3) = 1.5
+      ! svv_k1(3) = 1.5
+      ! ifnlsvv(3) = .false.
 
-      ifcont(1) = .true.
+c     scalar 3
+      ! svv_c0(4) = 0.1
+      ! svvcut(4) = (lx1-1.0)/2.0
+      ! svv_k0(4) = 1.5
+      ! svv_k1(4) = 1.5
       ifnlsvv(4) = .true.
-
+c--------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
@@ -205,36 +197,3 @@ c---------------------------------------------------------------------
       return
       end
 c---------------------------------------------------------------------
-      subroutine getexact(exact,phi)
-      include 'SIZE'
-      include 'TOTAL'
-
-c      real errs(lx1,ly1,lz1,lelt)
-      real exact(lx1,ly1,lz1,lelt)
-      real phi(lx1,ly1,lz1,lelt)
-
-      nxyz = lx1*ly1*lz1
-      ntot = nelv*nxyz
-
-      do i=1,ntot
-         x1 = xm1(i,1,1,1)
-         if(x1 .ge. 0.35 .and. x1 .le. 0.55)then
-            exact(i,1,1,1) =1.0
-         elseif(x1 .gt. 0.7 .and. x1 .lt. 0.9)then
-            exact(i,1,1,1) = sqrt(1. - ((x1-0.8)/0.1)**2.)
-         elseif(x1 .gt. 0.08 .and. x1 .le. 0.15)then
-            exact(i,1,1,1) = (1./0.0049)*x1**2. -
-     &           (0.16/0.0049)*x1 + 0.0064/0.0049
-         elseif(x1 .gt. 0.15 .and. x1 .le. 0.22)then
-            exact(i,1,1,1) = (1./0.0049)*x1**2. -
-     &           (0.44/0.0049)*x1 + 0.0484/0.0049
-         else
-            exact(i,1,1,1) = 0.
-         endif
-      enddo
-
-c      call sub3(errs,exact,phi,ntot)
-
-      return
-      end
-c---------------------------------------------------------------------      
