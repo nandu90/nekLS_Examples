@@ -50,10 +50,20 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      real signls
 
       e = gllel(eg)
       
       qvol   = 0.0
+      avol = 0.0
+
+      if(ifield.eq.ifld_tlsr)then
+        qvol = signls(ix,iy,iz,e)
+      endif
 
       return
       end
@@ -114,7 +124,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine userchk()
-      ! implicit none
+      implicit none
       include 'SIZE'
       include 'TOTAL'
 
@@ -180,10 +190,10 @@ c--------------------------------------------------
 
       eps = 1.0
       nsteps_ls = 100
-      ifld_tls = 2
-      ifld_cls = 3
+      ifld_cls = 2
+      ifld_tls = 3
       ifld_clsr = 4
-      ifld_tlsr = 0
+      ifld_tlsr = 5
       dt_in = dt
       ifdebug = 0
       call ls_init(nsteps_ls,eps,dt_in,
