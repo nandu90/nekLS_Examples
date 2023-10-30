@@ -10,6 +10,10 @@ c-----------------------------------------------------------------------
 
       e = gllel(eg)
 
+!     These routine is not called by external solver
+!     To Do: change the flow, so that this routine is called
+!     similar to RANS. Will avoid confusion
+
       utrans = 1.0
       udiff = cpfld(ifield,1)
 
@@ -110,10 +114,14 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine userchk()
-      implicit none
-
+      ! implicit none
       include 'SIZE'
       include 'TOTAL'
+
+      if(istep.gt.0)then
+        call ls_drive
+      endif
+
       return
       end
 c-----------------------------------------------------------------------
@@ -131,6 +139,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
 
       ifflow = .false.
+
       return
       end
 c-----------------------------------------------------------------------
@@ -142,13 +151,14 @@ c-----------------------------------------------------------------------
       include 'AVM'
       include 'SVV'
 
-      real eps
+      real eps,dt_in
       integer nsteps_ls
 
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
+      integer ifdebug
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -169,14 +179,16 @@ c     scalar 2
 c--------------------------------------------------
 
       eps = 1.0
-      nsteps_ls = 10
+      nsteps_ls = 100
       ifld_tls = 2
       ifld_cls = 3
       ifld_clsr = 4
       ifld_tlsr = 0
-      call ls_init(nsteps_ls,eps,
+      dt_in = dt
+      ifdebug = 0
+      call ls_init(nsteps_ls,eps,dt_in,
      $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr)
+     $             ifld_tls,ifld_tlsr,ifdebug)
 
       return
       end
