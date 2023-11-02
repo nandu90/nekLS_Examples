@@ -128,8 +128,13 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
 
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
       if(istep.gt.0)then
-        call ls_drive
+        call ls_drive(ifld_clsr)
       endif
 
       return
