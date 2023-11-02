@@ -1,0 +1,225 @@
+      include "experimental/lvlSet.f"
+c-----------------------------------------------------------------------
+      subroutine uservp(ix,iy,iz,eg) ! set variable properties
+      implicit none
+      integer ix,iy,iz,eg,e
+     
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+
+!     These routine is not called by external solver
+!     To Do: change the flow, so that this routine is called
+!     similar to RANS. Will avoid confusion
+
+      utrans = 1.0
+      udiff = cpfld(ifield,1)
+
+      if(ifavm(ifield-1))then
+        udiff = 1e-10       !must be tiny for hyperbolic
+      elseif(ifsvv(ifield-1))then
+        udiff = 1e-10      !must be tiny for hyperbolic
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userf(ix,iy,iz,eg) ! set acceleration term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+
+      ffx = 0.0
+      ffy = 0.0
+      ffz = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq(ix,iy,iz,eg) ! set source term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      real signls
+
+      e = gllel(eg)
+      
+      qvol = 0.0
+      avol = 0.0
+
+      if(ifield.eq.ifld_tlsr)then
+        qvol = signls(ix,iy,iz,e)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc(ix,iy,iz,iside,eg) ! set up boundary conditions
+      implicit none
+      integer ix,iy,iz,iside,eg
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      ux   = 0.0
+      uy   = 0.0
+      uz   = 0.0
+      temp = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric(ix,iy,iz,eg) ! set up initial conditions
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      real xx,yy,func,rad,a,b,c,d,e1,e2
+
+      e = gllel(eg)
+
+      ux = 0.0
+      uy = 0.0
+      uz = 0.0
+
+      xx = xm1(ix,iy,iz,e)
+      yy = ym1(ix,iy,iz,e)
+      if(ifield.eq.ifld_tls)then
+        func = 1.0
+      elseif(ifield.eq.ifld_tlsr)then
+        func = (xx-1.0)**2 + (yy-1.0)**2 + 0.1
+      endif
+
+      rad = 1.
+      a = 0.7
+      b = (a-xx)/sqrt((a-xx)**2+yy**2)
+      c = (a+xx)/sqrt((a+xx)**2+yy**2)
+      d = a/rad
+      if(b.ge.d .and. c.ge.d)then
+        e1 = -sqrt(xx**2 + (yy + sqrt(rad**2-a**2))**2)
+        e2 = -sqrt(xx**2 + (yy - sqrt(rad**2-a**2))**2)
+        temp = func*(max(e1,e2))
+      else
+        e1 = sqrt((xx+a)**2 + yy**2)-rad
+        e2 = sqrt((xx-a)**2 + yy**2)-rad
+        temp = func*(min(e1,e2))
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk()
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      if(istep.gt.0)then
+        call ls_drive(ifld_tlsr)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userqtl ! Set thermal divergence
+
+      call userqtl_scig 
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat()   ! This routine to modify element vertices
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      ifflow = .false.
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2()  ! This routine to modify mesh coordinates
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'AVM'
+      include 'SVV'
+
+      real eps,dt_in
+      integer nsteps_ls
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      integer ifdebug
+
+c---------------------------------------------------      
+c     This section to specify user defined parameters
+c     for AVM/SVV. Leave commented to use default parameters
+c     parameters. 
+
+c     scalar 1      
+      ! avm_c1(2) = 1.0
+      ! avm_ncut(2) = 1.0
+      ! icont(2) = .false.
+      svv_c0(2) = 5.0
+      ! svvcut(3) = (lx1-1.0)/2.0
+      ! svv_k0(3) = 1.5
+      ! svv_k1(3) = 1.5
+      ! ifnlsvv(3) = .false.
+
+c--------------------------------------------------
+      eps = 1.0
+      nsteps_ls = 1
+      ifld_cls = 0
+      ifld_tls = 2
+      ifld_clsr = 0
+      ifld_tlsr = 3
+      dt_in = dt
+      ifdebug = 2
+      call ls_init(nsteps_ls,eps,dt_in,
+     $             ifld_cls,ifld_clsr,
+     $             ifld_tls,ifld_tlsr,ifdebug)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      
+      return
+      end
+c---------------------------------------------------------------------

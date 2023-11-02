@@ -1,0 +1,38 @@
+#
+# nek parameter file
+#
+[GENERAL]
+stopAt = numSteps
+#stopAt = endTime
+numSteps = 2000 #200000
+#endTime = 1.0
+
+dt = 10e-04
+timeStepper = bdf2
+
+#writeControl = runTime
+writeInterval = 200
+
+[PROBLEMTYPE]
+variableProperties = yes
+
+[PRESSURE]
+residualTol = 1e-5
+residualProj = yes
+
+[VELOCITY]
+residualTol = 1e-8
+density = 1
+viscosity = -100
+
+[TEMPERATURE] #tls field
+rhocp = 1.
+conductivity = 1.
+residualTol = 1e-8
+#regularization = none
+
+[SCALAR01] #tls re-distancing field
+density = 1.0
+diffusivity = 1e-8 
+residualTol = 1e-8
+regularization = svv
