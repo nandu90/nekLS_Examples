@@ -4,10 +4,10 @@
 [GENERAL]
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 1 #200000
+numSteps = 1000 #200000
 #endTime = 1.0
 
-dt = 10e-04
+dt = 5e-04
 timeStepper = bdf2
 
 #writeControl = runTime
@@ -26,14 +26,14 @@ density = 1
 viscosity = -100
 
 [TEMPERATURE] #cls field
-#solver = none
+solver = none
 rhocp = 1.
 conductivity = 1.
 residualTol = 1e-8
 #regularization = none
 
 [SCALAR01] #tls field
-#solver = none
+solver = none
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
@@ -44,7 +44,7 @@ residualTol = 1e-8
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
-#regularization = svv
+regularization = svv
 
 [SCALAR03] #tls re-distancing field
 #solver = none

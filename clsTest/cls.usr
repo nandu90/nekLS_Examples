@@ -114,10 +114,12 @@ c-----------------------------------------------------------------------
       
       if(ifield.eq.ifld_tls)then
         continue
+      elseif(ifield.eq.ifld_tlsr)then
+        continue
       elseif(ifield.eq.ifld_cls)then
-        temp = heaviside(ix,iy,iz,e,temp)
+        temp = heaviside(ix,iy,iz,e,temp,0.0)
       elseif(ifield.eq.ifld_clsr)then
-        temp = heaviside(ix,iy,iz,e,temp)
+        temp = heaviside(ix,iy,iz,e,temp,5.0)
       endif
       
       return
@@ -133,7 +135,12 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
+      real xx,yy,deltael,eps,temp
+      integer i,ntot
+
       if(istep.gt.0)then
+        !This call invokes the external solver for 
+        !advancing specified field
         call ls_drive(ifld_clsr)
       endif
 
@@ -175,26 +182,10 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug
 
-c---------------------------------------------------      
-c     This section to specify user defined parameters
-c     for AVM/SVV. Leave commented to use default parameters
-c     parameters. 
-
-c     scalar 1      
-      ! avm_c1(2) = 1.0
-      ! avm_ncut(2) = 1.0
-      ! icont(2) = .false.
-
-c     scalar 2      
-      ! svv_c0(3) = 0.1
-      ! svvcut(3) = (lx1-1.0)/2.0
-      ! svv_k0(3) = 1.5
-      ! svv_k1(3) = 1.5
-      ! ifnlsvv(3) = .false.
-c--------------------------------------------------
-
-      eps = 1.0
-      nsteps_ls = 100
+      !Note - the normals in the cls re-distancing equation
+      !are taken from the ifld_tls field
+      eps = 0.5
+      nsteps_ls = 1
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
@@ -204,6 +195,19 @@ c--------------------------------------------------
       call ls_init(nsteps_ls,eps,dt_in,
      $             ifld_cls,ifld_clsr,
      $             ifld_tls,ifld_tlsr,ifdebug)
+
+c---------------------------------------------------      
+c     This section to specify user defined parameters
+c     for AVM/SVV. Leave commented to use default parameters
+c     parameters. 
+
+      svv_c0(ifld_clsr-1) = 1.0
+      ! svvcut(ifld_clsr-1) = (lx1-1.0)/2.0
+      ! svv_k0(ifld_clsr-1) = 1.5
+      ! svv_k1(ifld_clsr-1) = 1.5
+      ! ifnlsvv(ifld_clsr-1) = .false.
+      ifupwindsvv(ifld_clsr-1) = .true.
+c--------------------------------------------------
 
       return
       end
