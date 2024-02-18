@@ -141,10 +141,13 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
+      real evolS, exactVol, errS
+      real enclosedVol
+
       if(istep.gt.0)then
         call ls_drive(ifld_tlsr)
       endif
-
+      
       return
       end
 c-----------------------------------------------------------------------
@@ -183,22 +186,6 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug
 
-c---------------------------------------------------      
-c     This section to specify user defined parameters
-c     for AVM/SVV. Leave commented to use default parameters
-c     parameters. 
-
-c     scalar 1      
-      ! avm_c1(2) = 1.0
-      ! avm_ncut(2) = 1.0
-      ! icont(2) = .false.
-      svv_c0(2) = 5.0
-      ! svvcut(3) = (lx1-1.0)/2.0
-      ! svv_k0(3) = 1.5
-      ! svv_k1(3) = 1.5
-      ! ifnlsvv(3) = .false.
-
-c--------------------------------------------------
       eps = 1.0
       nsteps_ls = 1
       ifld_cls = 0
@@ -211,6 +198,22 @@ c--------------------------------------------------
      $             ifld_cls,ifld_clsr,
      $             ifld_tls,ifld_tlsr,ifdebug)
 
+c---------------------------------------------------      
+c     This section to specify user defined parameters
+c     for AVM/SVV. Leave commented to use default parameters
+c     parameters. 
+
+      avm_ncut(ifld_tlsr-1) = 2
+      avm_c1(ifld_tlsr-1) = 5.0
+      ifcont(ifld_tlsr-1) = .true.
+
+      svv_c0(ifld_tlsr-1) = 5.0
+      ! svvcut(ifld_tlsr-1) = (lx1-1.0)/2.0
+      ! svv_k0(ifld_tlsr-1) = 1.5
+      ! svv_k1(ifld_tlsr-1) = 1.5
+      ! ifnlsvv(ifld_tlsr-1) = .true.
+
+c--------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
