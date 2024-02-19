@@ -1,3 +1,4 @@
+      include "experimental/lvlSet.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -164,9 +165,9 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
 c     scalar 1      
-      ! avm_c1(2) = 1.0
-      ! avm_ncut(2) = 1.0
-      ! icont(2) = .false.
+      avm_c1(2) = 5.0
+      avm_ncut(2) = 2.0
+      ifcont(2) = .false.
 
 c     scalar 2      
       svv_c0(3) = 1.0
@@ -174,13 +175,15 @@ c     scalar 2
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
+      ifupwindsvv(3) = .true.
 
 c     scalar 3
-      svv_c0(4) = 1.0
+      svv_c0(4) = 2.0
       ! svvcut(4) = (lx1-1.0)/2.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ifnlsvv(4) = .true.
+      ifupwindsvv(4) = .true.
 c--------------------------------------------------
       return
       end

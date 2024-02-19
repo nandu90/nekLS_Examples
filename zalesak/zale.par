@@ -11,7 +11,7 @@ dt = 2.0e-04
 timeStepper = bdf2
 
 writeControl = runTime
-writeInterval = 0.2
+writeInterval = 0.02
 
 [PROBLEMTYPE]
 variableProperties = yes
@@ -33,6 +33,7 @@ residualTol = 1e-8
 regularization = none
 
 [SCALAR01]
+#solver = none
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
