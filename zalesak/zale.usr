@@ -165,9 +165,10 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
 c     scalar 1      
-      avm_c1(2) = 5.0
+      avm_c1(2) = 2.0
       avm_ncut(2) = 2.0
       ifcont(2) = .false.
+      !ifupwindavm(2) = .true.
 
 c     scalar 2      
       svv_c0(3) = 1.0
