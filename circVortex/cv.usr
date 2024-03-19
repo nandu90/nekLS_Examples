@@ -1,0 +1,338 @@
+      include "experimental/lvlSet.f"
+c-----------------------------------------------------------------------
+      subroutine uservp(ix,iy,iz,eg) ! set variable properties
+      implicit none
+      integer ix,iy,iz,eg,e
+     
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+
+!     These routine is not called by external solver
+!     To Do: change the flow, so that this routine is called
+!     similar to RANS. Will avoid confusion
+
+      utrans = 1.0
+      udiff = cpfld(ifield,1)
+
+      if(ifavm(ifield-1))then
+        udiff = 1e-10       !must be tiny for hyperbolic
+      elseif(ifsvv(ifield-1))then
+        udiff = 1e-10      !must be tiny for hyperbolic
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userf(ix,iy,iz,eg) ! set acceleration term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+
+      ffx = 0.0
+      ffy = 0.0
+      ffz = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq(ix,iy,iz,eg) ! set source term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      real signls
+
+      e = gllel(eg)
+      
+      qvol = 0.0
+      avol = 0.0
+
+      if(ifield.eq.ifld_tlsr)then
+        qvol = signls(ix,iy,iz,e)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc(ix,iy,iz,iside,eg) ! set up boundary conditions
+      implicit none
+      integer ix,iy,iz,iside,eg
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      integer e
+
+      e = gllel(eg)
+
+      ux   = 0.0
+      uy   = 0.0
+      uz   = 0.0
+      temp = 0.0
+
+      if(ifield.eq.ifld_clsr)then
+        temp = t(ix,iy,iz,e,ifld_cls-1)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric(ix,iy,iz,eg) ! set up initial conditions
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      real rad,xcen,ycen,func
+      real xx,yy,heaviside
+
+      e = gllel(eg)
+
+      xx = xm1(ix,iy,iz,e)
+      yy = ym1(ix,iy,iz,e)
+
+      ux = 0.0
+      uy = 0.0
+      uz = 0.0
+
+      rad = 0.3/2.0
+      xcen = 0.5
+      ycen = 0.75
+      func = sqrt((xx-xcen)**2. + (yy-ycen)**2.) - rad
+      if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
+        temp = func
+      elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
+        temp = heaviside(ix,iy,iz,e,func,0.0)
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk()
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      integer ntot,i,xx,yy,ux,uy
+      real evolS, evolC, enclosedVol, exactVol, errS, errC
+      real eps, deltael
+      integer ie,ifc
+
+      ntot = lx1*ly1*lz1*nelv
+
+      ! if(istep.eq.0 .and. nio.eq.0)then
+      !   open(unit=100,file='vol.dat',status='unknown')
+      ! endif
+
+      call newdriver
+      
+      ! exactVol = PI*(0.15**2.0)
+      ! evolC = enclosedVol(ifld_cls)
+      ! errC = evolC/exactVol
+      ! if(nio.eq.0) write(*,*)"Enclosed Vol CLS",evolC,exactVol,errC
+      ! evolS = enclosedVol(ifld_tls)
+      ! errS = evolS/exactVol
+      ! if(nio.eq.0) write(*,*)"Enclosed Vol SLS",evolS,exactVol,errS
+
+      ! if(nio.eq.0)write(100,*)time,evolC,errC,evolS,errS
+
+      ! if(istep.eq.nsteps)close(100)
+      
+      call velupdate
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userqtl ! Set thermal divergence
+
+      call userqtl_scig 
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat()   ! This routine to modify element vertices
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      ifflow = .false.
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2()  ! This routine to modify mesh coordinates
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'AVM'
+      include 'SVV'
+
+      real eps,dt_in
+      integer nsteps_cls, nsteps_tls
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      integer ifdebug
+
+      eps = 1.0
+      nsteps_cls = uparam(1)
+      nsteps_tls = uparam(2)
+      ifld_cls = 2
+      ifld_tls = 3
+      ifld_clsr = 4
+      ifld_tlsr = 5
+      dt_in = dt * uparam(4)
+      ifdebug = 0
+      call ls_init(nsteps_cls,nsteps_tls,eps,dt_in,
+     $             ifld_cls,ifld_clsr,
+     $             ifld_tls,ifld_tlsr,ifdebug)
+
+c---------------------------------------------------      
+c     This section to specify user defined parameters
+c     for AVM/SVV. Leave commented to use default parameters
+c     parameters. 
+
+      svv_c0(ifld_cls-1) = 1.0                 !ifld_cls
+      svvcut(ifld_cls-1) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(1) = 1.5
+      ! svv_k1(1) = 1.5
+      ! ifnlsvv(1) = .true.
+
+      ! avm_c1(1) = 1.0
+      ! avm_ncut(1) = 1.0
+      ! icont(1) = .false.
+      ! ifupwindsvv(ifld_cls-1) = .true.
+
+c     scalar 2      
+      svv_c0(ifld_tls-1) = 1.0                  !ifld_tls
+      svvcut(ifld_tls-1) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(2) = 1.5
+      ! svv_k1(2) = 1.5
+      ! ifnlsvv(2) = .false.
+      ! ifupwindsvv(ifld_tls-1) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_clsr-1) = 1.0                  !ifld_clsr
+      svvcut(ifld_clsr-1) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(3) = 1.5
+      ! svv_k1(3) = 1.5
+      ! ifnlsvv(3) = .false.
+      ! ifupwindsvv(ifld_clsr-1) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_tlsr-1) = 1.0                  !ifld_tlsr
+      svvcut(ifld_tlsr-1) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(4) = 1.5
+      ! svv_k1(4) = 1.5
+      ! ifnlsvv(4) = .false.
+      ! ifupwindsvv(ifld_tlsr-1) = .true.
+
+c--------------------------------------------------
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine velupdate
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+
+      real xx,yy,ux,uy
+      integer i,ntot
+
+      ntot = lx1*ly1*lz1*nelv
+
+      do i=1,ntot
+        xx = xm1(i,1,1,1)
+        yy = ym1(i,1,1,1)
+
+        ux = (sin(PI*xx)**2.0) * sin(2.0*PI*yy) *
+     $                 cos(PI*time/8.0)
+        uy = -sin(2.0*PI*xx) * (sin(PI*yy)**2.0) *
+     $                 cos(PI*time/8.0)
+
+        vx(i,1,1,1) = ux
+        vy(i,1,1,1) = uy
+      enddo
+
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine newdriver
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      integer ntot,ifreq
+
+      ntot = lx1*ly1*lz1*nelt
+
+      ifreq = uparam(3)
+      !re-distancing TLS every n steps
+      if(mod(istep,ifreq).eq.0)then
+        call copy(t(1,1,1,1,ifld_tlsr-1),t(1,1,1,1,ifld_cls-1),ntot)
+
+        call cadd(t(1,1,1,1,ifld_tlsr-1),-0.5,ntot)
+        
+        call cmult(t(1,1,1,1,ifld_tlsr-1),0.1,ntot)
+
+        call ls_drive(ifld_tlsr)
+
+        call copy(t(1,1,1,1,ifld_tls-1),t(1,1,1,1,ifld_tlsr-1),ntot)
+      endif
+
+
+      !re-distance CLS at every time step
+      call copy(t(1,1,1,1,ifld_clsr-1),t(1,1,1,1,ifld_cls-1),ntot)
+      call ls_drive(ifld_clsr)
+      call copy(t(1,1,1,1,ifld_cls-1),t(1,1,1,1,ifld_clsr-1),ntot)
+
+      return
+      end
+c---------------------------------------------------------------------
