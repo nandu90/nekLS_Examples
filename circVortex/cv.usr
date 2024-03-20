@@ -208,7 +208,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug
 
-      eps = 3.0/(lx1-1.0)
+      eps = 4.0/(lx1-1.0)
       nsteps_cls = uparam(1)
       nsteps_tls = uparam(2)
       ifld_cls = 2
@@ -256,7 +256,7 @@ c     scalar 3
       ifupwindsvv(ifld_clsr-1) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr-1) = 2.0                  !ifld_tlsr
+      svv_c0(ifld_tlsr-1) = 1.0                  !ifld_tlsr
       ! svvcut(ifld_tlsr-1) = (lx1-1.0)/2.0-1.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
@@ -322,7 +322,7 @@ c---------------------------------------------------------------------
 
         call cadd(t(1,1,1,1,ifld_tlsr-1),-0.5,ntot)
         
-        call cmult(t(1,1,1,1,ifld_tlsr-1),0.1,ntot)
+        call cmult(t(1,1,1,1,ifld_tlsr-1),0.01,ntot)
 
         call ls_drive(ifld_tlsr)
 
