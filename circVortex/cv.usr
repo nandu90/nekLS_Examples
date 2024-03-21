@@ -154,6 +154,8 @@ c-----------------------------------------------------------------------
       !   open(unit=100,file='vol.dat',status='unknown')
       ! endif
 
+      if(istep.eq.0)call outfld('  ')
+
       call newdriver
       
       ! exactVol = PI*(0.15**2.0)
@@ -313,6 +315,10 @@ c---------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ntot,ifreq
 
+      integer ntlsr
+      save ntlsr
+      data ntlsr /0/
+
       ntot = lx1*ly1*lz1*nelt
 
       ifreq = uparam(3)
@@ -324,16 +330,26 @@ c---------------------------------------------------------------------
         
         call cmult(t(1,1,1,1,ifld_tlsr-1),0.01,ntot)
 
-        call ls_drive(ifld_tlsr)
+        call ls_drive(ifld_tlsr,0)
+
+        call ls_drive(ifld_tlsr,1)
 
         call copy(t(1,1,1,1,ifld_tls-1),t(1,1,1,1,ifld_tlsr-1),ntot)
+
+        ntlsr = 0
+        !Now actively change sign
+        ! call ls_drive(ifld_tlsr,1)
       endif
 
 
-      !re-distance CLS at every time step
-      call copy(t(1,1,1,1,ifld_clsr-1),t(1,1,1,1,ifld_cls-1),ntot)
-      call ls_drive(ifld_clsr)
-      call copy(t(1,1,1,1,ifld_cls-1),t(1,1,1,1,ifld_clsr-1),ntot)
+      if(mod(ntlsr,100).eq.0)then
+        !re-distance CLS at every time step
+        call copy(t(1,1,1,1,ifld_clsr-1),t(1,1,1,1,ifld_cls-1),ntot)
+        call ls_drive(ifld_clsr)
+        call copy(t(1,1,1,1,ifld_cls-1),t(1,1,1,1,ifld_clsr-1),ntot)
+      endif
+
+      ntlsr = ntlsr + 1
 
       return
       end
