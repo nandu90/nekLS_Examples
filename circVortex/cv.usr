@@ -148,6 +148,8 @@ c-----------------------------------------------------------------------
       real eps, deltael
       integer ie,ifc
 
+      integer ntlsr, nclsr
+
       ntot = lx1*ly1*lz1*nelv
 
       ! if(istep.eq.0 .and. nio.eq.0)then
@@ -156,7 +158,9 @@ c-----------------------------------------------------------------------
 
       if(istep.eq.0)call outfld('  ')
 
-      call newdriver
+      ntlsr = uparam(5)
+      nclsr = uparam(6)
+      call LS_default_driver(ntlsr,nclsr)
       
       ! exactVol = PI*(0.15**2.0)
       ! evolC = enclosedVol(ifld_cls)
@@ -176,8 +180,6 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine userqtl ! Set thermal divergence
-
-      call userqtl_scig 
 
       return
       end
@@ -217,8 +219,8 @@ c-----------------------------------------------------------------------
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
-      dt_cls_in = dt * uparam(4)
-      dt_tls_in = dt * uparam(5)
+      dt_cls_in = dt * uparam(3)
+      dt_tls_in = dt * uparam(4)
       ifdebug = 0
       call ls_init(nsteps_cls,nsteps_tls,eps,
      $             dt_cls_in,dt_tls_in,
@@ -300,56 +302,6 @@ c---------------------------------------------------------------------
         vx(i,1,1,1) = ux
         vy(i,1,1,1) = uy
       enddo
-
-      return
-      end
-c---------------------------------------------------------------------
-      subroutine newdriver
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-
-      common /ls_usr/ ifld_cls,ifld_clsr,
-     $                ifld_tls,ifld_tlsr 
-      integer ifld_cls,ifld_clsr
-      integer ifld_tls,ifld_tlsr
-      integer ntot,ifreq
-
-      integer ntlsr
-      save ntlsr
-      data ntlsr /0/
-
-      ntot = lx1*ly1*lz1*nelt
-
-      ifreq = uparam(3)
-      !re-distancing TLS every n steps
-      if(mod(istep,ifreq).eq.0)then
-        call copy(t(1,1,1,1,ifld_tlsr-1),t(1,1,1,1,ifld_cls-1),ntot)
-
-        call cadd(t(1,1,1,1,ifld_tlsr-1),-0.5,ntot)
-        
-        call cmult(t(1,1,1,1,ifld_tlsr-1),0.01,ntot)
-
-        call ls_drive(ifld_tlsr,0)
-
-        call ls_drive(ifld_tlsr,1)
-
-        call copy(t(1,1,1,1,ifld_tls-1),t(1,1,1,1,ifld_tlsr-1),ntot)
-
-        ntlsr = 0
-        !Now actively change sign
-        ! call ls_drive(ifld_tlsr,1)
-      endif
-
-
-      if(mod(ntlsr,100).eq.0)then
-        !re-distance CLS at every time step
-        call copy(t(1,1,1,1,ifld_clsr-1),t(1,1,1,1,ifld_cls-1),ntot)
-        call ls_drive(ifld_clsr)
-        call copy(t(1,1,1,1,ifld_cls-1),t(1,1,1,1,ifld_clsr-1),ntot)
-      endif
-
-      ntlsr = ntlsr + 1
 
       return
       end
