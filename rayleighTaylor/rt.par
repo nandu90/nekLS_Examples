@@ -16,9 +16,10 @@ writeInterval = 100
 
 userParam01 = 4       #Number of CLS re-distancing steps
 userParam02 = 200     #Number of TLS re-distancing steps
-userParam03 = 500     #Freq of TLSR
-userParam04 = 0.01    #dt factor for CLSR
-userParam05 = 0.1     #dt factor for TLSR
+userParam03 = 0.01    #dt factor for CLSR
+userParam04 = 0.1     #dt factor for TLSR
+userParam05 = 500     #Freq of TLSR
+userParam06 = 50      #Freq of CLSR
 
 [PROBLEMTYPE]
 equation = lowMachNS
