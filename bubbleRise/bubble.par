@@ -20,9 +20,10 @@ filterWeight = 10.0
 
 userParam01 = 4       #Number of CLS re-distancing steps
 userParam02 = 100     #Number of TLS re-distancing steps
-userParam03 = 200     #Freq of TLSR
-userParam04 = 0.01    #dt factor for CLSR
-userParam05 = 0.2     #dt factor for TLSR
+userParam03 = 0.01    #dt factor for CLSR
+userParam04 = 0.2     #dt factor for TLSR
+userParam05 = 200     #Freq of TLSR
+userParam06 = 20      #Freq of CLSR
 
 [PROBLEMTYPE]
 equation = lowMachNS
