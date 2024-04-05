@@ -9,7 +9,7 @@ numSteps = 12000 #1000 #16000 #4000 #400 #400 #200000
 #endTime = 2 #10e-4
 
 dt = 2.5e-04
-timeStepper = bdf1
+timeStepper = bdf2
 
 #writeControl = runTime
 writeInterval = 100
