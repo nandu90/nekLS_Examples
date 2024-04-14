@@ -14,9 +14,9 @@ timeStepper = bdf1
 #writeControl = runTime
 writeInterval = 100
 
-filtering = hpfrt
-filterModes = 2
-filterWeight = 10.0
+#filtering = hpfrt
+#filterModes = 2
+#filterWeight = 10.0
 
 userParam01 = 4       #Number of CLS re-distancing steps
 userParam02 = 100     #Number of TLS re-distancing steps
@@ -63,3 +63,8 @@ diffusivity = 1e-8
 residualTol = 1e-8
 regularization = svv
 
+[SCALAR04] #tls re-distancing field
+solver = none
+density = 1.0
+diffusivity = 1e-8 
+residualTol = 1e-8

@@ -42,9 +42,9 @@ c-----------------------------------------------------------------------
       else
         utrans = 1.0
         udiff = 1e-10
-        if(ifavm(ifield-1))then
+        if(ifavm(ifield))then
           udiff = 1e-10       !must be tiny for hyperbolic
-        elseif(ifsvv(ifield-1))then
+        elseif(ifsvv(ifield))then
           udiff = 1e-10      !must be tiny for hyperbolic
         endif
       endif
@@ -59,16 +59,23 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
+      include 'SVV'
 
       common /dimen/ Re,We,Fr
       real Re,We,Fr
       real sfx,sfy,sfz
 
+      real svvx,svvy,svvz
+
       e = gllel(eg)
 
       call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
-      ffx = -sfx
-      ffy = -sfy - 1./Fr
+
+      !Add SVV regularization to fluid
+      call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
+
+      ffx = -sfx + svvx
+      ffy = -sfy - 1./Fr + svvy
       ffz = -sfz
 
       return
@@ -230,8 +237,11 @@ c     This section to specify user defined parameters
 c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
-      svv_c0(ifld_cls-1) = 1.0                 !ifld_cls
-      ! svvcut(ifld_cls-1) = (lx1-1.0)/2.0-1.0
+      !fluid
+      svv_c0(1) = 1.0
+
+      svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
       ! ifnlsvv(1) = .true.
@@ -239,32 +249,31 @@ c     parameters.
       ! avm_c1(1) = 1.0
       ! avm_ncut(1) = 1.0
       ! icont(1) = .false.
-      ifupwindsvv(ifld_cls-1) = .true.
+      ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls-1) = 1.0                  !ifld_tls
-      ! svvcut(ifld_tls-1) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
       ! ifnlsvv(2) = .false.
-      ifupwindsvv(ifld_tls-1) = .true.
+      ifupwindsvv(ifld_tls) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_clsr-1) = 1.0                  !ifld_clsr
-      ! svvcut(ifld_clsr-1) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
-      ifupwindsvv(ifld_clsr-1) = .true.
+      ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr-1) = 1.0                  !ifld_tlsr
-      svvcut(ifld_tlsr-1) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
-      !upwind SVV does not work well on TLSR
-      ifupwindsvv(ifld_tlsr-1) = .false.
+      ! ifupwindsvv(ifld_tlsr) = .true.
 
 c--------------------------------------------------
       return
