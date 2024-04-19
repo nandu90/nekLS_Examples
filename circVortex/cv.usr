@@ -144,11 +144,14 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
 
       integer ntot,i,xx,yy,ux,uy
-      real evolS, evolC, enclosedVol, exactVol, errS, errC
-      real eps, deltael
+      real rad
       integer ie,ifc
 
       integer ntlsr, nclsr
+      real evolC, enclosedVol, exactVol
+      real Em
+      real volini
+      save volini
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -162,6 +165,17 @@ c-----------------------------------------------------------------------
       nclsr = uparam(6)
       call LS_default_driver(ntlsr,nclsr)
       
+      if(mod(istep,100).eq.0)then
+        rad = 0.3/2.0
+        evolC = enclosedVol(-1)
+        if(istep.eq.0)volini = evolC
+        exactVol = PI*rad**2.0
+        Em = (evolC - volini)/exactVol
+        if(nio.eq.0)then 
+          write(*,*)"Step, Volume Error, Em",istep,Em
+        endif
+      endif
+
       ! exactVol = PI*(0.15**2.0)
       ! evolC = enclosedVol(ifld_cls)
       ! errC = evolC/exactVol
