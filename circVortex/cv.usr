@@ -149,15 +149,19 @@ c-----------------------------------------------------------------------
 
       integer ntlsr, nclsr
       real evolC, enclosedVol, exactVol
-      real Em
+      real Em, EL1
       real volini
       save volini
+      real psiini(lx1,ly1,lz1,lelv)
+      save psiini
+      real wrk(lx1,ly1,lz1,lelv)
+      real glsum
 
       ntot = lx1*ly1*lz1*nelv
 
-      ! if(istep.eq.0 .and. nio.eq.0)then
-      !   open(unit=100,file='vol.dat',status='unknown')
-      ! endif
+      if(istep.eq.0 .and. nio.eq.0)then
+        open(unit=100,file='vol.dat',status='unknown')
+      endif
 
       if(istep.eq.0)call outfld('  ')
 
@@ -168,25 +172,32 @@ c-----------------------------------------------------------------------
       if(mod(istep,100).eq.0)then
         rad = 0.3/2.0
         evolC = enclosedVol(-1)
-        if(istep.eq.0)volini = evolC
+        if(istep.eq.0)then 
+          volini = evolC
+        endif
         exactVol = PI*rad**2.0
-        Em = (evolC - volini)/exactVol
+        ! Em = (evolC - volini)/exactVol
+        Em = evolC/volini
+        
+        !calc L1 norm at final time step
+        if(istep.eq.0)call copy(psiini,t(1,1,1,1,ifld_cls-1),ntot)
+        if(istep.eq.0 .or.istep.eq.nsteps)then
+          call copy(wrk,psiini,ntot)
+          call sub2(wrk,t(1,1,1,1,ifld_cls-1),ntot)
+          do i=1,ntot
+            wrk(i,1,1,1) = abs(wrk(i,1,1,1))
+          enddo
+          call col2(wrk,bm1,ntot)
+          EL1 = glsum(wrk,ntot)
+        endif
         if(nio.eq.0)then 
           write(*,*)"Step, Volume Error, Em",istep,Em
+          write(*,*)"Step, L1 Error, E1",istep,EL1
+          write(100,*)istep,Em
         endif
       endif
 
-      ! exactVol = PI*(0.15**2.0)
-      ! evolC = enclosedVol(ifld_cls)
-      ! errC = evolC/exactVol
-      ! if(nio.eq.0) write(*,*)"Enclosed Vol CLS",evolC,exactVol,errC
-      ! evolS = enclosedVol(ifld_tls)
-      ! errS = evolS/exactVol
-      ! if(nio.eq.0) write(*,*)"Enclosed Vol SLS",evolS,exactVol,errS
-
-      ! if(nio.eq.0)write(100,*)time,evolC,errC,evolS,errS
-
-      ! if(istep.eq.nsteps)close(100)
+      if(istep.eq.nsteps)close(100)
       
       call velupdate
 

@@ -5,20 +5,20 @@
 #startFrom = cv.fld
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 16000 #4000 #400 #400 #200000
+numSteps = 16000 #16000 #4000 #400 #400 #200000
 #endTime = 2 #10e-4
 
 dt = 5e-04
 timeStepper = bdf2
 
 #writeControl = runTime
-writeInterval = 100
+writeInterval = 2000
 
 userParam01 = 10      #Number of CLS re-distancing steps
 userParam02 = 100     #Number of TLS re-distancing steps
-userParam03 = 0.01    #dt factor for CLSR
+userParam03 = 0.1     #dt factor for CLSR
 userParam04 = 0.1     #dt factor for TLSR
-userParam05 = 2000    #Freq of TLSR
+userParam05 = 1000    #Freq of TLSR
 userParam06 = 100     #Freq of CLSR
 
 [PROBLEMTYPE]
