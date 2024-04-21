@@ -1,0 +1,59 @@
+#
+# nek parameter file
+#
+[GENERAL]
+#startFrom = cv.fld
+stopAt = numSteps
+#stopAt = endTime
+numSteps = 12000 #100 #16000 #4000 #400 #400 #200000
+#endTime = 2 #10e-4
+
+dt = 2.5e-04
+timeStepper = bdf2
+
+#writeControl = runTime
+writeInterval = 1000
+
+userParam01 = 10      #Number of CLS re-distancing steps
+userParam02 = 100     #Number of TLS re-distancing steps
+userParam03 = 0.01     #dt factor for CLSR
+userParam04 = 0.1     #dt factor for TLSR
+userParam05 = 1500    #Freq of TLSR
+userParam06 = 200     #Freq of CLSR
+
+[PROBLEMTYPE]
+variableProperties = yes
+
+[PRESSURE]
+residualTol = 1e-5
+residualProj = yes
+
+[VELOCITY]
+residualTol = 1e-8
+density = 1
+viscosity = -100
+
+[TEMPERATURE] #cls field
+rhocp = 1.
+conductivity = 1.
+residualTol = 1e-8
+regularization = svv
+
+[SCALAR01] #tls field
+density = 1.0
+diffusivity = 1e-8 
+residualTol = 1e-8
+regularization = svv
+
+[SCALAR02] #cls re-distanacing
+density = 1.0
+diffusivity = 1e-8 
+residualTol = 1e-8
+regularization = svv
+
+[SCALAR03] #tls re-distancing field
+density = 1.0
+diffusivity = 1e-8 
+residualTol = 1e-8
+regularization = svv
+
