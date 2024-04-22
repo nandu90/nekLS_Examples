@@ -71,6 +71,8 @@ c-----------------------------------------------------------------------
 
       call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
 
+      t(ix,iy,iz,e,5) = sqrt(sfx*sfx+sfy*sfy)
+
       !Add SVV regularization to fluid
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
@@ -265,7 +267,7 @@ c     scalar 3
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
-      ifupwindsvv(ifld_clsr) = .true.
+      ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
       svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
