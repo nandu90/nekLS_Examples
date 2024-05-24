@@ -114,9 +114,9 @@ c-----------------------------------------------------------------------
       uz   = 0.0
       temp = 0.0
 
-      if(ifield.eq.ifld_clsr)then
-        temp = t(ix,iy,iz,e,ifld_cls-1)
-      endif
+      ! if(ifield.eq.ifld_clsr)then
+      !   temp = t(ix,iy,iz,e,ifld_cls-1)
+      ! endif
 
       return
       end
@@ -275,15 +275,15 @@ c     scalar 3
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
-      ifupwindsvv(ifld_clsr) = .true.
+      ifupwindsvv(ifld_clsr) = .false.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
+      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
       svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
-      ifupwindsvv(ifld_tlsr) = .true.
+      ifupwindsvv(ifld_tlsr) = .false.
 
 c--------------------------------------------------
       return
