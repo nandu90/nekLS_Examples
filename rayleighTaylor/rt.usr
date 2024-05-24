@@ -1,4 +1,5 @@
       include "experimental/lvlSet.f"
+      include "lineplot.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -173,6 +174,7 @@ c-----------------------------------------------------------------------
       integer ie,ifc
 
       integer ntlsr, nclsr
+      real pta(3),ptb(3)
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -195,6 +197,24 @@ c-----------------------------------------------------------------------
       ! if(nio.eq.0)write(100,*)time,evolC,errC,evolS,errS
 
       ! if(istep.eq.nsteps)close(100)
+
+      if(mod(istep,1000).eq.0)then
+        pta(1) = 0.5
+        pta(2) = 0.0
+        pta(3) = 0.0
+        ptb(1) = 0.5
+        ptb(2) = 4.0
+        ptb(3) = 0.0
+        call lineplot(pta,ptb,1001)
+
+        pta(1) = 1.0
+        pta(2) = 0.0
+        pta(3) = 0.0
+        ptb(1) = 1.0
+        ptb(2) = 4.0
+        ptb(3) = 0.0
+        call lineplot(pta,ptb,1001)
+      endif
       
       return
       end
