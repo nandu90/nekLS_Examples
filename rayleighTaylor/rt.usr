@@ -115,9 +115,9 @@ c-----------------------------------------------------------------------
       uz   = 0.0
       temp = 0.0
 
-      ! if(ifield.eq.ifld_clsr)then
-      !   temp = t(ix,iy,iz,e,ifld_cls-1)
-      ! endif
+      if(ifield.eq.ifld_clsr)then
+        temp = t(ix,iy,iz,e,ifld_cls-1)
+      endif
 
       return
       end

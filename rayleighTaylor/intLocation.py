@@ -72,8 +72,11 @@ def getloc(direc,files,tol):
         y = data[:,1]-2.0
         cls = data[:,5]-0.5
         
-        y = y[np.abs(cls) < 0.5-tol]
-        cls = cls[np.abs(cls) < 0.5-tol]
+        tol2 = tol
+        if((direc == 'finest/') & (f == files[-1])):
+            tol2 = 1e-2
+        y = y[np.abs(cls) < 0.5-tol2]
+        cls = cls[np.abs(cls) < 0.5-tol2]
     
         func = interpolate.interp1d(y,cls,fill_value="extrapolate",kind="linear")
         root = optimize.fsolve(func,np.mean(y))
@@ -87,20 +90,20 @@ def getloc(direc,files,tol):
 def main():
     nosefiles = np.arange(0,50,2)
     neckfiles = np.arange(1,50,2)
-    tol = 1e-2
+    tol = [1e-2,1e-2,1e-3]
 
-    nose, time1 = getloc('',nosefiles,tol)
-    neck, time2 = getloc('',neckfiles,tol)
+    nose, time1 = getloc('',nosefiles,tol[0])
+    neck, time2 = getloc('',neckfiles,tol[0])
     x1 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
     y1 = np.concatenate((nose,np.array([np.nan]),neck))
 
-    nose, time1 = getloc('fine/',nosefiles,tol)
-    neck, time2 = getloc('fine/',neckfiles,tol)
+    nose, time1 = getloc('fine/',nosefiles,tol[1])
+    neck, time2 = getloc('fine/',neckfiles,tol[1])
     x2 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
     y2 = np.concatenate((nose,np.array([np.nan]),neck))
 
-    nose, time1 = getloc('finest/',nosefiles,tol)
-    neck, time2 = getloc('finest/',neckfiles,tol)
+    nose, time1 = getloc('finest/',nosefiles,tol[2])
+    neck, time2 = getloc('finest/',neckfiles,tol[2])
     x3 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
     y3 = np.concatenate((nose,np.array([np.nan]),neck))
 
@@ -115,7 +118,7 @@ def main():
     x = [x1,x2,x3,xchiu,xg]
     y = [y1,y2,y3,ychiu,yg]
     labels = ['$25X100$','$50X200$','$100X400$','Chiu et al','Guermond et al']
-    lines = ['--','--','--','','']
+    lines = ['--','-.',':','','']
     marks = ['','','','v','o']
     
     plotnow('location','$t*$','$y$',x,y,labels,linestyles=lines,markers=marks)
