@@ -29,16 +29,20 @@ c-----------------------------------------------------------------------
 !     To Do: change the flow, so that this routine is called
 !     similar to RANS. Will avoid confusion
 
+      charl = 0.05715
+      gdim = 9.81
       rhol = 1000.0
       rhog = 1.2
       mul = 1e-3
       mug = 1.8e-5
       charl = 0.05715
-      udim = 0.1 !say
-      gdim = 9.81
-      gamm = 0.06
+
+      !https://www.sciencedirect.com/science/article/pii/S0021999197958472
+      udim = sqrt(gdim*charl)
+
       Re = rhol*udim*charl/mul
       Fr = udim**2.0/(gdim*charl)
+      gamm = 0.06
       We = charl*rhol*udim**2.0/gamm
 
       if(ifield.eq.1)then
@@ -70,12 +74,26 @@ c-----------------------------------------------------------------------
 
       common /dimen/ Re,We,Fr
       real Re,We,Fr
+      real sfx,sfy,sfz
+
+      real svvx,svvy,svvz
 
       e = gllel(eg)
 
-      ffx = 0.0
-      ffy = -1./Fr
-      ffz = 0.0
+      sfx = 0.0
+      sfy = 0.0
+      sfz = 0.0
+      svvx = 0.0
+      svvy = 0.0
+      svvz = 0.0
+
+      ! call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
+      
+      ! call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
+
+      ffx = -sfx + svvx
+      ffy = -sfy -1./Fr + svvy
+      ffz = -sfz
 
       return
       end
@@ -102,6 +120,8 @@ c-----------------------------------------------------------------------
         qvol = signls(ix,iy,iz,e)
       endif
 
+      call limit_cls(ix,iy,iz,e)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -127,6 +147,10 @@ c-----------------------------------------------------------------------
 
       if(ifield.eq.ifld_clsr)then
         temp = t(ix,iy,iz,e,ifld_cls-1)
+      endif
+
+      if(ifield.eq.1)then
+        call traction_ls(ix,iy,iz,e,iside)
       endif
 
       return
@@ -174,35 +198,12 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
 
-      common /ls_usr/ ifld_cls,ifld_clsr,
-     $                ifld_tls,ifld_tlsr 
-      integer ifld_cls,ifld_clsr
-      integer ifld_tls,ifld_tlsr
+      integer ntlsr, nclsr
 
-      integer ntot,i,xx,yy,ux,uy
-      real evolS, evolC, enclosedVol, exactVol, errS, errC
-      real eps, deltael
-      integer ie,ifc
+      ntlsr = uparam(5) !freq of TLS re-distancing
+      nclsr = uparam(6) !freq of CLS re-distancing
 
-      ntot = lx1*ly1*lz1*nelv
-
-      ! if(istep.eq.0 .and. nio.eq.0)then
-      !   open(unit=100,file='vol.dat',status='unknown')
-      ! endif
-
-      call newdriver
-      
-      ! exactVol = PI*(0.15**2.0)
-      ! evolC = enclosedVol(ifld_cls)
-      ! errC = evolC/exactVol
-      ! if(nio.eq.0) write(*,*)"Enclosed Vol CLS",evolC,exactVol,errC
-      ! evolS = enclosedVol(ifld_tls)
-      ! errS = evolS/exactVol
-      ! if(nio.eq.0) write(*,*)"Enclosed Vol SLS",evolS,exactVol,errS
-
-      ! if(nio.eq.0)write(100,*)time,evolC,errC,evolS,errS
-
-      ! if(istep.eq.nsteps)close(100)
+      call LS_default_driver(ntlsr,nclsr)
       
       return
       end
@@ -238,15 +239,15 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug
 
-      eps = 4.0/(lx1-1.0)
+      eps = 1.25 !4.0/(lx1-1.0)
       nsteps_cls = uparam(1)
       nsteps_tls = uparam(2)
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
-      dt_cls_in = dt * uparam(4)
-      dt_tls_in = dt * uparam(5)
+      dt_cls_in = dt * uparam(3)
+      dt_tls_in = dt * uparam(4)
       ifdebug = 0
       call ls_init(nsteps_cls,nsteps_tls,eps,
      $             dt_cls_in,dt_tls_in,
@@ -258,8 +259,11 @@ c     This section to specify user defined parameters
 c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
-      svv_c0(ifld_cls-1) = 1.0                 !ifld_cls
-      ! svvcut(ifld_cls-1) = (lx1-1.0)/2.0-1.0
+      !fluid
+      svv_c0(1) = 1.0
+
+      svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
       ! ifnlsvv(1) = .true.
@@ -267,31 +271,31 @@ c     parameters.
       ! avm_c1(1) = 1.0
       ! avm_ncut(1) = 1.0
       ! icont(1) = .false.
-      ifupwindsvv(ifld_cls-1) = .true.
+      ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls-1) = 1.0                  !ifld_tls
-      ! svvcut(ifld_tls-1) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
       ! ifnlsvv(2) = .false.
-      ifupwindsvv(ifld_tls-1) = .true.
+      ifupwindsvv(ifld_tls) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_clsr-1) = 1.0                  !ifld_clsr
-      ! svvcut(ifld_clsr-1) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
-      ifupwindsvv(ifld_clsr-1) = .true.
+      ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr-1) = 2.0                  !ifld_tlsr
-      svvcut(ifld_tlsr-1) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
-      ifupwindsvv(ifld_tlsr-1) = .true.
+      ! ifupwindsvv(ifld_tlsr) = .true.
 
 c--------------------------------------------------
       return
@@ -303,54 +307,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       
-      return
-      end
-c---------------------------------------------------------------------
-      subroutine newdriver
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-
-      common /ls_usr/ ifld_cls,ifld_clsr,
-     $                ifld_tls,ifld_tlsr 
-      integer ifld_cls,ifld_clsr
-      integer ifld_tls,ifld_tlsr
-      integer ntot,ifreq
-
-      integer ntlsr
-      save ntlsr
-      data ntlsr /0/
-
-      ntot = lx1*ly1*lz1*nelt
-
-      ifreq = uparam(3)
-      !re-distancing TLS every n steps
-      if(mod(istep,ifreq).eq.0)then
-        call copy(t(1,1,1,1,ifld_tlsr-1),t(1,1,1,1,ifld_cls-1),ntot)
-
-        call cadd(t(1,1,1,1,ifld_tlsr-1),-0.5,ntot)
-        
-        call cmult(t(1,1,1,1,ifld_tlsr-1),0.01,ntot)
-
-        call ls_drive(ifld_tlsr,0)
-
-        call ls_drive(ifld_tlsr,1)
-
-        call copy(t(1,1,1,1,ifld_tls-1),t(1,1,1,1,ifld_tlsr-1),ntot)
-
-        ntlsr = 0
-      endif
-
-
-      if(mod(ntlsr,50).eq.0)then
-        !re-distance CLS at every time step
-        call copy(t(1,1,1,1,ifld_clsr-1),t(1,1,1,1,ifld_cls-1),ntot)
-        call ls_drive(ifld_clsr)
-        call copy(t(1,1,1,1,ifld_cls-1),t(1,1,1,1,ifld_clsr-1),ntot)
-      endif
-
-      ntlsr = ntlsr + 1
-
       return
       end
 c---------------------------------------------------------------------
