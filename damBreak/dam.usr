@@ -87,9 +87,9 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      ! call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
+      call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
       
-      ! call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
+      call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
       ffx = -sfx + svvx
       ffy = -sfy -1./Fr + svvy
@@ -260,7 +260,7 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      svv_c0(1) = 1.0
+      svv_c0(1) = 5.0
 
       svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
