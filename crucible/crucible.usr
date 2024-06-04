@@ -1,0 +1,339 @@
+      include "experimental/lvlSet.f"
+      include "utilities.f"
+      include "limits.f"
+c-----------------------------------------------------------------------
+      subroutine uservp(ix,iy,iz,eg) ! set variable properties
+      implicit none
+      integer ix,iy,iz,eg,e
+     
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      real Re, We, Fr, rhoratio, muratio, nuratio
+      real psi
+      integer icalld
+      save icalld
+      data icalld /0/
+
+      common /dimen/ Re,We,Fr
+
+      e = gllel(eg)
+
+!     These routine is not called by external solver
+!     To Do: change the flow, so that this routine is called
+!     similar to RANS. Will avoid confusion
+
+      Re = uparam(7) 
+      We = uparam(8)
+      Fr = uparam(9)
+      rhoratio = 1.0/967.0
+      !kinematic viscosity of air: 14.8cSt
+      !https://resources.system-analysis.cadence.com/blog/msa2022-the-relationship-between-the-kinematic-viscosity-of-air-and-temperature
+      !kinematic viscosity of silicone oil: 10000 cSt
+      !https://www.sigmaaldrich.com/US/en/product/aldrich/378402
+      ! muratio = 3.62e-6
+      nuratio = 14.8/10000.0
+
+      if(ifield.eq.1)then
+        psi = t(ix,iy,iz,e,ifld_cls-1)
+        psi = max(0.0,psi)
+        psi = min(1.0,psi)
+        utrans = ((1.0-psi)*rhoratio+psi)
+        udiff = ((1.0-psi)*nuratio+psi)/Re
+        t(ix,iy,iz,e,5) = utrans
+      else
+        utrans = 1.0
+        udiff = 1e-10
+        if(ifavm(ifield-1))then
+          udiff = 1e-10       !must be tiny for hyperbolic
+        elseif(ifsvv(ifield-1))then
+          udiff = 1e-10      !must be tiny for hyperbolic
+        endif
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userf(ix,iy,iz,eg) ! set acceleration term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      common /dimen/ Re,We,Fr
+      real Re,We,Fr
+      real sfx,sfy,sfz
+
+      real svvx,svvy,svvz
+
+      e = gllel(eg)
+
+      sfx = 0.0
+      sfy = 0.0
+      sfz = 0.0
+      svvx = 0.0
+      svvy = 0.0
+      svvz = 0.0
+
+      call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
+      
+      call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
+
+      ffx = -sfx + svvx
+      ffy = -sfy -1./Fr + svvy
+      ffz = -sfz
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq(ix,iy,iz,eg) ! set source term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      real signls
+
+      e = gllel(eg)
+      
+      qvol = 0.0
+      avol = 0.0
+
+      if(ifield.eq.ifld_tlsr)then
+        qvol = signls(ix,iy,iz,e)
+      endif
+
+      call limit_cls(ix,iy,iz,e)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc(ix,iy,iz,iside,eg) ! set up boundary conditions
+      implicit none
+      integer ix,iy,iz,iside,eg
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      integer e
+
+      e = gllel(eg)
+
+      ux   = 0.0
+      uy   = 0.0
+      uz   = 0.0
+      temp = 0.0
+
+      if(cbc(iside,e,1).eq.'v  ')then
+        ux = 0.0
+        uy = -1.0
+        uz = 0.0
+        if(ifield.eq.ifld_cls)temp = 0.0
+      endif
+      if(ifield.eq.ifld_cls)temp = 0.0
+
+      if(ifield.eq.ifld_clsr)then
+        temp = t(ix,iy,iz,e,ifld_cls-1)
+      endif
+
+      if(ifield.eq.1)then
+        call traction_ls(ix,iy,iz,e,iside)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric(ix,iy,iz,eg) ! set up initial conditions
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      real xx,yy,heaviside
+      real phix,phiy
+      real temp2
+
+      e = gllel(eg)
+
+      xx = xm1(ix,iy,iz,e)
+      yy = ym1(ix,iy,iz,e)
+
+      ux = 0.0
+      uy = 0.0
+      uz = 0.0
+
+      phiy = 20.5 - yy
+      if(xx.gt.20.0-1e-6 .and. xx.lt.21.0+1e-6)then
+        phiy = 4.5 - yy
+      endif
+      temp = phiy
+      temp2 = sqrt((xx-20.5)**2.0 + (yy-5.0)**2.0)-1.0
+      temp = min(temp,temp2)
+      if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
+        continue
+      elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
+        temp = heaviside(ix,iy,iz,e,temp,0.0)
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk()
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+
+      integer ntlsr, nclsr
+
+      ntlsr = uparam(5) !freq of TLS re-distancing
+      nclsr = uparam(6) !freq of CLS re-distancing
+
+      call LS_default_driver(ntlsr,nclsr)
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userqtl ! Set thermal divergence
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat()   ! This routine to modify element vertices
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2()  ! This routine to modify mesh coordinates
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'AVM'
+      include 'SVV'
+
+      real eps,dt_cls_in,dt_tls_in
+      integer nsteps_cls, nsteps_tls
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      integer ifdebug
+
+      integer ie,ntot,ifc
+      real xsum,xavg,asum
+
+      ntot = lx1*ly1*lz1*nelt
+
+      eps = 1.25 !4.0/(lx1-1.0)
+      nsteps_cls = uparam(1)
+      nsteps_tls = uparam(2)
+      ifld_cls = 2
+      ifld_tls = 3
+      ifld_clsr = 4
+      ifld_tlsr = 5
+      dt_cls_in = dt * uparam(3)
+      dt_tls_in = dt * uparam(4)
+      ifdebug = 0
+      call ls_init(nsteps_cls,nsteps_tls,eps,
+     $             dt_cls_in,dt_tls_in,
+     $             ifld_cls,ifld_clsr,
+     $             ifld_tls,ifld_tlsr,ifdebug)
+
+c---------------------------------------------------      
+c     This section to specify user defined parameters
+c     for AVM/SVV. Leave commented to use default parameters
+c     parameters. 
+
+      !fluid
+      svv_c0(1) = 1.0
+
+      svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(1) = 1.5
+      ! svv_k1(1) = 1.5
+      ! ifnlsvv(1) = .true.
+
+      ! avm_c1(1) = 1.0
+      ! avm_ncut(1) = 1.0
+      ! icont(1) = .false.
+      ifupwindsvv(ifld_cls) = .true.
+
+c     scalar 2      
+      svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(2) = 1.5
+      ! svv_k1(2) = 1.5
+      ! ifnlsvv(2) = .false.
+      ifupwindsvv(ifld_tls) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(3) = 1.5
+      ! svv_k1(3) = 1.5
+      ! ifnlsvv(3) = .false.
+      ! ifupwindsvv(ifld_clsr) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(4) = 1.5
+      ! svv_k1(4) = 1.5
+      ! ifnlsvv(4) = .false.
+      ! ifupwindsvv(ifld_tlsr) = .true.
+
+      do ie=1,nelv
+        do ifc=1,2*ndim
+          call fcsum2(xsum,asum,xm1,ie,ifc)
+          xavg = xsum/asum
+          if(cbc(ifc,ie,1).eq.'W  ')then
+            if(abs(xavg-20.5).lt.0.75+1e-4)then
+              cbc(ifc,ie,2) = 't  '
+            endif
+          endif
+        enddo
+      enddo
+      call count_boundaries
+c--------------------------------------------------
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      
+      return
+      end
+c---------------------------------------------------------------------

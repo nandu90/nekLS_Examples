@@ -1,0 +1,88 @@
+base.rea
+2                     spatial dimension (will create box.re2)
+6                      number of fields
+#
+#    comments: two dimensional periodic hill
+#
+#========================================================
+#
+Box                                       
+-79 -100                            Nelx  Nely
+0 19.75 1.                        x0 x1 ratio
+5 30 1.			      y0 y1 ratio
+shl,shl,E  ,O                     BC's
+I  ,I  ,E  ,I   
+I  ,I  ,E  ,I   
+t  ,t  ,E  ,t   
+I  ,I  ,E  ,I   
+I  ,I  ,E  ,I
+Box                                       
+-79 -20                            Nelx  Nely
+0 19.75 1.                        x0 x1 ratio
+0 5 1.			      y0 y1 ratio
+shl,E  ,shl,E                     BC's
+I  ,E  ,I  ,E   
+I  ,E  ,I  ,E   
+t  ,E  ,t  ,E   
+I  ,E  ,I  ,E   
+I  ,E  ,I  ,E
+Box                                       
+-1 -20                            Nelx  Nely
+19.75 20 1.                        x0 x1 ratio
+0 5 1.			      y0 y1 ratio
+E  ,E  ,shl,shl                     BC's
+E  ,E  ,I  ,t   
+E  ,E  ,I  ,I   
+E  ,E  ,t  ,t   
+E  ,E  ,I  ,I   
+E  ,E  ,I  ,I
+Box                                       
+-4 -20                            Nelx  Nely
+20 21 1.                        x0 x1 ratio
+0 5 1.			      y0 y1 ratio
+E  ,E  ,shl,E                     BC's
+E  ,E  ,I  ,E   
+E  ,E  ,I  ,E   
+E  ,E  ,t  ,E   
+E  ,E  ,I  ,E   
+E  ,E  ,I  ,E
+Box                                       
+-1 -20                            Nelx  Nely
+21 21.25 1.                        x0 x1 ratio
+0 5 1.			      y0 y1 ratio
+E  ,E  ,shl,shl                     BC's
+E  ,E  ,I  ,t   
+E  ,E  ,I  ,I   
+E  ,E  ,t  ,t   
+E  ,E  ,I  ,I   
+E  ,E  ,I  ,I
+Box                                       
+-79 -20                            Nelx  Nely
+21.25 42 1.                        x0 x1 ratio
+0 5 1.			      y0 y1 ratio
+E  ,shl,shl,E                     BC's
+E  ,I  ,I  ,E   
+E  ,I  ,I  ,E   
+E  ,t  ,t  ,E   
+E  ,I  ,I  ,E   
+E  ,I  ,I  ,E
+Box                                       
+-79 -100                            Nelx  Nely
+21.25 42 1.                        x0 x1 ratio
+5 30 1.			      y0 y1 ratio
+shl,shl,E  ,O                     BC's
+I  ,I  ,E  ,I   
+I  ,I  ,E  ,I   
+t  ,t  ,E  ,t   
+I  ,I  ,E  ,I   
+I  ,I  ,E  ,I
+Box                                       
+-4 -100                            Nelx  Nely
+20 21 1.                        x0 x1 ratio
+5 30 1.			      y0 y1 ratio
+shl,shl,E  ,v                     BC's
+t  ,t  ,E  ,t   
+I  ,I  ,E  ,I   
+t  ,t  ,E  ,t   
+I  ,I  ,E  ,I   
+I  ,I  ,E  ,I
