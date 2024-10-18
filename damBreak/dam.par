@@ -5,13 +5,13 @@
 #startFrom = dam.fld
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 100000 #12000 #1000 #16000 #4000 #400 #400 #200000
+numSteps = 10000 #12000 #1000 #16000 #4000 #400 #400 #200000
 #endTime = 2 #10e-4
 
 dt = 10.0e-04
-timeStepper = bdf2 #With bdf2 SF does not work well
+timeStepper = bdf1 #With bdf2 SF does not work well
 variabledt = yes
-targetCFL = 2.0
+targetCFL = 0.5
 extrapolation = OIFS
 
 #writeControl = runTime

@@ -15,6 +15,7 @@ c-----------------------------------------------------------------------
 
       real Re, We, Fr, rhoratio, muratio
       real udim, charl, rhol, mul, gdim, gamm
+      real nul, nug
       real rhog,mug
       real psi
       integer icalld
@@ -35,6 +36,8 @@ c-----------------------------------------------------------------------
       rhog = 1.2
       mul = 1e-3
       mug = 1.8e-5
+      nul = mul/rhol
+      nug = mug/rhog
       charl = 0.05715
 
       !https://www.sciencedirect.com/science/article/pii/S0021999197958472
@@ -239,7 +242,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug
 
-      eps = 1.25 !4.0/(lx1-1.0)
+      eps = 4.0/(lx1-1.0)
       nsteps_cls = uparam(1)
       nsteps_tls = uparam(2)
       ifld_cls = 2
