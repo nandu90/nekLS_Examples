@@ -2,7 +2,7 @@
 # nek parameter file
 #
 [GENERAL]
-startFrom = crucible.fld
+#startFrom = crucible.fld
 stopAt = numSteps
 #stopAt = endTime
 numSteps = 100000 #100000 #10000 #00000 #12000 #1000 #16000 #4000 #400 #400 #200000
@@ -15,14 +15,14 @@ timeStepper = bdf2 #With bdf2 SF does not work well
 #extrapolation = OIFS
 
 #writeControl = runTime
-writeInterval = 10000
+writeInterval = 1000
 
 userParam01 = 20       #Number of CLS re-distancing steps
 userParam02 = 200     #Number of TLS re-distancing steps
 userParam03 = 10.0    #dt factor for CLSR
-userParam04 = 200.0     #dt factor for TLSR
-userParam05 = 1000     #Freq of TLSR
-userParam06 = 500      #Freq of CLSR
+userParam04 = 500.0     #dt factor for TLSR
+userParam05 = 100     #Freq of TLSR
+userParam06 = 50      #Freq of CLSR
 
 #filtering = hpfrt
 #filterModes = 1

@@ -33,7 +33,7 @@ c-----------------------------------------------------------------------
 !     similar to RANS. Will avoid confusion
 
       charl = 6.57e-3 !bubble effective dia
-      gdim = 1.0
+      gdim = 5.0
 
       rhol = 970.0
       mul = 1.0
@@ -96,7 +96,7 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      ! call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
+      call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
@@ -156,7 +156,7 @@ c-----------------------------------------------------------------------
       uz   = 0.0
       temp = 0.0
 
-      xx = abs(xm1(ix,iy,iz,e))
+      xx = xm1(ix,iy,iz,e)
 
       if(ifield.eq.ifld_clsr)then
         temp = t(ix,iy,iz,e,ifld_cls-1)
@@ -164,13 +164,13 @@ c-----------------------------------------------------------------------
 
       if(cbc(iside,e,1).eq.'v  ')then
         ux = 0.0
-        uy = 0.5*(tanh(5.0*PI*(xx-0.5)))-0.5
+        uy = 0.5*(tanh(2.0*PI*(abs(xx)-0.5)))-0.5
         uz = 0.0
       endif
 
       if(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
         if(cbc(iside,e,ifld_cls).eq.'t  ')then
-          temp = 1.0 + 0.5*(tanh(5.0*PI*(xx-0.5)))-0.5
+          temp = 1.0 + 0.5*(tanh(2.0*PI*(abs(xx)-0.5)))-0.5
         endif
       endif
 
@@ -209,7 +209,7 @@ c-----------------------------------------------------------------------
 
       phiy = 30 - yy
       temp = phiy
-      temp2 = sqrt((xx)**2.0 + (yy-10.0)**2.0)-0.75
+      temp2 = sqrt((xx)**2.0 + (yy-10.0)**2.0)-0.5
       temp = min(temp,temp2)
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
@@ -278,7 +278,7 @@ c-----------------------------------------------------------------------
 
       ntot = lx1*ly1*lz1*nelt
 
-      eps = 1.25 !4.0/(lx1-1.0)
+      eps = 4.0/(lx1-1.0)
       nsteps_cls = uparam(1)
       nsteps_tls = uparam(2)
       ifld_cls = 2
