@@ -33,7 +33,8 @@ c-----------------------------------------------------------------------
 !     similar to RANS. Will avoid confusion
 
       charl = 6.57e-3 !bubble effective dia
-      gdim = 5.0
+      charl = 1e-3 !inlet orifice diameter
+      gdim = 10.0
 
       rhol = 970.0
       mul = 1.0
@@ -46,6 +47,7 @@ c-----------------------------------------------------------------------
       gamm = 40.0e-3
       
       udim = 13.15e-3
+      udim = sqrt(gdim*charl)
       
       Re = rhol*udim*charl/mul
       Fr = udim**2.0/(gdim*charl)

@@ -15,7 +15,7 @@ timeStepper = bdf2 #With bdf2 SF does not work well
 #extrapolation = OIFS
 
 #writeControl = runTime
-writeInterval = 10000
+writeInterval = 1000
 
 userParam01 = 20       #Number of CLS re-distancing steps
 userParam02 = 200     #Number of TLS re-distancing steps
