@@ -15,7 +15,10 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      real Re, We, Fr, rhoratio, muratio, nuratio
+      real Re, We, Fr, rhoratio, muratio
+      real udim, charl, rhol, mul, gdim, gamm
+      real nul, nug
+      real rhog,mug
       real psi
       integer icalld
       save icalld
@@ -29,24 +32,34 @@ c-----------------------------------------------------------------------
 !     To Do: change the flow, so that this routine is called
 !     similar to RANS. Will avoid confusion
 
-      Re = uparam(7) 
-      We = uparam(8)
-      Fr = uparam(9)
-      rhoratio = 1.0/967.0
-      !kinematic viscosity of air: 14.8cSt
-      !https://resources.system-analysis.cadence.com/blog/msa2022-the-relationship-between-the-kinematic-viscosity-of-air-and-temperature
-      !kinematic viscosity of silicone oil: 10000 cSt
-      !https://www.sigmaaldrich.com/US/en/product/aldrich/378402
-      ! muratio = 3.62e-6
-      nuratio = 14.8/10000.0
+      charl = 6.57e-3 !bubble effective dia
+      gdim = 1.0
+
+      rhol = 970.0
+      mul = 1.0
+      nul = mul/rhol
+      
+      rhog = 1.1839
+      nug = 1.562e-5
+      mug = nug * rhog
+
+      gamm = 40.0e-3
+      
+      udim = 13.15e-3
+      
+      Re = rhol*udim*charl/mul
+      Fr = udim**2.0/(gdim*charl)
+      We = charl*rhol*udim**2.0/gamm
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
         psi = max(0.0,psi)
         psi = min(1.0,psi)
-        utrans = ((1.0-psi)*rhoratio+psi)
-        udiff = ((1.0-psi)*nuratio+psi)/Re
-        t(ix,iy,iz,e,5) = utrans
+        utrans = ((1.0-psi)*rhog + psi*rhol)/rhol
+        !in non-dimensional form you must have kinematic 
+        !viscosity here
+        udiff = ((1.0-psi)*nug + psi*nul)/nul/Re
+        vtrans0(ix,iy,iz,e) = rhog/rhol
       else
         utrans = 1.0
         udiff = 1e-10
@@ -83,7 +96,7 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
+      ! call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
@@ -134,6 +147,8 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer e
 
+      real xx
+
       e = gllel(eg)
 
       ux   = 0.0
@@ -141,16 +156,22 @@ c-----------------------------------------------------------------------
       uz   = 0.0
       temp = 0.0
 
-      if(cbc(iside,e,1).eq.'v  ')then
-        ux = 0.0
-        uy = -1.0
-        uz = 0.0
-        if(ifield.eq.ifld_cls)temp = 0.0
-      endif
-      if(ifield.eq.ifld_cls)temp = 0.0
+      xx = abs(xm1(ix,iy,iz,e))
 
       if(ifield.eq.ifld_clsr)then
         temp = t(ix,iy,iz,e,ifld_cls-1)
+      endif
+
+      if(cbc(iside,e,1).eq.'v  ')then
+        ux = 0.0
+        uy = 0.5*(tanh(5.0*PI*(xx-0.5)))-0.5
+        uz = 0.0
+      endif
+
+      if(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
+        if(cbc(iside,e,ifld_cls).eq.'t  ')then
+          temp = 1.0 + 0.5*(tanh(5.0*PI*(xx-0.5)))-0.5
+        endif
       endif
 
       if(ifield.eq.1)then
@@ -186,12 +207,9 @@ c-----------------------------------------------------------------------
       uy = 0.0
       uz = 0.0
 
-      phiy = 20.5 - yy
-      if(xx.gt.20.0-1e-6 .and. xx.lt.21.0+1e-6)then
-        phiy = 4.5 - yy
-      endif
+      phiy = 30 - yy
       temp = phiy
-      temp2 = sqrt((xx-20.5)**2.0 + (yy-5.0)**2.0)-1.0
+      temp2 = sqrt((xx)**2.0 + (yy-10.0)**2.0)-0.75
       temp = min(temp,temp2)
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
@@ -208,6 +226,8 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
 
       integer ntlsr, nclsr
+
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
       ntlsr = uparam(5) !freq of TLS re-distancing
       nclsr = uparam(6) !freq of CLS re-distancing
@@ -248,8 +268,13 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug
 
-      integer ie,ntot,ifc
+      integer ie,ntot,ifc,i
       real xsum,xavg,asum
+
+      real xmin,xmax,ymin,ymax
+      real glmin, glmax
+      real inletL, inletL2, theta, rinfluence
+      real fac, arm, xx, yy
 
       ntot = lx1*ly1*lz1*nelt
 
@@ -274,7 +299,7 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      svv_c0(1) = 1.0
+      svv_c0(1) = 5.0
 
       svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
@@ -311,19 +336,47 @@ c     scalar 3
       ! ifnlsvv(4) = .false.
       ! ifupwindsvv(ifld_tlsr) = .true.
 
-      do ie=1,nelv
-        do ifc=1,2*ndim
-          call fcsum2(xsum,asum,xm1,ie,ifc)
-          xavg = xsum/asum
-          if(cbc(ifc,ie,1).eq.'W  ')then
-            if(abs(xavg-20.5).lt.0.75+1e-4)then
-              cbc(ifc,ie,2) = 't  '
-            endif
-          endif
-        enddo
-      enddo
+      ! do ie=1,nelv
+      !   do ifc=1,2*ndim
+      !     call fcsum2(xsum,asum,xm1,ie,ifc)
+      !     xavg = xsum/asum
+      !     if(cbc(ifc,ie,1).eq.'W  ')then
+      !       if(abs(xavg-20.5).lt.0.75+1e-4)then
+      !         cbc(ifc,ie,2) = 't  '
+      !       endif
+      !     endif
+      !   enddo
+      ! enddo
       call count_boundaries
 c--------------------------------------------------
+  
+      !create a 45 degree angle
+      xmin = glmin(xm1,ntot)
+      xmax = glmax(xm1,ntot)
+      call cadd(xm1,-(xmax-xmin)/2.0,ntot)
+    
+      inletL = 2.0
+      inletL2 = inletL/2.0
+      theta = PI/4.0
+
+      do i=1,ntot
+        rinfluence = sqrt(xm1(i,1,1,1)**2 + (ym1(i,1,1,1)-10.0)**2.0)
+        rinfluence = rinfluence/inletL2
+        fac = 0.5 - 0.5 * tanh((PI/6.0)*(rinfluence-5.0))
+
+        xx = xm1(i,1,1,1)/inletL2
+        arm = xx/cos(theta)
+        yy = arm * sin(theta) *fac * inletL2
+        ym1(i,1,1,1) = ym1(i,1,1,1) + yy
+      enddo
+
+      !fix the corner b/w inlet and shl
+      call fixcorners('v  ','shl')
+
+      !fix the corner b/w inlet and wall to t for ifld_cls
+      ! call fixcornerst('v  ','W  ',ifld_cls)
+
+      
       return
       end
 c-----------------------------------------------------------------------
@@ -337,3 +390,68 @@ c-----------------------------------------------------------------------
       return
       end
 c---------------------------------------------------------------------
+      subroutine extrappr(pe,p,plag,plag1)
+C
+C     Pressure extrapolation
+C
+      INCLUDE 'SIZE'
+      INCLUDE 'SOLN'
+      INCLUDE 'TSTEP'
+
+      real  p    (lx2,ly2,lz2,1)
+     $     ,pe   (lx2,ly2,lz2,1)
+     $     ,plag (lx2,ly2,lz2,1)
+     $     ,plag1(lx2,ly2,lz2,1)
+
+      iord_ext = 1
+      istp_str = 10
+      ntot2 = lx2*ly2*lz2*nelv
+
+      dt0 = dtlag(1)
+      dt1 = dtlag(2)
+      dt2 = dtlag(3)
+
+      dts =  dt1 + dt2
+      dta =  dt0 / dt1
+      dtb =  dt1 / dt2
+      dtc =  dt0 / dt2
+      dtd =  dts / dt1
+      dte =  dt0 / dts
+C
+      if     (istep.le.istp_str.and. nbd.le.3 .or. iord_ext.eq.1) then
+
+         call copy(pe,  p,ntot2)
+
+      elseif (istep.gt.istp_str.and. nbd.le.3 .and. iord_ext.eq.2) then
+
+         const = dt0/dt1
+
+         do i=1,ntot2
+            pn            = p   (i,1,1,1)
+            pnm1          = plag(i,1,1,1)
+            pe  (i,1,1,1) = pn   + const*(pn  -pnm1)
+         enddo
+
+      elseif (istep.gt.10.and. nbd.le.3 .and. iord_ext.eq.3) then
+
+         const3=  dte*(dtb + dtc)
+         const2= -dta*(1.0 + dtb + dtc)
+         const1=  1.0 - const2 - const3
+
+         do i=1,ntot2
+            pn            = p    (i,1,1,1)
+            pnm1          = plag (i,1,1,1)
+            pnm2          = plag1(i,1,1,1)
+            pe  (i,1,1,1) = const1*pn + const2*pnm1 - const3*pnm2
+         enddo
+
+      elseif (nbd.gt.3) then
+         WRITE (6,*) 'Pressure extrapolation cannot be completed'
+         WRITE (6,*) 'Try a lower-order temporal scheme'
+         call exitt
+      endif
+
+  3   format(A,1p4e17.9,I4)
+
+      return
+      end
