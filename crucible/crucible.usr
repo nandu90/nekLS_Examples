@@ -280,7 +280,7 @@ c-----------------------------------------------------------------------
 
       ntot = lx1*ly1*lz1*nelt
 
-      eps = 4.0/(lx1-1.0)
+      eps = 6.0/(lx1-1.0)
       nsteps_cls = uparam(1)
       nsteps_tls = uparam(2)
       ifld_cls = 2
