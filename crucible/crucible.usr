@@ -150,6 +150,7 @@ c-----------------------------------------------------------------------
       integer e
 
       real xx
+      real func
 
       e = gllel(eg)
 
@@ -164,15 +165,21 @@ c-----------------------------------------------------------------------
         temp = t(ix,iy,iz,e,ifld_cls-1)
       endif
 
+      func = 0.5*(tanh(1.5*PI*(abs(xx)-0.4)))-0.5
       if(cbc(iside,e,1).eq.'v  ')then
         ux = 0.0
-        uy = 0.5*(tanh(2.0*PI*(abs(xx)-0.5)))-0.5
+        ! uy = 0.5*(tanh(2.0*PI*(abs(xx)-0.5)))-0.5
+        uy = func
+        uy = uy * 0.05
         uz = 0.0
       endif
 
       if(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
-        if(cbc(iside,e,ifld_cls).eq.'t  ')then
-          temp = 1.0 + 0.5*(tanh(2.0*PI*(abs(xx)-0.5)))-0.5
+        if(cbc(iside,e,ifld_cls).eq.'t  ' 
+     $   .and. cbc(iside,e,1).eq.'v  ')then
+          temp = 1.0 + func
+        else if(cbc(iside,e,ifld_cls).eq.'t  ')then
+          temp = t(ix,iy,iz,e,ifld_cls-1)
         endif
       endif
 
@@ -199,6 +206,7 @@ c-----------------------------------------------------------------------
       real xx,yy,heaviside
       real phix,phiy
       real temp2
+      real radius
 
       e = gllel(eg)
 
@@ -211,12 +219,17 @@ c-----------------------------------------------------------------------
 
       phiy = 30 - yy
       temp = phiy
-      temp2 = sqrt((xx)**2.0 + (yy-10.0)**2.0)-0.5
+      radius = 0.5
+      temp2 = sqrt((xx)**2.0 + (yy-10.0)**2.0)-radius
       temp = min(temp,temp2)
+
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
       elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
         temp = heaviside(ix,iy,iz,e,temp,0.0)
+        if(xx.le.-1.0 .and.yy .le.20.0)then
+          temp = 1.0
+        endif
       endif
       
       return
@@ -303,7 +316,7 @@ c     parameters.
       !fluid
       svv_c0(1) = 5.0
 
-      svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      svv_c0(ifld_cls) = 2.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
@@ -315,7 +328,7 @@ c     parameters.
       ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      svv_c0(ifld_tls) = 2.0                  !ifld_tls
       ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5

@@ -11,7 +11,7 @@ Box
 0 30.0 1.                        x0 x1 ratio
 10 50 1.			      y0 y1 ratio
 W  ,W  ,E  ,O                     BC's
-I  ,I  ,E  ,I   
+t  ,t  ,E  ,I   
 I  ,I  ,E  ,I   
 t  ,t  ,E  ,t   
 I  ,I  ,E  ,I   
@@ -20,16 +20,16 @@ Box
 0 30 1.                        x0 x1 ratio
 0 10 1.			      y0 y1 ratio
 W  ,E  ,W  ,E                     BC's
-I  ,E  ,I  ,E   
+t  ,E  ,t  ,E   
 I  ,E  ,I  ,E   
 t  ,E  ,t  ,E   
 I  ,E  ,I  ,E   
 Box                                       
--8 -20                            Nelx  Nely
+-16 -20                            Nelx  Nely
 30 32 1.                        x0 x1 ratio
 0 10 1.			      y0 y1 ratio
 E  ,E  ,W  ,v                     BC's
-E  ,E  ,I  ,t   
+E  ,E  ,t  ,t   
 E  ,E  ,I  ,I   
 E  ,E  ,t  ,t   
 E  ,E  ,I  ,I   
@@ -38,7 +38,7 @@ Box
 32 62 1.                        x0 x1 ratio
 0 10 1.			      y0 y1 ratio
 E  ,W  ,W  ,E                     BC's
-E  ,I  ,I  ,E   
+E  ,t  ,t  ,E   
 E  ,I  ,I  ,E   
 E  ,t  ,t  ,E   
 E  ,I  ,I  ,E   
@@ -47,7 +47,7 @@ Box
 32 62 1.                        x0 x1 ratio
 10 50 1.			      y0 y1 ratio
 W  ,W  ,E  ,O                     BC's
-I  ,I  ,E  ,I   
+t  ,t  ,E  ,I   
 I  ,I  ,E  ,I   
 t  ,t  ,E  ,t   
 I  ,I  ,E  ,I   
