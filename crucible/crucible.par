@@ -5,13 +5,13 @@
 startFrom = crucible.fld
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 1000000 #100000 #10000 #00000 #12000 #1000 #16000 #4000 #400 #400 #200000
+numSteps = 10000000 #100000 #10000 #00000 #12000 #1000 #16000 #4000 #400 #400 #200000
 #endTime = 2 #10e-4
 
-dt = 800.0e-06
+dt = 400.0e-06
 timeStepper = bdf2 #With bdf2 SF does not work well
-#variabledt = yes
-#targetCFL = 0.1
+variabledt = yes
+targetCFL = 0.01
 #extrapolation = OIFS
 
 #writeControl = runTime
@@ -19,8 +19,8 @@ writeInterval = 10000
 
 userParam01 = 20       #Number of CLS re-distancing steps
 userParam02 = 200     #Number of TLS re-distancing steps
-userParam03 = 1.0    #dt factor for CL
-userParam04 = 10.0     #dt factor for TLSR
+userParam03 = 2.0    #dt factor for CL
+userParam04 = 20.0     #dt factor for TLSR
 userParam05 = 1000     #Freq of TLSR
 userParam06 = 200      #Freq of CLSR
 
