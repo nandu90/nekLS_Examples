@@ -1,4 +1,5 @@
       include "experimental/lvlSet.f"
+      include "lineplot.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -205,6 +206,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
 
       integer ntlsr, nclsr
+      real pta(3),ptb(3)
 
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
@@ -213,6 +215,24 @@ c-----------------------------------------------------------------------
 
       call LS_default_driver(ntlsr,nclsr)
       
+      if(mod(istep,5000).eq.0)then
+        pta(1) = 0.0
+        pta(2) = 0.0
+        pta(3) = 0.0
+        ptb(1) = 5.0
+        ptb(2) = 0.0
+        ptb(3) = 0.0
+        call lineplot(pta,ptb,1001)
+
+        pta(1) = 0.0
+        pta(2) = 0.0
+        pta(3) = 0.0
+        ptb(1) = 0.0
+        ptb(2) = 1.25
+        ptb(3) = 0.0
+        call lineplot(pta,ptb,1001)
+      endif
+
       return
       end
 c-----------------------------------------------------------------------

@@ -5,13 +5,13 @@
 #startFrom = dam.fld
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 100000 #12000 #1000 #16000 #4000 #400 #400 #200000
+numSteps = 200000 #12000 #1000 #16000 #4000 #400 #400 #200000
 #endTime = 2 #10e-4
 
-dt = 10.0e-05
+dt = 5.0e-05
 timeStepper = bdf2 #With bdf2 SF does not work well
-#variabledt = yes
-#targetCFL = 0.5
+variabledt = yes
+targetCFL = 0.01
 #extrapolation = OIFS
 
 #writeControl = runTime
@@ -19,10 +19,10 @@ writeInterval = 1000
 
 userParam01 = 20       #Number of CLS re-distancing steps
 userParam02 = 200     #Number of TLS re-distancing steps
-userParam03 = 1.0    #dt factor for CLSR
-userParam04 = 5.0     #dt factor for TLSR
-userParam05 = 100     #Freq of TLSR
-userParam06 = 50      #Freq of CLSR
+userParam03 = 2.0    #dt factor for CLSR
+userParam04 = 10.0     #dt factor for TLSR
+userParam05 = 200     #Freq of TLSR
+userParam06 = 100      #Freq of CLSR
 
 #filtering = hpfrt
 #filterModes = 1
