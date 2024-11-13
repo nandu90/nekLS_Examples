@@ -8,6 +8,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 from CoolProp.CoolProp import PropsSI
 from scipy.optimize import curve_fit
+import sympy as sym
 
 
 def main():
@@ -46,6 +47,20 @@ def main():
     We = rhol*U**2*L/gamma
     print("Weber Number =",We)
     
+
+    #Get the derivative of Spalding Wall Function 
+    #https://www.sciencedirect.com/science/article/pii/S030193221100067X
+    
+    kappa = sym.Symbol('kappa')
+    E = sym.Symbol('E')
+    uplus = sym.Symbol('uplus')
+    yplus = uplus + (1/E)*(sym.exp(kappa * uplus) - 1 - kappa*uplus - (kappa*uplus)**2/math.factorial(2) - (kappa*uplus)**3/math.factorial(3))
+    sym.pprint(yplus)
+
+    dydu = sym.diff(yplus, uplus)
+    sym.pprint(dydu)
+    
+
     return
 
 if __name__=="__main__":
