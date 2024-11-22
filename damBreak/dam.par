@@ -2,10 +2,10 @@
 # nek parameter file
 #
 [GENERAL]
-#startFrom = dam.fld
+startFrom = dam.fld
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 200000 #12000 #1000 #16000 #4000 #400 #400 #200000
+numSteps = 500000 #12000 #1000 #16000 #4000 #400 #400 #200000
 #endTime = 2 #10e-4
 
 dt = 5.0e-05
