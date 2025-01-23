@@ -1,5 +1,4 @@
       include "experimental/lvlSet.f"
-      include "lineplot.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -31,32 +30,34 @@ c-----------------------------------------------------------------------
 !     To Do: change the flow, so that this routine is called
 !     similar to RANS. Will avoid confusion
 
-      charl = 0.05715
       gdim = 9.81
-      rhol = 1000.0
-      rhog = 1.2
-      mul = 1e-3
-      mug = 1.8e-5 !/5.0
+      rhol = 1627.0       !
+      rhog = 0.622
+      mul = 2.2e-3
+      mug = 4.64e-5
       nul = mul/rhol
       nug = mug/rhog
-      charl = 0.05715
 
-      !https://www.sciencedirect.com/science/article/pii/S0021999197958472
-      udim = sqrt(gdim*charl)
 
-      Re = rhol*udim*charl/mul
-      Fr = udim**2.0/(gdim*charl)
-      gamm = 0.06
-      We = charl*rhol*udim**2.0/gamm
+      if(icalld.eq.0)then
+        icalld = 1
+        if(nio.eq.0)then
+          write(*,*)"Characteristic length",charl
+          write(*,*)"Characteristic velocity",udim
+          write(*,*)"Reynolds number",Re
+          write(*,*)"Froude number",Fr
+          write(*,*)"Weber number",We
+        endif
+      endif
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
         psi = max(0.0,psi)
         psi = min(1.0,psi)
-        utrans = ((1.0-psi)*rhog + psi*rhol)/rhol
-        !in non-dimensional form you must have kinematic 
+        utrans = ((1.0-psi)*rhog + psi*rhol)
+        !in non-dimensional form you must have kinematic
         !viscosity here
-        udiff = ((1.0-psi)*nug + psi*nul)/nul/Re
+        udiff = ((1.0-psi)*mug + psi*mul)
         vtrans0(ix,iy,iz,e) = rhog/rhol
       else
         utrans = 1.0
@@ -85,6 +86,9 @@ c-----------------------------------------------------------------------
 
       real svvx,svvy,svvz
 
+      real gvec(3)
+      real gamm
+
       e = gllel(eg)
 
       sfx = 0.0
@@ -94,13 +98,19 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
+      gvec(1) = 0.0
+      gvec(2) = 0.0
+      gvec(3) = -9.81
+
+      gamm = 0.01
+
+      call surfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      ffx = -sfx + svvx
-      ffy = -sfy -1./Fr + svvy
-      ffz = -sfz
+      ffx = -sfx + gvec(1) + svvx
+      ffy = -sfy + gvec(2) + svvy
+      ffz = -sfz + gvec(3) + svvz
 
       return
       end
@@ -147,14 +157,17 @@ c-----------------------------------------------------------------------
 
       e = gllel(eg)
 
-      ux   = 0.0
-      uy   = 0.0
-      uz   = 0.0
-      temp = 0.0
-
-      if(ifield.eq.ifld_clsr)then
-        temp = t(ix,iy,iz,e,ifld_cls-1)
+      !Inlet
+      if(cbc(iside,e,1).eq.'v  ')then
+        ux = 0.0
+        uy = 0.0
+        uz = -5.31
+        if(ifield.eq.ifld_cls) temp = 0.0
       endif
+
+      ! if(ifield.eq.ifld_clsr)then
+      !   temp = t(ix,iy,iz,e,ifld_cls-1)
+      ! endif
 
       if(ifield.eq.1)then
         call traction_ls(ix,iy,iz,e,iside)
@@ -176,21 +189,21 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      real xx,yy,heaviside
-      real phix,phiy
+      real xx,yy,heaviside,zz
+      real phix,phiy,phiz
 
       e = gllel(eg)
 
       xx = xm1(ix,iy,iz,e)
       yy = ym1(ix,iy,iz,e)
+      zz = zm1(ix,iy,iz,e)
 
       ux = 0.0
       uy = 0.0
       uz = 0.0
 
-      phix = 1.0 - xx
-      phiy = 1.0 - yy
-      temp = min(phix,phiy)
+      phiz = -0.07454340 - zz
+      temp = phiz
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
       elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
@@ -206,7 +219,9 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
 
       integer ntlsr, nclsr
-      real pta(3),ptb(3)
+      common /myoutflow/ d(lx1,ly1,lz1,lelt),m1(lx1*ly1*lz1,lelt)
+      real d, m1
+      real rq,uin
 
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
@@ -215,24 +230,10 @@ c-----------------------------------------------------------------------
 
       call LS_default_driver(ntlsr,nclsr)
       
-      if(mod(istep,5000).eq.0)then
-        pta(1) = 0.0
-        pta(2) = 0.0
-        pta(3) = 0.0
-        ptb(1) = 5.0
-        ptb(2) = 0.0
-        ptb(3) = 0.0
-        call lineplot(pta,ptb,1001)
-
-        pta(1) = 0.0
-        pta(2) = 0.0
-        pta(3) = 0.0
-        ptb(1) = 0.0
-        ptb(2) = 1.25
-        ptb(3) = 0.0
-        call lineplot(pta,ptb,1001)
-      endif
-
+      rq=4.0
+      uin = 0.
+      call turb_outflow(d,m1,rq,uin)
+      
       return
       end
 c-----------------------------------------------------------------------
@@ -265,7 +266,10 @@ c-----------------------------------------------------------------------
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
-      integer ifdebug, ifixCLSbdry
+      integer ifdebug
+      integer ie,ifc
+      integer ifixCLSbdry
+
 
       eps = 4.0/(lx1-1.0)
       nsteps_cls = uparam(1)
@@ -291,7 +295,7 @@ c     parameters.
       !fluid
       svv_c0(1) = 1.0
 
-      svv_c0(ifld_cls) = 2.0                 !ifld_cls
+      svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
@@ -303,7 +307,7 @@ c     parameters.
       ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls) = 2.0                  !ifld_tls
+      svv_c0(ifld_tls) = 1.0                  !ifld_tls
       ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
@@ -327,6 +331,42 @@ c     scalar 3
       ! ifupwindsvv(ifld_tlsr) = .true.
 
 c--------------------------------------------------
+      do ie=1,nelt
+        do ifc=1,2*ndim
+          if(bc(5,ifc,ie,1).eq.2)then
+            cbc(ifc,ie,1) = 'v  '
+            cbc(ifc,ie,ifld_cls) = 't  '
+            cbc(ifc,ie,ifld_tls) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 't  '
+            cbc(ifc,ie,ifld_tlsr) = 'I  '
+          elseif(bc(5,ifc,ie,1).eq.3)then
+            cbc(ifc,ie,1) = 'O  '
+            cbc(ifc,ie,ifld_cls) = 'I  '
+            cbc(ifc,ie,ifld_tls) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 'I  '
+            cbc(ifc,ie,ifld_tlsr) = 'I  '
+          elseif(bc(5,ifc,ie,1).eq.4)then
+            cbc(ifc,ie,1) = 'shl'
+            cbc(ifc,ie,ifld_cls) = 'I  '
+            cbc(ifc,ie,ifld_tls) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 'I  '
+            cbc(ifc,ie,ifld_tlsr) = 'I  '
+          elseif(bc(5,ifc,ie,1).eq.5)then !bottom
+            cbc(ifc,ie,1) = 'shl'
+            cbc(ifc,ie,ifld_cls) = 'I  '
+            cbc(ifc,ie,ifld_tls) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 'I  '
+            cbc(ifc,ie,ifld_tlsr) = 'I  '
+          elseif(bc(5,ifc,ie,1).eq.6)then !vessel
+            cbc(ifc,ie,1) = 'shl'
+            cbc(ifc,ie,ifld_cls) = 'I  '
+            cbc(ifc,ie,ifld_tls) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 'I  '
+            cbc(ifc,ie,ifld_tlsr) = 'I  '
+          endif
+        enddo
+      enddo
+
       return
       end
 c-----------------------------------------------------------------------
@@ -404,4 +444,3 @@ C
 
       return
       end
-
