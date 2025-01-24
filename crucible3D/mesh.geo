@@ -2,10 +2,10 @@
 SetFactory("OpenCASCADE");
 
 //Azimuthal resolution in each quadrant
-na = 8;
+na = 15;
 
 //Injector radial resolution
-ni = 10;
+ni = 20;
 gi = 1; //growth ratio
 
 //Layer 1 radial resolution (circle)
@@ -20,17 +20,17 @@ g2 = 0.95;
 
 //Layer 3 radial resolution (circle)
 r3 = 10.0;
-n3 = 16;
+n3 = 10;
 g3 = 0.95;
 
 //Layer 4 radial resolution (square)
 r4 = 18.0;
-n4 = 10;
+n4 = 5;
 g4 = 0.9;
 
 //Layer 5 radial resolution (circle)
 r5 = 24.5;
-n5 = 10;
+n5 = 5;
 g5 = 0.8;
 
 //3D extrusions
