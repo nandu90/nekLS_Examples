@@ -215,7 +215,7 @@ c-----------------------------------------------------------------------
 
       call LS_default_driver(ntlsr,nclsr)
       
-      if(mod(istep,5000).eq.0)then
+      if(mod(istep,100).eq.0)then
         pta(1) = 0.0
         pta(2) = 0.0
         pta(3) = 0.0

@@ -294,6 +294,8 @@ c-----------------------------------------------------------------------
       real inletL, inletL2, theta, rinfluence
       real fac, arm, xx, zz
 
+      integer ifixCLSbdry
+
       ntot = lx1*ly1*lz1*nelt
 
       eps = 2.0/(lx1-1.0)
@@ -306,10 +308,12 @@ c-----------------------------------------------------------------------
       dt_cls_in = dt * uparam(3)
       dt_tls_in = dt * uparam(4)
       ifdebug = 0
+      ifixCLSbdry = 0
+      
       call ls_init(nsteps_cls,nsteps_tls,eps,
      $             dt_cls_in,dt_tls_in,
      $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr,ifdebug)
+     $             ifld_tls,ifld_tlsr,ifdebug,ifixCLSbdry)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -367,21 +371,22 @@ c     scalar 3
       ! enddo
 c--------------------------------------------------
   
+      !Done in Gmsh using python script
       !create a 45 degree angle
-      inletL = 3.175
-      inletL2 = inletL/2.0
-      theta = PI/4.0
+      ! inletL = 3.175
+      ! inletL2 = inletL/2.0
+      ! theta = PI/4.0
 
-      do i=1,ntot
-        rinfluence = sqrt(xm1(i,1,1,1)**2 + (zm1(i,1,1,1)-10.0)**2.0)
-        rinfluence = rinfluence/inletL2
-        fac = 0.5 - 0.5 * tanh((PI/6.0)*(rinfluence-5.0))
+      ! do i=1,ntot
+      !   rinfluence = sqrt(xm1(i,1,1,1)**2 + (zm1(i,1,1,1))**2.0)
+      !   rinfluence = rinfluence/inletL2
+      !   fac = 0.5 - 0.5 * tanh((PI/6.0)*(rinfluence-1.5))
 
-        xx = xm1(i,1,1,1)/inletL2
-        arm = xx/cos(theta)
-        zz = arm * sin(theta) *fac * inletL2
-        zm1(i,1,1,1) = zm1(i,1,1,1) + zz
-      enddo
+      !   xx = xm1(i,1,1,1)/inletL2
+      !   arm = xx/cos(theta)
+      !   zz = arm * sin(theta) *fac * inletL2
+      !   zm1(i,1,1,1) = zm1(i,1,1,1) + zz
+      ! enddo
 
       !!fix the corner b/w inlet and shl
       !call fixcorners('v  ','shl')
