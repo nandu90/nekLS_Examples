@@ -1,0 +1,12 @@
+c
+c     USR ARRAYS for GJP method
+c
+      real gjpux(lx1,ly1,lz1,lelv)
+      real gjpuy(lx1,ly1,lz1,lelv)
+      real gjpuz(lx1,ly1,lz1,lelv)
+      real gjpt(lx1,ly1,lz1,lelv,ldimt)
+			real h2el(2*ldim, lelv)
+      
+      common /gjpsr/ gjpux, gjpuy, gjpuz,
+     $     gjpt, h2el
+

@@ -1,4 +1,5 @@
       include "experimental/lvlSet.f"
+      include "gjp.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -50,6 +51,8 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
+      include 'USRGJP'
+
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
@@ -64,6 +67,11 @@ c-----------------------------------------------------------------------
       if(ifield.eq.ifld_tlsr)then
         qvol = signls(ix,iy,iz,e)
       endif
+
+      if(ifield.eq.ifld_tls .or. ifield.eq.ifld_cls)then
+        qvol = qvol - gjpt(ix,iy,iz,e,ifield-1)
+      endif
+
 
       return
       end
@@ -163,11 +171,12 @@ c-----------------------------------------------------------------------
         open(unit=100,file='vol.dat',status='unknown')
       endif
 
+
       if(istep.eq.0)call outfld('  ')
 
       ntlsr = uparam(5)
       nclsr = uparam(6)
-      call LS_default_driver(ntlsr,nclsr)
+      ! call LS_default_driver(ntlsr,nclsr)
       
       if(mod(istep,100).eq.0)then
         rad = 0.3/2.0
@@ -200,6 +209,8 @@ c-----------------------------------------------------------------------
       if(istep.eq.nsteps)close(100)
       
       call velupdate
+
+      call compute_gjp(.false.,.true.)
 
       return
       end
@@ -294,6 +305,8 @@ c     scalar 3
       ifupwindsvv(ifld_tlsr) = .true.
 
 c--------------------------------------------------
+      call df_setup
+
       return
       end
 c-----------------------------------------------------------------------
@@ -302,6 +315,9 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
+      include 'USRGJP'
+
+      call get_h2el(h2el)
       
       return
       end
@@ -332,3 +348,49 @@ c---------------------------------------------------------------------
       return
       end
 c---------------------------------------------------------------------
+      subroutine compute_gjp(ifflow_gjp,ift_gjp)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'LVLSET'
+      include 'USRGJP'
+
+      integer is, ntot
+      integer icalld
+      save icalld
+      data icalld /0/
+
+      logical ifflow_gjp, ift_gjp
+
+      real smax,smin
+      real glmax,glmin
+
+      if(icalld.eq.0)then
+        icalld = 1
+      endif
+
+      ntot = lx1*ly1*lz1*nelv
+
+      if(ifflow_gjp)then
+        call gjpsource(gjpux,vx,h2el)
+        call gjpsource(gjpuy,vy,h2el)
+        if(if3d)call gjpsource(gjpuz,vz,h2el)
+        call opdssum (gjpux,gjpuy,gjpuz)
+        call opcolv(gjpux,gjpuy,gjpuz,binvm1)
+      endif
+
+      if(ift_gjp)then
+        do is=1,ldimt
+          if(is.eq.ifld_cls-1)then
+            call gjpsource(gjpt(1,1,1,1,is),t(1,1,1,1,is),h2el)
+            call dssum(gjpt(1,1,1,1,is),lx1,ly1,lz1)
+            ! call col2(gjpt(1,1,1,1,is),binvm1,ntot)
+            smax = glmax(gjpt(1,1,1,1,is),ntot)
+            smin = glmin(gjpt(1,1,1,1,is),ntot)
+            if(nio.eq.0)write(*,*)"t,max,min", is,smax,smin
+          endif
+        enddo
+      endif
+
+      return
+      end
