@@ -141,12 +141,18 @@ c-----------------------------------------------------------------------
       real xx,yy,deltael,eps,temp
       integer i,ntot
 
+      integer ntlsr, nclsr
+
       if(istep.eq.0)call outfld('  ')
+
+      ntlsr = uparam(5)
+      nclsr = uparam(6)
 
       if(istep.gt.0)then
         !This call invokes the external solver for 
         !advancing specified field
         call ls_drive(ifld_clsr)
+        ! call LS_default_driver(ntlsr,nclsr)
       endif
 
       if(istep.eq.nsteps)then
@@ -191,14 +197,14 @@ c-----------------------------------------------------------------------
       !Note - the normals in the cls re-distancing equation
       !are taken from the ifld_tls field
       eps = 4.0/(lx1-1.0)
-      nsteps_cls = 1
-      nsteps_tls = 0 !dummy
+      nsteps_cls = uparam(1)
+      nsteps_tls = uparam(2)
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
-      dt_cls_in = dt
-      dt_tls_in = dt  !dummy
+      dt_cls_in = dt * uparam(3)
+      dt_tls_in = dt * uparam(4)
       ifdebug = 0
       ifixCLSbdry = 1
       call ls_init(nsteps_cls,nsteps_tls,eps,
@@ -211,12 +217,44 @@ c     This section to specify user defined parameters
 c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
-      svv_c0(ifld_clsr) = 1.0
-      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0
-      ! svv_k0(ifld_clsr) = 1.5
-      ! svv_k1(ifld_clsr) = 1.5
-      ! ifnlsvv(ifld_clsr) = .false.
+      !fluid
+
+      svv_c0(1) = 1.0
+
+      svv_c0(ifld_cls) = 2.0                 !ifld_cls
+      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(1) = 1.5
+      ! svv_k1(1) = 1.5
+      ! ifnlsvv(1) = .true.
+
+      ! avm_c1(1) = 1.0
+      ! avm_ncut(1) = 1.0
+      ! icont(1) = .false.
+      ifupwindsvv(ifld_cls) = .true.
+
+c     scalar 2      
+      svv_c0(ifld_tls) = 2.0                  !ifld_tls
+      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(2) = 1.5
+      ! svv_k1(2) = 1.5
+      ! ifnlsvv(2) = .false.
+      ifupwindsvv(ifld_tls) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
+      svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(3) = 1.5
+      ! svv_k1(3) = 1.5
+      ! ifnlsvv(3) = .false.
       ! ifupwindsvv(ifld_clsr) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(4) = 1.5
+      ! svv_k1(4) = 1.5
+      ! ifnlsvv(4) = .false.
+      ! ifupwindsvv(ifld_tlsr) = .true.
 c--------------------------------------------------
 
       return
