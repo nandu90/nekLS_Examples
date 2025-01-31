@@ -1,0 +1,244 @@
+      include "experimental/lvlSet.f"
+c-----------------------------------------------------------------------
+      subroutine uservp(ix,iy,iz,eg) ! set variable properties
+      implicit none
+      integer ix,iy,iz,eg,e
+     
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+
+!     These routine is not called by external solver
+!     To Do: change the flow, so that this routine is called
+!     similar to RANS. Will avoid confusion
+
+      utrans = 1.0
+      udiff = cpfld(ifield,1)
+
+      if(ifavm(ifield-1))then
+        udiff = 1e-10       !must be tiny for hyperbolic
+      elseif(ifsvv(ifield-1))then
+        udiff = 1e-10      !must be tiny for hyperbolic
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userf(ix,iy,iz,eg) ! set acceleration term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      e = gllel(eg)
+
+      ffx = 0.0
+      ffy = 0.0
+      ffz = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userq(ix,iy,iz,eg) ! set source term
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      real signls
+
+      e = gllel(eg)
+      
+      qvol   = 0.0
+      avol = 0.0
+
+      if(ifield.eq.ifld_tlsr)then
+        qvol = signls(ix,iy,iz,e)
+      endif
+
+      call limit_cls(ix,iy,iz,e)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userbc(ix,iy,iz,iside,eg) ! set up boundary conditions
+      implicit none
+      integer ix,iy,iz,iside,eg
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+
+      ux   = 0.0
+      uy   = 0.0
+      uz   = 0.0
+      temp = 0.0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine useric(ix,iy,iz,eg) ! set up initial conditions
+      implicit none
+      integer ix,iy,iz,eg,e
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'NEKUSE'
+      
+      real xx,yy,rad,zz
+      real heaviside
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      e = gllel(eg)
+
+      ux = 0.0
+      uy = 0.0
+      uz = 0.0
+
+      rad = 0.25
+      xx = xm1(ix,iy,iz,e)
+      yy = ym1(ix,iy,iz,e)
+      zz = zm1(ix,iy,iz,e)
+
+      temp = sqrt(xx**2.0 + yy**2.0 + zz**2.0) - rad
+      
+      if(ifield.eq.ifld_tls)then
+        continue
+      elseif(ifield.eq.ifld_tlsr)then
+        continue
+      elseif(ifield.eq.ifld_cls)then
+        temp = heaviside(ix,iy,iz,e,temp,0.0)
+      elseif(ifield.eq.ifld_clsr)then
+        temp = heaviside(ix,iy,iz,e,temp,2.0)
+      endif
+      
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userchk()
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      real xx,yy,deltael,eps,temp
+      integer i,ntot
+
+      if(istep.eq.0)call outfld('  ')
+
+      if(istep.gt.0)then
+        !This call invokes the external solver for 
+        !advancing specified field
+        call ls_drive(ifld_clsr)
+      endif
+
+      if(istep.eq.nsteps)then
+        call out_normals
+      endif
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine userqtl ! Set thermal divergence
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat()   ! This routine to modify element vertices
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      ifflow = .false.
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat2()  ! This routine to modify mesh coordinates
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'AVM'
+      include 'SVV'
+
+      real eps,dt_cls_in,dt_tls_in
+      integer nsteps_cls, nsteps_tls
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      integer ifdebug, ifixCLSbdry
+
+      !Note - the normals in the cls re-distancing equation
+      !are taken from the ifld_tls field
+      eps = 4.0/(lx1-1.0)
+      nsteps_cls = 1
+      nsteps_tls = 0 !dummy
+      ifld_cls = 2
+      ifld_tls = 3
+      ifld_clsr = 4
+      ifld_tlsr = 5
+      dt_cls_in = dt
+      dt_tls_in = dt  !dummy
+      ifdebug = 0
+      ifixCLSbdry = 1
+      call ls_init(nsteps_cls,nsteps_tls,eps,
+     $             dt_cls_in,dt_tls_in,
+     $             ifld_cls,ifld_clsr,
+     $             ifld_tls,ifld_tlsr,ifdebug,ifixCLSbdry)
+
+c---------------------------------------------------      
+c     This section to specify user defined parameters
+c     for AVM/SVV. Leave commented to use default parameters
+c     parameters. 
+
+      svv_c0(ifld_clsr) = 1.0
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0
+      ! svv_k0(ifld_clsr) = 1.5
+      ! svv_k1(ifld_clsr) = 1.5
+      ! ifnlsvv(ifld_clsr) = .false.
+      ! ifupwindsvv(ifld_clsr) = .true.
+c--------------------------------------------------
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine out_normals
+      implicit none
+      include "SIZE"
+      include "TOTAL"
+      include "LVLSET"
+
+      call outpost(clsnr,clsns,clsnt,pr,t,'cls')
+
+      return
+      end
+
