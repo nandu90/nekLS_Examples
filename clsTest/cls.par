@@ -11,7 +11,7 @@ dt = 5e-04
 timeStepper = bdf2
 
 #writeControl = runTime
-writeInterval = 10
+writeInterval = 100
 
 [PROBLEMTYPE]
 variableProperties = yes

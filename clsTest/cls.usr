@@ -173,40 +173,44 @@ c-----------------------------------------------------------------------
       include 'AVM'
       include 'SVV'
 
-      real eps,dt_in
-      integer nsteps_ls
+      real eps,dt_cls_in,dt_tls_in
+      integer nsteps_cls, nsteps_tls
 
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
-      integer ifdebug
+      integer ifdebug, ifixCLSbdry
 
       !Note - the normals in the cls re-distancing equation
       !are taken from the ifld_tls field
-      eps = 0.5
-      nsteps_ls = 1
+      eps = 4.0/(lx1-1.0)
+      nsteps_cls = 1
+      nsteps_tls = 0 !dummy
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
-      dt_in = dt
+      dt_cls_in = dt
+      dt_tls_in = dt  !dummy
       ifdebug = 0
-      call ls_init(nsteps_ls,eps,dt_in,
+      ifixCLSbdry = 1
+      call ls_init(nsteps_cls,nsteps_tls,eps,
+     $             dt_cls_in,dt_tls_in,
      $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr,ifdebug)
+     $             ifld_tls,ifld_tlsr,ifdebug,ifixCLSbdry)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
 c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
-      svv_c0(ifld_clsr-1) = 1.0
-      ! svvcut(ifld_clsr-1) = (lx1-1.0)/2.0
-      ! svv_k0(ifld_clsr-1) = 1.5
-      ! svv_k1(ifld_clsr-1) = 1.5
-      ! ifnlsvv(ifld_clsr-1) = .false.
-      ifupwindsvv(ifld_clsr-1) = .true.
+      svv_c0(ifld_clsr) = 1.0
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0
+      ! svv_k0(ifld_clsr) = 1.5
+      ! svv_k1(ifld_clsr) = 1.5
+      ! ifnlsvv(ifld_clsr) = .false.
+      ! ifupwindsvv(ifld_clsr) = .true.
 c--------------------------------------------------
 
       return
