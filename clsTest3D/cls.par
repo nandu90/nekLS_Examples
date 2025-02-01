@@ -2,23 +2,24 @@
 # nek parameter file
 #
 [GENERAL]
+#startFrom = "cls.fld"
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 1000 #200000
+numSteps = 100 #200000
 #endTime = 1.0
 
 dt = 5e-04
 timeStepper = bdf2
 
 #writeControl = runTime
-writeInterval = 100
+writeInterval = 10
 
-userParam01 = 1       #Number of CLS re-distancing steps
-userParam02 = 1       #Number of TLS re-distancing steps
+userParam01 = 20       #Number of CLS re-distancing steps
+userParam02 = 200       #Number of TLS re-distancing steps
 userParam03 = 1.0     #dt factor for CLSR
 userParam04 = 1.0     #dt factor for TLSR
-userParam05 = 200     #Freq of TLSR
-userParam06 = 20      #Freq of CLSR
+userParam05 = 20     #Freq of TLSR
+userParam06 = 10      #Freq of CLSR
 
 [PROBLEMTYPE]
 variableProperties = yes
@@ -37,14 +38,14 @@ solver = none
 rhocp = 1.
 conductivity = 1.
 residualTol = 1e-8
-#regularization = none
+regularization = svv
 
 [SCALAR01] #tls field
 solver = none
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
-#regularization = avm
+regularization = svv
 
 [SCALAR02] #cls re-distancing field
 #solver = none
@@ -58,4 +59,4 @@ regularization = svv
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
-#regularization = svv
+regularization = svv

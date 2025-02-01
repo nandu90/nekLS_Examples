@@ -78,10 +78,23 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
 
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      integer e
+
+      e = gllel(eg)
+
       ux   = 0.0
       uy   = 0.0
       uz   = 0.0
       temp = 0.0
+
+      if(ifield.eq.ifld_clsr)then
+        temp = t(ix,iy,iz,e,ifld_cls-1)
+      endif
 
       return
       end
@@ -122,7 +135,7 @@ c-----------------------------------------------------------------------
       elseif(ifield.eq.ifld_cls)then
         temp = heaviside(ix,iy,iz,e,temp,0.0)
       elseif(ifield.eq.ifld_clsr)then
-        temp = heaviside(ix,iy,iz,e,temp,2.0)
+        temp = heaviside(ix,iy,iz,e,temp,0.0)
       endif
       
       return
@@ -148,16 +161,17 @@ c-----------------------------------------------------------------------
       ntlsr = uparam(5)
       nclsr = uparam(6)
 
-      if(istep.gt.0)then
+      ! if(istep.gt.0)then
         !This call invokes the external solver for 
         !advancing specified field
-        call ls_drive(ifld_clsr)
-        ! call LS_default_driver(ntlsr,nclsr)
-      endif
+        ! call ls_drive(ifld_clsr)
+        ! call ls_drive(ifld_tlsr,1)
+        call LS_default_driver(ntlsr,nclsr)
+      ! endif
 
-      if(istep.eq.nsteps)then
-        call out_normals
-      endif
+      ! if(istep.eq.nsteps)then
+      !   call out_normals
+      ! endif
       return
       end
 c-----------------------------------------------------------------------
@@ -206,7 +220,7 @@ c-----------------------------------------------------------------------
       dt_cls_in = dt * uparam(3)
       dt_tls_in = dt * uparam(4)
       ifdebug = 0
-      ifixCLSbdry = 1
+      ifixCLSbdry = 0
       call ls_init(nsteps_cls,nsteps_tls,eps,
      $             dt_cls_in,dt_tls_in,
      $             ifld_cls,ifld_clsr,
@@ -242,7 +256,7 @@ c     scalar 2
 
 c     scalar 3      
       svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
-      svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
