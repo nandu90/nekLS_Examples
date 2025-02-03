@@ -5,7 +5,7 @@
 #startFrom = "cls.fld"
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 100 #200000
+numSteps = 100 #00 #200000
 #endTime = 1.0
 
 dt = 5e-04
@@ -14,12 +14,8 @@ timeStepper = bdf2
 #writeControl = runTime
 writeInterval = 10
 
-userParam01 = 20       #Number of CLS re-distancing steps
-userParam02 = 200       #Number of TLS re-distancing steps
-userParam03 = 1.0     #dt factor for CLSR
-userParam04 = 1.0     #dt factor for TLSR
-userParam05 = 20     #Freq of TLSR
-userParam06 = 10      #Freq of CLSR
+userParam01 = 20     #Freq of TLSR
+userParam02 = 10     #Freq of CLSR
 
 [PROBLEMTYPE]
 variableProperties = yes

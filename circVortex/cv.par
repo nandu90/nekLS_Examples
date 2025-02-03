@@ -14,12 +14,8 @@ timeStepper = bdf2
 #writeControl = runTime
 writeInterval = 2000
 
-userParam01 = 10      #Number of CLS re-distancing steps
-userParam02 = 100     #Number of TLS re-distancing steps
-userParam03 = 0.1     #dt factor for CLSR
-userParam04 = 0.1     #dt factor for TLSR
-userParam05 = 1000    #Freq of TLSR
-userParam06 = 100     #Freq of CLSR
+userParam01 = 1000    #Freq of TLSR
+userParam02 = 100     #Freq of CLSR
 
 [PROBLEMTYPE]
 variableProperties = yes

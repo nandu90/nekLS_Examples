@@ -65,6 +65,8 @@ c-----------------------------------------------------------------------
         qvol = signls(ix,iy,iz,e)
       endif
 
+      call limit_cls(ix,iy,iz,e)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -76,10 +78,23 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
 
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      integer e
+
+      e = gllel(eg)
+
       ux   = 0.0
       uy   = 0.0
       uz   = 0.0
       temp = 0.0
+
+      if(ifield.eq.ifld_clsr)then
+        temp = t(ix,iy,iz,e,ifld_cls-1)
+      endif
 
       return
       end
@@ -92,7 +107,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
       
-      real xx,yy,rad
+      real xx,yy,rad,zz
       real heaviside
 
       common /ls_usr/ ifld_cls,ifld_clsr,
@@ -109,8 +124,9 @@ c-----------------------------------------------------------------------
       rad = 0.25
       xx = xm1(ix,iy,iz,e)
       yy = ym1(ix,iy,iz,e)
+      zz = zm1(ix,iy,iz,e)
 
-      temp = sqrt(xx**2.0 + yy**2.0) - rad
+      temp = sqrt(xx**2.0 + yy**2.0 + zz**2.0) - rad
       
       if(ifield.eq.ifld_tls)then
         continue
@@ -119,7 +135,7 @@ c-----------------------------------------------------------------------
       elseif(ifield.eq.ifld_cls)then
         temp = heaviside(ix,iy,iz,e,temp,0.0)
       elseif(ifield.eq.ifld_clsr)then
-        temp = heaviside(ix,iy,iz,e,temp,5.0)
+        temp = heaviside(ix,iy,iz,e,temp,0.0)
       endif
       
       return
@@ -138,18 +154,28 @@ c-----------------------------------------------------------------------
       real xx,yy,deltael,eps,temp
       integer i,ntot
 
-      if(istep.gt.0)then
+      integer ntlsr, nclsr
+
+      if(istep.eq.0)call outfld('  ')
+
+      ntlsr = uparam(1)
+      nclsr = uparam(2)
+
+      ! if(istep.gt.0)then
         !This call invokes the external solver for 
         !advancing specified field
-        call ls_drive(ifld_clsr)
-      endif
+        ! call ls_drive(ifld_clsr)
+        ! call ls_drive(ifld_tlsr,1)
+        call LS_default_driver(ntlsr,nclsr)
+      ! endif
 
+      ! if(istep.eq.nsteps)then
+      !   call out_normals
+      ! endif
       return
       end
 c-----------------------------------------------------------------------
       subroutine userqtl ! Set thermal divergence
-
-      call userqtl_scig 
 
       return
       end
@@ -185,32 +211,59 @@ c-----------------------------------------------------------------------
       !Note - the normals in the cls re-distancing equation
       !are taken from the ifld_tls field
       eps = 4.0/(lx1-1.0)
-      nsteps_cls = 1
-      nsteps_tls = 0 !dummy
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
-      dt_cls_in = dt
-      dt_tls_in = dt  !dummy
       ifdebug = 0
-      ifixCLSbdry = 1
-      call ls_init(nsteps_cls,nsteps_tls,eps,
-     $             dt_cls_in,dt_tls_in,
-     $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr,ifdebug,ifixCLSbdry)
+      ifixCLSbdry = 0
+      call ls_init(ifld_cls, ifld_clsr,
+     $             ifld_tls, ifld_tlsr,
+     $             eps, ifdebug, ifixCLSbdry)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
 c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
-      svv_c0(ifld_clsr) = 1.0
-      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0
-      ! svv_k0(ifld_clsr) = 1.5
-      ! svv_k1(ifld_clsr) = 1.5
-      ! ifnlsvv(ifld_clsr) = .false.
+      !fluid
+
+      svv_c0(1) = 1.0
+
+      svv_c0(ifld_cls) = 2.0                 !ifld_cls
+      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(1) = 1.5
+      ! svv_k1(1) = 1.5
+      ! ifnlsvv(1) = .true.
+
+      ! avm_c1(1) = 1.0
+      ! avm_ncut(1) = 1.0
+      ! icont(1) = .false.
+      ifupwindsvv(ifld_cls) = .true.
+
+c     scalar 2      
+      svv_c0(ifld_tls) = 2.0                  !ifld_tls
+      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(2) = 1.5
+      ! svv_k1(2) = 1.5
+      ! ifnlsvv(2) = .false.
+      ifupwindsvv(ifld_tls) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(3) = 1.5
+      ! svv_k1(3) = 1.5
+      ! ifnlsvv(3) = .false.
       ! ifupwindsvv(ifld_clsr) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(4) = 1.5
+      ! svv_k1(4) = 1.5
+      ! ifnlsvv(4) = .false.
+      ! ifupwindsvv(ifld_tlsr) = .true.
 c--------------------------------------------------
 
       return
@@ -225,3 +278,14 @@ c-----------------------------------------------------------------------
       return
       end
 c---------------------------------------------------------------------
+      subroutine out_normals
+      implicit none
+      include "SIZE"
+      include "TOTAL"
+      include "LVLSET"
+
+      call outpost(clsnr,clsns,clsnt,pr,t,'cls')
+
+      return
+      end
+

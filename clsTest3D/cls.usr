@@ -158,8 +158,8 @@ c-----------------------------------------------------------------------
 
       if(istep.eq.0)call outfld('  ')
 
-      ntlsr = uparam(5)
-      nclsr = uparam(6)
+      ntlsr = uparam(1)
+      nclsr = uparam(2)
 
       ! if(istep.gt.0)then
         !This call invokes the external solver for 
@@ -211,20 +211,15 @@ c-----------------------------------------------------------------------
       !Note - the normals in the cls re-distancing equation
       !are taken from the ifld_tls field
       eps = 4.0/(lx1-1.0)
-      nsteps_cls = uparam(1)
-      nsteps_tls = uparam(2)
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
-      dt_cls_in = dt * uparam(3)
-      dt_tls_in = dt * uparam(4)
       ifdebug = 0
       ifixCLSbdry = 0
-      call ls_init(nsteps_cls,nsteps_tls,eps,
-     $             dt_cls_in,dt_tls_in,
-     $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr,ifdebug,ifixCLSbdry)
+      call ls_init(ifld_cls, ifld_clsr,
+     $             ifld_tls, ifld_tlsr,
+     $             eps, ifdebug, ifixCLSbdry)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
