@@ -5,7 +5,7 @@
 #startFrom = "cls.fld"
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 100 #00 #200000
+numSteps = 10 #00 #200000
 #endTime = 1.0
 
 dt = 5e-04
