@@ -196,25 +196,39 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
-      include 'AVM'
-      include 'SVV'
-
-      real eps,dt_cls_in,dt_tls_in
-      integer nsteps_cls, nsteps_tls
 
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
-      integer ifdebug, ifixCLSbdry
 
-      !Note - the normals in the cls re-distancing equation
-      !are taken from the ifld_tls field
-      eps = 4.0/(lx1-1.0)
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'AVM'
+      include 'SVV'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      real eps
+      integer ifdebug, ifixCLSbdry
+      
+      !Note - the normals in the cls re-distancing equation
+      !are taken from the ifld_tls field
+      eps = 4.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
@@ -265,16 +279,6 @@ c     scalar 3
       ! ifnlsvv(4) = .false.
       ! ifupwindsvv(ifld_tlsr) = .true.
 c--------------------------------------------------
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine usrdat3()
-      implicit none
-
-      include 'SIZE'
-      include 'TOTAL'
-      
       return
       end
 c---------------------------------------------------------------------
