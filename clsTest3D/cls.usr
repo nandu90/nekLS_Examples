@@ -115,13 +115,16 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
+      common /dimen/ gfac
+      real gfac
+
       e = gllel(eg)
 
       ux = 0.0
       uy = 0.0
       uz = 0.0
 
-      rad = 0.25
+      rad = 0.25 * gfac
       xx = xm1(ix,iy,iz,e)
       yy = ym1(ix,iy,iz,e)
       zz = zm1(ix,iy,iz,e)
@@ -202,10 +205,22 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
+      common /dimen/ gfac
+      real gfac
+
+      integer ntot
+
+      ntot = lx1*ly1*lz1*nelt
+
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
+
+      gfac = 1 !0.001
+      call cmult(xm1,gfac,ntot)
+      call cmult(ym1,gfac,ntot)
+      call cmult(zm1,gfac,ntot)
 
       return
       end

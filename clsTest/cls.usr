@@ -115,18 +115,20 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
+      common /dimen/ gfac
+      real gfac
+
       e = gllel(eg)
 
       ux = 0.0
       uy = 0.0
       uz = 0.0
 
-      rad = 0.25
+      rad = 0.25 * gfac
       xx = xm1(ix,iy,iz,e)
       yy = ym1(ix,iy,iz,e)
-      zz = zm1(ix,iy,iz,e)
 
-      temp = sqrt(xx**2.0 + yy**2.0 + zz**2.0) - rad
+      temp = sqrt(xx**2.0 + yy**2.0) - rad
       
       if(ifield.eq.ifld_tls)then
         continue
@@ -202,10 +204,24 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
+      real glmin,glmax
+      real xmin,xmax
+
+      common /dimen/ gfac
+      real gfac
+
+      integer ntot
+
+      ntot = lx1*ly1*lz1*nelt
+
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
+
+      gfac = 0.001
+      call cmult(xm1,gfac,ntot)
+      call cmult(ym1,gfac,ntot)
 
       return
       end
@@ -274,7 +290,7 @@ c     scalar 3
 
 c     scalar 3      
       svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-2.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
