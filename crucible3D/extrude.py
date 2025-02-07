@@ -172,6 +172,27 @@ def assign_boundary_circle_xy(geo_commands, rloc, name, zlim=[]):
 
     return
 
+def assign_volume(geo_commands, name):
+    volumes = gmsh.model.getEntities(3)
+
+    # Extract volume tags
+    volume_tags = [tag for dim, tag in volumes if dim == 3]
+
+    if volume_tags:
+        # Create a Physical Volume and assign all volumes to it
+        phys_vol = gmsh.model.addPhysicalGroup(3, volume_tags)
+        gmsh.model.setPhysicalName(3, phys_vol, name)
+
+        print(f"Assigned Physical Volume {name} to volume tags: {volume_tags}")
+        geo_commands.append(f'Physical Volume("{name}") = {{{", ".join(map(str, volume_tags))}}};\n')
+    else:
+        print("No volumes found in the model!")
+
+    
+    gmsh.model.geo.synchronize()
+    
+    return
+
 def main():
     # Initialize Gmsh
     gmsh.initialize()
@@ -230,9 +251,12 @@ def main():
 
     # Assign boundary
     assign_boundary_circle_xy(geo_commands, 1.5875,"innerWall",zlim=[0,40])
+
+    #Assign Volume
+    assign_volume(geo_commands, "fluid")
     
     # Write to a new .geo file
-    geo_output_file = "extruded_mesh.geo"
+    geo_output_file = "extruded.geo"
     with open(geo_output_file, "w") as f:
         f.write("\n".join(geo_commands))
 
