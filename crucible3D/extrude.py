@@ -49,6 +49,8 @@ def extrude_layers(geo_commands, entities, final_z, num_layers, initial_height, 
         layer_thicknesses = [gp_sum(initial_height,growth_factor,i) for i in range(1,num_layers+1)]
 
     layer_thicknesses = [i + offset for i in layer_thicknesses]
+
+    print(layer_thicknesses)
     
     surfaces = [tag for _, tag in entities if tag not in excluded_surfaces]
 
@@ -214,23 +216,23 @@ def main():
 
     #Injector surfaces
     inj_surf = {1, 2, 3, 4, 5}
+
+    num_layers = 10      # Total number of layers
+    deltae1 = 0.1
     
     # Extrude in -Z
     final_z = -10.0      # Depth of crucible
-    num_layers = 2      # Total number of layers
-    initial_height = -1.0
+    initial_height = -deltae1
     extrude_layers(geo_commands, entities, final_z, num_layers, initial_height)
 
     # Bump extrude in +Z
     final_z = 20.0       # Location of interface
-    num_layers = 2      # Total number of layers in half bump
-    initial_height = 1.0
+    initial_height = deltae1
     extrude_bump(geo_commands, entities, final_z, num_layers, initial_height,excluded_surfaces=inj_surf)
 
     # Extrude in +Z
     final_z = 10.0      # Delta Z from interface to outlet
-    num_layers = 2      # Total number of layers
-    initial_height = 1.0
+    initial_height = deltae1
     off = 20.0          # Location of interface
     extrude_layers(geo_commands, entities, final_z, num_layers, initial_height,excluded_surfaces=inj_surf,offset=off)
     
