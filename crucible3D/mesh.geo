@@ -1,6 +1,3 @@
-// Gmsh project created on Thu Jan 23 09:54:07 2025
-SetFactory("OpenCASCADE");
-
 //Azimuthal resolution in each quadrant
 na = 15;
 
@@ -388,22 +385,3 @@ Transfinite Surface {23} = {27, 23, 26, 30};
 //+
 Recombine Surface {25, 24, 18, 21, 14, 17, 2, 5, 13, 9, 6, 12, 1, 3, 4, 8, 7, 10, 11, 15, 16, 19, 20, 22, 23};
 //+
-Extrude {0, 0, -10} {
-  Point{30}; Point{26}; Point{22}; Point{18}; Point{28}; Point{24}; Point{13}; Point{20}; Point{16}; Point{4}; Point{11}; Point{9}; Point{2}; Point{7}; Point{5}; Point{6}; Point{1}; Point{8}; Point{10}; Point{3}; Point{15}; Point{19}; Point{12}; Point{23}; Point{27}; Point{17}; Point{21}; Point{25}; Point{29}; Curve{50}; Curve{43}; Curve{33}; Curve{47}; Curve{39}; Curve{49}; Curve{26}; Curve{32}; Curve{44}; Curve{36}; Curve{22}; Curve{18}; Curve{27}; Curve{13}; Curve{11}; Curve{17}; Curve{3}; Curve{12}; Curve{8}; Curve{7}; Curve{4}; Curve{10}; Curve{6}; Curve{5}; Curve{14}; Curve{19}; Curve{2}; Curve{9}; Curve{1}; Curve{25}; Curve{21}; Curve{29}; Curve{34}; Curve{16}; Curve{20}; Curve{15}; Curve{42}; Curve{40}; Curve{51}; Curve{48}; Curve{23}; Curve{24}; Curve{28}; Curve{35}; Curve{31}; Curve{30}; Curve{37}; Curve{41}; Curve{38}; Curve{52}; Curve{46}; Curve{45}; Surface{24}; Surface{21}; Surface{17}; Surface{23}; Surface{16}; Surface{12}; Surface{20}; Surface{6}; Surface{5}; Surface{4}; Surface{7}; Surface{1}; Surface{2}; Surface{11}; Surface{3}; Surface{9}; Surface{8}; Surface{13}; Surface{10}; Surface{14}; Surface{18}; Surface{15}; Surface{19}; Surface{25}; Surface{22}; Layers {nlower}; Recombine;
-}
-//+
-Extrude {0, 0, 40} {
-  Surface{25}; Surface{24}; Surface{23}; Surface{22}; Surface{19}; Surface{18}; Surface{21}; Surface{20}; Surface{15}; Surface{14}; Surface{17}; Surface{16}; Surface{11}; Surface{10}; Surface{13}; Surface{12}; Surface{7}; Surface{8}; Surface{9}; Surface{6}; Layers {nupper}; Recombine;
-}
-//+
-Physical Volume("fluid", 310) = {28, 33, 37, 38, 4, 42, 29, 30, 34, 39, 43, 45, 41, 36, 32, 7, 27, 44, 40, 5, 35, 14, 11, 10, 25, 31, 23, 22, 19, 17, 15, 12, 9, 8, 6, 3, 2, 1, 13, 16, 26, 18, 20, 21, 24};
-//+
-Physical Surface("outlet", 311) = {170, 159, 163, 180, 167, 177, 174, 182, 189, 186, 194, 192, 201, 204, 198, 206, 213, 216, 210, 218};
-//+
-Physical Surface("inlet", 312) = {1, 3, 4, 5, 2};
-//+
-Physical Surface("bottomwall", 313) = {82, 94, 154, 152, 86, 104, 149, 145, 90, 98, 147, 142, 102, 127, 139, 137, 132, 108, 119, 134, 129, 125, 112, 116, 122};
-//+
-Physical Surface("outerWall", 314) = {155, 150, 160, 165, 78, 168, 92, 153};
-//+
-Physical Surface("innerWall", 315) = {212, 215, 207, 217};
