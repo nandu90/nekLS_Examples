@@ -17,12 +17,8 @@ targetCFL = 0.2
 writeControl = runTime
 writeInterval = 0.1
 
-userParam01 = 20       #Number of CLS re-distancing steps
-userParam02 = 200     #Number of TLS re-distancing steps
-userParam03 = 0.1    #dt factor for CLSR
-userParam04 = 0.5     #dt factor for TLSR
-userParam05 = 200     #Freq of TLSR
-userParam06 = 20      #Freq of CLSR
+userParam01 = 200     #Freq of TLSR
+userParam02 = 20      #Freq of CLSR
 
 #filtering = hpfrt
 #filterModes = 1

@@ -3,3 +3,6 @@
 *.nek5000
 *.batch
 *log*
+*ma2*
+*re2*
+*SESSION.NAME*

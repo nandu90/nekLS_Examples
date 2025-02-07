@@ -210,8 +210,8 @@ c-----------------------------------------------------------------------
 
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
-      ntlsr = uparam(5) !freq of TLS re-distancing
-      nclsr = uparam(6) !freq of CLS re-distancing
+      ntlsr = uparam(1) !freq of TLS re-distancing
+      nclsr = uparam(2) !freq of CLS re-distancing
 
       call LS_default_driver(ntlsr,nclsr)
       
@@ -255,8 +255,27 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
-      include 'AVM'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      ifld_cls = 2
+      ifld_tls = 3
+      ifld_clsr = 4
+      ifld_tlsr = 5
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
       include 'SVV'
+      include 'AVM'
 
       real eps,dt_cls_in,dt_tls_in
       integer nsteps_cls, nsteps_tls
@@ -268,20 +287,11 @@ c-----------------------------------------------------------------------
       integer ifdebug, ifixCLSbdry
 
       eps = 4.0/(lx1-1.0)
-      nsteps_cls = uparam(1)
-      nsteps_tls = uparam(2)
-      ifld_cls = 2
-      ifld_tls = 3
-      ifld_clsr = 4
-      ifld_tlsr = 5
-      dt_cls_in = dt * uparam(3)
-      dt_tls_in = dt * uparam(4)
       ifdebug = 0
       ifixCLSbdry = 1
-      call ls_init(nsteps_cls,nsteps_tls,eps,
-     $             dt_cls_in,dt_tls_in,
-     $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr,ifdebug,ifixCLSbdry)
+      call ls_init(ifld_cls, ifld_clsr,
+     $             ifld_tls, ifld_tlsr,
+     $             eps, ifdebug, ifixCLSbdry)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -327,14 +337,6 @@ c     scalar 3
       ! ifupwindsvv(ifld_tlsr) = .true.
 
 c--------------------------------------------------
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine usrdat3()
-      implicit none
-
-      include 'SIZE'
-      include 'TOTAL'
       
       return
       end

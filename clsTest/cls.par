@@ -2,9 +2,10 @@
 # nek parameter file
 #
 [GENERAL]
+#startFrom = "cls.fld"
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 1000 #200000
+numSteps = 100 #200000
 #endTime = 1.0
 
 dt = 5e-04
@@ -12,6 +13,9 @@ timeStepper = bdf2
 
 #writeControl = runTime
 writeInterval = 10
+
+userParam01 = 20     #Freq of TLSR
+userParam02 = 10      #Freq of CLSR
 
 [PROBLEMTYPE]
 variableProperties = yes
@@ -30,14 +34,14 @@ solver = none
 rhocp = 1.
 conductivity = 1.
 residualTol = 1e-8
-#regularization = none
+regularization = svv
 
 [SCALAR01] #tls field
 solver = none
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
-#regularization = avm
+regularization = svv
 
 [SCALAR02] #cls re-distancing field
 #solver = none
@@ -51,4 +55,4 @@ regularization = svv
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
-#regularization = svv
+regularization = svv

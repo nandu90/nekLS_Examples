@@ -17,9 +17,9 @@ c-----------------------------------------------------------------------
       utrans = 1.0
       udiff = cpfld(ifield,1)
 
-      if(ifavm(ifield))then
+      if(ifavm(ifield-1))then
         udiff = 1e-10       !must be tiny for hyperbolic
-      elseif(ifsvv(ifield))then
+      elseif(ifsvv(ifield-1))then
         udiff = 1e-10      !must be tiny for hyperbolic
       endif
 
@@ -58,12 +58,14 @@ c-----------------------------------------------------------------------
 
       e = gllel(eg)
       
-      qvol = 0.0
+      qvol   = 0.0
       avol = 0.0
 
       if(ifield.eq.ifld_tlsr)then
         qvol = signls(ix,iy,iz,e)
       endif
+
+      call limit_cls(ix,iy,iz,e)
 
       return
       end
@@ -75,10 +77,12 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
+
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
+
       integer e
 
       e = gllel(eg)
@@ -102,32 +106,39 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
+      
+      real xx,yy,rad,zz
+      real heaviside
 
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      real rad,xcen,ycen,func
-      real xx,yy,heaviside
+      common /dimen/ gfac
+      real gfac
 
       e = gllel(eg)
-
-      xx = xm1(ix,iy,iz,e)
-      yy = ym1(ix,iy,iz,e)
 
       ux = 0.0
       uy = 0.0
       uz = 0.0
 
-      rad = 0.3/2.0
-      xcen = 0.5
-      ycen = 0.75
-      func = sqrt((xx-xcen)**2. + (yy-ycen)**2.) - rad
-      if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
-        temp = func
-      elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
-        temp = heaviside(ix,iy,iz,e,func,0.0)
+      rad = 0.25 * gfac
+      xx = xm1(ix,iy,iz,e)
+      yy = ym1(ix,iy,iz,e)
+      zz = zm1(ix,iy,iz,e)
+
+      temp = sqrt(xx**2.0 + yy**2.0 + zz**2.0) - rad
+      
+      if(ifield.eq.ifld_tls)then
+        continue
+      elseif(ifield.eq.ifld_tlsr)then
+        continue
+      elseif(ifield.eq.ifld_cls)then
+        temp = heaviside(ix,iy,iz,e,temp,0.0)
+      elseif(ifield.eq.ifld_clsr)then
+        temp = heaviside(ix,iy,iz,e,temp,0.0)
       endif
       
       return
@@ -143,64 +154,27 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      integer ntot,i,xx,yy,ux,uy
-      real rad
-      integer ie,ifc
+      real xx,yy,deltael,eps,temp
+      integer i,ntot
 
       integer ntlsr, nclsr
-      real evolC, enclosedVol, exactVol
-      real Em, EL1
-      real volini
-      save volini
-      real psiini(lx1,ly1,lz1,lelv)
-      save psiini
-      real wrk(lx1,ly1,lz1,lelv)
-      real glsum
-
-      ntot = lx1*ly1*lz1*nelv
-
-      if(istep.eq.0 .and. nio.eq.0)then
-        open(unit=100,file='vol.dat',status='unknown')
-      endif
 
       if(istep.eq.0)call outfld('  ')
 
       ntlsr = uparam(1)
       nclsr = uparam(2)
-      call LS_default_driver(ntlsr,nclsr)
-      
-      if(mod(istep,100).eq.0)then
-        rad = 0.3/2.0
-        evolC = enclosedVol(-1)
-        if(istep.eq.0)then 
-          volini = evolC
-        endif
-        exactVol = PI*rad**2.0
-        ! Em = (evolC - volini)/exactVol
-        Em = evolC/volini
-        
-        !calc L1 norm at final time step
-        if(istep.eq.0)call copy(psiini,t(1,1,1,1,ifld_cls-1),ntot)
-        if(istep.eq.0 .or.istep.eq.nsteps)then
-          call copy(wrk,psiini,ntot)
-          call sub2(wrk,t(1,1,1,1,ifld_cls-1),ntot)
-          do i=1,ntot
-            wrk(i,1,1,1) = abs(wrk(i,1,1,1))
-          enddo
-          call col2(wrk,bm1,ntot)
-          EL1 = glsum(wrk,ntot)
-        endif
-        if(nio.eq.0)then 
-          write(*,*)"Step, Volume Error, Em",istep,Em
-          write(*,*)"Step, L1 Error, E1",istep,EL1
-          write(100,*)istep,Em
-        endif
-      endif
 
-      if(istep.eq.nsteps)close(100)
-      
-      call velupdate
+      ! if(istep.gt.0)then
+        !This call invokes the external solver for 
+        !advancing specified field
+        ! call ls_drive(ifld_clsr)
+        ! call ls_drive(ifld_tlsr,1)
+        call LS_default_driver(ntlsr,nclsr)
+      ! endif
 
+      ! if(istep.eq.nsteps)then
+      !   call out_normals
+      ! endif
       return
       end
 c-----------------------------------------------------------------------
@@ -225,15 +199,28 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
+
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
+      common /dimen/ gfac
+      real gfac
+
+      integer ntot
+
+      ntot = lx1*ly1*lz1*nelt
+
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
+
+      gfac = 1 !0.001
+      call cmult(xm1,gfac,ntot)
+      call cmult(ym1,gfac,ntot)
+      call cmult(zm1,gfac,ntot)
 
       return
       end
@@ -246,15 +233,16 @@ c-----------------------------------------------------------------------
       include 'AVM'
       include 'SVV'
 
-      real eps,dt_cls_in,dt_tls_in
-      integer nsteps_cls, nsteps_tls
-
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
-      integer ifdebug, ifixCLSbdry
 
+      real eps
+      integer ifdebug, ifixCLSbdry
+      
+      !Note - the normals in the cls re-distancing equation
+      !are taken from the ifld_tls field
       eps = 4.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
@@ -267,7 +255,11 @@ c     This section to specify user defined parameters
 c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
-      svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      !fluid
+
+      svv_c0(1) = 1.0
+
+      svv_c0(ifld_cls) = 2.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
@@ -279,7 +271,7 @@ c     parameters.
       ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      svv_c0(ifld_tls) = 2.0                  !ifld_tls
       ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
@@ -287,49 +279,32 @@ c     scalar 2
       ifupwindsvv(ifld_tls) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
+      svv_c0(ifld_clsr) = 2.0                  !ifld_clsr
       ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
-      ifupwindsvv(ifld_clsr) = .true.
+      ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
       svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
-      ifupwindsvv(ifld_tlsr) = .true.
-
+      ! ifupwindsvv(ifld_tlsr) = .true.
 c--------------------------------------------------
-      
       return
       end
 c---------------------------------------------------------------------
-      subroutine velupdate
+      subroutine out_normals
       implicit none
-      include 'SIZE'
-      include 'TOTAL'
+      include "SIZE"
+      include "TOTAL"
+      include "LVLSET"
 
-      real xx,yy,ux,uy
-      integer i,ntot
-
-      ntot = lx1*ly1*lz1*nelv
-
-      do i=1,ntot
-        xx = xm1(i,1,1,1)
-        yy = ym1(i,1,1,1)
-
-        ux = (sin(PI*xx)**2.0) * sin(2.0*PI*yy) *
-     $                 cos(PI*time/8.0)
-        uy = -sin(2.0*PI*xx) * (sin(PI*yy)**2.0) *
-     $                 cos(PI*time/8.0)
-
-        vx(i,1,1,1) = ux
-        vy(i,1,1,1) = uy
-      enddo
+      call outpost(clsnr,clsns,clsnt,pr,t,'cls')
 
       return
       end
-c---------------------------------------------------------------------
+
