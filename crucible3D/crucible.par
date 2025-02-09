@@ -17,12 +17,8 @@ targetCFL = 0.01
 #writeControl = runTime
 writeInterval = 10000
 
-userParam01 = 20       #Number of CLS re-distancing steps
-userParam02 = 200     #Number of TLS re-distancing steps
-userParam03 = 2.0    #dt factor for CL
-userParam04 = 20.0     #dt factor for TLSR
-userParam05 = 1000     #Freq of TLSR
-userParam06 = 200      #Freq of CLSR
+userParam01 = 1000     #Freq of TLSR
+userParam02 = 200      #Freq of CLSR
 
 #filtering = hpfrt
 #filterModes = 1
@@ -39,7 +35,7 @@ stressFormulation = yes
 [PRESSURE]
 residualTol = 1e-6
 residualProj = yes
-#preconditioner = semg_amg_hypre
+preconditioner = semg_amg_hypre
 
 [VELOCITY]
 residualTol = 1e-6

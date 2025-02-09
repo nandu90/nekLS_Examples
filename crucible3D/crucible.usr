@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
 
       real Re, We, Fr, rhoratio, muratio
-      real udim, charl, rhol, mul, gdim, gamm
+      real rhol, mul
       real nul, nug
       real rhog,mug
       real psi
@@ -24,7 +24,10 @@ c-----------------------------------------------------------------------
       save icalld
       data icalld /0/
 
-      common /dimen/ Re,We,Fr
+      common /dimen/ charl,gamm,gdim,gfac,udim
+      real charl,gamm,gdim,gfac,udim
+
+      real flowrate,areainlet
 
       e = gllel(eg)
 
@@ -32,8 +35,7 @@ c-----------------------------------------------------------------------
 !     To Do: change the flow, so that this routine is called
 !     similar to RANS. Will avoid confusion
 
-      charl = 6.57e-3 !bubble effective dia
-      charl = 1e-3 !inlet orifice diameter
+      charl = 1.397e-3 !inlet orifice diameter
       gdim = 9.81
 
       rhol = 970.0
@@ -46,22 +48,19 @@ c-----------------------------------------------------------------------
 
       gamm = 0.0216
       
-      udim = 13.15e-3
-      udim = sqrt(gdim*charl)
-      
-      Re = rhol*udim*charl/mul
-      Fr = udim**2.0/(gdim*charl)
-      We = charl*rhol*udim**2.0/gamm
+      flowrate = 10.0/60.0 * 1e-6
+      areainlet = PI*(charl/2.0)**2.0
+      udim = flowrate/areainlet
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
         psi = max(0.0,psi)
         psi = min(1.0,psi)
-        utrans = ((1.0-psi)*rhog + psi*rhol)/rhol
+        utrans = ((1.0-psi)*rhog + psi*rhol)
         !in non-dimensional form you must have kinematic 
         !viscosity here
-        udiff = ((1.0-psi)*nug + psi*nul)/nul/Re
-        vtrans0(ix,iy,iz,e) = rhog/rhol
+        udiff = ((1.0-psi)*mug + psi*mul)
+        vtrans0(ix,iy,iz,e) = rhog
       else
         utrans = 1.0
         udiff = 1e-10
@@ -83,8 +82,8 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
 
-      common /dimen/ Re,We,Fr
-      real Re,We,Fr
+      common /dimen/ charl,gamm,gdim,gfac,udim
+      real charl,gamm,gdim,gfac,udim
       real sfx,sfy,sfz
 
       real svvx,svvy,svvz
@@ -98,13 +97,13 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
+      call surfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
       ffx = -sfx + svvx
       ffy = -sfy + svvy
-      ffz = -sfz - 1/Fr
+      ffz = -sfz + svvz - gdim 
 
       return
       end
@@ -153,6 +152,9 @@ c-----------------------------------------------------------------------
       real func
       real injradius, xinj
 
+      common /dimen/ charl,gamm,gdim,gfac,udim
+      real charl,gamm,gdim,gfac,udim
+
       e = gllel(eg)
 
       ux   = 0.0
@@ -167,13 +169,13 @@ c-----------------------------------------------------------------------
         temp = t(ix,iy,iz,e,ifld_cls-1)
       endif
 
-      injradius = 1.397/2.0
+      injradius = charl/2.0 *1e3*gfac
       xinj = sqrt(xx**2.0 + yy**2.0)/injradius
       func = 0.5*(tanh(1.5*PI*(xinj-0.4)))-0.5
       if(cbc(iside,e,1).eq.'v  ')then
         ux = 0.0
         uy = 0.0
-        uz = func * 0.05
+        uz = func * udim
       endif
 
       if(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
@@ -210,6 +212,9 @@ c-----------------------------------------------------------------------
       real temp2
       real radius
 
+      common /dimen/ charl,gamm,gdim,gfac,udim
+      real charl,gamm,gdim,gfac,udim
+
       e = gllel(eg)
 
       xx = xm1(ix,iy,iz,e)
@@ -220,9 +225,9 @@ c-----------------------------------------------------------------------
       uy = 0.0
       uz = 0.0
 
-      phiz = 20 - zz
+      phiz = 20.0 * gfac - zz
       temp = phiz
-      radius = 1.397/2.0
+      radius = charl/2.0 *1e3*gfac
       temp2 = sqrt((xx)**2.0 + (yy)**2.0 + (zz)**2.0)-radius
       temp = min(temp,temp2)
 
@@ -245,12 +250,12 @@ c-----------------------------------------------------------------------
 
       integer ntlsr, nclsr
 
-      ! call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
-      ntlsr = uparam(5) !freq of TLS re-distancing
-      nclsr = uparam(6) !freq of CLS re-distancing
+      ntlsr = uparam(1) !freq of TLS re-distancing
+      nclsr = uparam(2) !freq of CLS re-distancing
 
-      ! call LS_default_driver(ntlsr,nclsr)
+      call LS_default_driver(ntlsr,nclsr)
       
       return
       end
@@ -274,6 +279,87 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
+
+      integer iel,ntot,ifc,i,id_face
+      real xsum,xavg,asum
+
+      real xmin,xmax,ymin,ymax
+      real glmin, glmax
+      real inletL, inletL2, theta, rinfluence
+      real fac, arm, xx, zz
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      common /dimen/ charl,gamm,gdim,gfac,udim
+      real charl,gamm,gdim,gfac,udim
+
+      ifld_cls = 2
+      ifld_tls = 3
+      ifld_clsr = 4
+      ifld_tlsr = 5
+
+      ntot = lx1*ly1*lz1*nelt
+
+      !Dimensionalize mesh
+      gfac = 1e-3
+      call cmult(xm1,gfac,ntot)
+      call cmult(ym1,gfac,ntot)
+      call cmult(zm1,gfac,ntot)
+
+      do iel=1,nelt
+        do ifc=1,2*ndim
+          id_face = bc(5,ifc,iel,1)
+          cbc(ifc,iel,1) = 'E  '
+          cbc(ifc,iel,ifld_cls) = 'E  '
+          cbc(ifc,iel,ifld_tls) = 'E  '
+          cbc(ifc,iel,ifld_clsr) = 'E  '
+          cbc(ifc,iel,ifld_tlsr) = 'E  '
+          if(id_face.eq.3)then
+            cbc(ifc,iel,1) = 'v  '
+            cbc(ifc,iel,ifld_cls) = 't  '
+            cbc(ifc,iel,ifld_tls) = 'I  '
+            cbc(ifc,iel,ifld_clsr) = 't  '
+            cbc(ifc,iel,ifld_tlsr) = 'I  '
+          elseif(id_face.eq.2)then
+            cbc(ifc,iel,1) = 'O  '
+            cbc(ifc,iel,ifld_cls) = 'I  '
+            cbc(ifc,iel,ifld_tls) = 'I  '
+            cbc(ifc,iel,ifld_clsr) = 'I  '
+            cbc(ifc,iel,ifld_tlsr) = 'I  '
+          elseif(id_face.eq.1)then
+            cbc(ifc,iel,1) = 'W  '
+            cbc(ifc,iel,ifld_cls) = 't  '
+            cbc(ifc,iel,ifld_tls) = 'I  '
+            cbc(ifc,iel,ifld_clsr) = 't  '
+            cbc(ifc,iel,ifld_tlsr) = 'I  '
+          elseif(id_face.eq.4)then
+            cbc(ifc,iel,1) = 'W  '
+            cbc(ifc,iel,ifld_cls) = 't  '
+            cbc(ifc,iel,ifld_tls) = 'I  '
+            cbc(ifc,iel,ifld_clsr) = 't  '
+            cbc(ifc,iel,ifld_tlsr) = 'I  '
+          elseif(id_face.eq.5)then
+            cbc(ifc,iel,1) = 'W  '
+            cbc(ifc,iel,ifld_cls) = 't  '
+            cbc(ifc,iel,ifld_tls) = 'I  '
+            cbc(ifc,iel,ifld_clsr) = 't  '
+            cbc(ifc,iel,ifld_tlsr) = 'I  '
+          endif
+        enddo
+      enddo
+      
+      call count_boundaries
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
       include 'AVM'
       include 'SVV'
 
@@ -285,35 +371,25 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
       integer ifdebug
-
-      integer iel,ntot,ifc,i,id_face
-      real xsum,xavg,asum
-
-      real xmin,xmax,ymin,ymax
-      real glmin, glmax
-      real inletL, inletL2, theta, rinfluence
-      real fac, arm, xx, zz
-
       integer ifixCLSbdry
 
-      ntot = lx1*ly1*lz1*nelt
-
       eps = 2.0/(lx1-1.0)
-      nsteps_cls = uparam(1)
-      nsteps_tls = uparam(2)
-      ifld_cls = 2
-      ifld_tls = 3
-      ifld_clsr = 4
-      ifld_tlsr = 5
-      dt_cls_in = dt * uparam(3)
-      dt_tls_in = dt * uparam(4)
+      ! nsteps_cls = uparam(1)
+      ! nsteps_tls = uparam(2)
+      ! dt_cls_in = dt * uparam(3)
+      ! dt_tls_in = dt * uparam(4)
       ifdebug = 0
       ifixCLSbdry = 0
       
-      call ls_init(nsteps_cls,nsteps_tls,eps,
-     $             dt_cls_in,dt_tls_in,
-     $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr,ifdebug,ifixCLSbdry)
+
+      call ls_init(ifld_cls, ifld_clsr,
+     $             ifld_tls, ifld_tlsr,
+     $             eps, ifdebug, ifixCLSbdry)
+
+      ! call ls_init2(nsteps_cls,nsteps_tls,eps,
+      ! $             dt_cls_in,dt_tls_in,
+      ! $             ifld_cls,ifld_clsr,
+      ! $             ifld_tls,ifld_tlsr,ifdebug,ifixCLSbdry)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -357,95 +433,6 @@ c     scalar 3
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
       ! ifupwindsvv(ifld_tlsr) = .true.
-
-      ! do ie=1,nelv
-      !   do ifc=1,2*ndim
-      !     call fcsum2(xsum,asum,xm1,ie,ifc)
-      !     xavg = xsum/asum
-      !     if(cbc(ifc,ie,1).eq.'W  ')then
-      !       if(abs(xavg-20.5).lt.0.75+1e-4)then
-      !         cbc(ifc,ie,2) = 't  '
-      !       endif
-      !     endif
-      !   enddo
-      ! enddo
-c--------------------------------------------------
-  
-      !Done in Gmsh using python script
-      !create a 45 degree angle
-      ! inletL = 3.175
-      ! inletL2 = inletL/2.0
-      ! theta = PI/4.0
-
-      ! do i=1,ntot
-      !   rinfluence = sqrt(xm1(i,1,1,1)**2 + (zm1(i,1,1,1))**2.0)
-      !   rinfluence = rinfluence/inletL2
-      !   fac = 0.5 - 0.5 * tanh((PI/6.0)*(rinfluence-1.5))
-
-      !   xx = xm1(i,1,1,1)/inletL2
-      !   arm = xx/cos(theta)
-      !   zz = arm * sin(theta) *fac * inletL2
-      !   zm1(i,1,1,1) = zm1(i,1,1,1) + zz
-      ! enddo
-
-      !!fix the corner b/w inlet and shl
-      !call fixcorners('v  ','shl')
-
-      !fix the corner b/w inlet and wall to t for ifld_cls
-      ! call fixcornerst('v  ','W  ',ifld_cls)
-
-      do iel=1,nelt
-        do ifc=1,2*ndim
-          id_face = bc(5,ifc,iel,1)
-          cbc(ifc,iel,1) = 'E  '
-          cbc(ifc,iel,ifld_cls) = 'E  '
-          cbc(ifc,iel,ifld_tls) = 'E  '
-          cbc(ifc,iel,ifld_clsr) = 'E  '
-          cbc(ifc,iel,ifld_tlsr) = 'E  '
-          if(id_face.eq.312)then
-            cbc(ifc,iel,1) = 'v  '
-            cbc(ifc,iel,ifld_cls) = 't  '
-            cbc(ifc,iel,ifld_tls) = 'I  '
-            cbc(ifc,iel,ifld_clsr) = 't  '
-            cbc(ifc,iel,ifld_tlsr) = 'I  '
-          elseif(id_face.eq.311)then
-            cbc(ifc,iel,1) = 'O  '
-            cbc(ifc,iel,ifld_cls) = 'I  '
-            cbc(ifc,iel,ifld_tls) = 'I  '
-            cbc(ifc,iel,ifld_clsr) = 'I  '
-            cbc(ifc,iel,ifld_tlsr) = 'I  '
-          elseif(id_face.eq.313)then
-            cbc(ifc,iel,1) = 'W  '
-            cbc(ifc,iel,ifld_cls) = 't  '
-            cbc(ifc,iel,ifld_tls) = 'I  '
-            cbc(ifc,iel,ifld_clsr) = 't  '
-            cbc(ifc,iel,ifld_tlsr) = 'I  '
-          elseif(id_face.eq.314)then
-            cbc(ifc,iel,1) = 'W  '
-            cbc(ifc,iel,ifld_cls) = 't  '
-            cbc(ifc,iel,ifld_tls) = 'I  '
-            cbc(ifc,iel,ifld_clsr) = 't  '
-            cbc(ifc,iel,ifld_tlsr) = 'I  '
-          elseif(id_face.eq.315)then
-            cbc(ifc,iel,1) = 'W  '
-            cbc(ifc,iel,ifld_cls) = 't  '
-            cbc(ifc,iel,ifld_tls) = 'I  '
-            cbc(ifc,iel,ifld_clsr) = 't  '
-            cbc(ifc,iel,ifld_tlsr) = 'I  '
-          endif
-        enddo
-      enddo
-      
-      call count_boundaries
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine usrdat3()
-      implicit none
-
-      include 'SIZE'
-      include 'TOTAL'
-
       
       return
       end
