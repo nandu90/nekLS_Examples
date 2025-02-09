@@ -39,7 +39,63 @@ def get_surface_points(surface_tag):
 
     return points
 
-def extrude_layers(geo_commands, entities, final_z, num_layers, initial_height, excluded_surfaces={},offset=0):
+def extract_surface_z(zloc, rlim=[]):
+    # Extract the surface closest to final_z
+    tolerance = 1e-6  # Small tolerance to handle floating-point precision
+    matching_surfaces = []
+    for entity in gmsh.model.getEntities(2):  # Get all 2D surfaces
+        _, tag = entity
+        x_min, y_min, z_min, x_max, y_max, z_max = gmsh.model.getBoundingBox(2, tag)
+
+        #print("here",z_min,z_max,zloc)
+        # Check if the surface is at final_z (considering numerical precision)
+        if (abs(z_max - zloc) < tolerance and abs(z_max - z_min) < tolerance):
+            ifonsurface = True
+            if(rlim != []):
+                points = get_surface_points(tag)
+                for p in points:
+                    x = p[0]
+                    y = p[1]
+                    z = p[2]
+                    rad = np.sqrt(x**2 + y**2)
+                    if(rad + tolerance < rlim[0] or rad - tolerance > rlim[1]):
+                        ifonsurface = False
+                        break
+            if(ifonsurface):
+                matching_surfaces.append(tag)
+                
+    # Print the identified surfaces
+    #print(f"Surfaces at z={zloc}: {matching_surfaces}")
+    
+    return matching_surfaces
+
+def layered_extrusion(geo_commands, layer_thicknesses, offset=0, rlim=[]):
+    # Perform extrusion with progression
+    for thickness in range(len(layer_thicknesses)):
+
+        deltaz = layer_thicknesses[thickness]
+        if(thickness == 0):
+            zloc = offset
+            deltaz -= offset
+        else:
+            zloc = layer_thicknesses[thickness-1]
+            deltaz -= layer_thicknesses[thickness-1]
+            
+        matching_surfaces = extract_surface_z(zloc, rlim)
+
+        #print("extruding from ",zloc," to ",layer_thicknesses[thickness], "deltaz ",deltaz)
+        
+        for tag in matching_surfaces:
+            extruded = gmsh.model.geo.extrude([(2,tag)], 0, 0, deltaz, numElements=[1], recombine=True)
+            geo_commands.append(f'Extrude {{0, 0, {deltaz}}} {{ Surface{{{tag}}}; Layers{{1}}; Recombine; }}')
+            
+        gmsh.model.geo.synchronize()
+
+        #print()
+
+    return
+
+def extrude_layers(geo_commands, entities, final_z, num_layers, initial_height, rlim=[],offset=0):
     growth_factor = get_growth_ratio(final_z,num_layers,initial_height)
 
     # Compute first layer thickness ensuring geometric progression of gaps
@@ -50,20 +106,16 @@ def extrude_layers(geo_commands, entities, final_z, num_layers, initial_height, 
 
     layer_thicknesses = [i + offset for i in layer_thicknesses]
 
-    print(layer_thicknesses)
-    
-    surfaces = [tag for _, tag in entities if tag not in excluded_surfaces]
+    print("Extrusion layers for progression:", layer_thicknesses)   
 
-    new_entities = []
-    # Perform extrusion with progression
-    for thickness in layer_thicknesses:
-        for tag in surfaces:
-            extruded = gmsh.model.geo.extrude([(2,tag)], 0, 0, thickness, numElements=[1], recombine=True)
-            geo_commands.append(f'Extrude {{0, 0, {thickness}}} {{ Surface{{{tag}}}; Layers{{1}}; Recombine; }}')
+    layered_extrusion(geo_commands, layer_thicknesses, offset=offset, rlim=rlim)
+
+    print("Extruded with progression",growth_factor)
+    print()
 
     return
 
-def extrude_bump(geo_commands, entities, final_z, num_layers, initial_height, excluded_surfaces={}):
+def extrude_bump(geo_commands, entities, final_z, num_layers, initial_height, rlim=[]):
     growth_factor = get_growth_ratio(final_z/2.0, num_layers, initial_height)
 
     # Compute first layer thickness ensuring geometric progression of gaps
@@ -80,47 +132,18 @@ def extrude_bump(geo_commands, entities, final_z, num_layers, initial_height, ex
 
     layer_thicknesses.append(final_z)
 
-    surfaces = [tag for _, tag in entities if tag not in excluded_surfaces]
+    print("Extrusion layers for bump:",layer_thicknesses)
 
-    new_entities = []
-    
-    # Perform extrusion with progression
-    for thickness in layer_thicknesses:
-        for tag in surfaces:
-            extruded = gmsh.model.geo.extrude([(2,tag)], 0, 0, thickness, numElements=[1], recombine=True)
-            geo_commands.append(f'Extrude {{0, 0, {thickness}}} {{ Surface{{{tag}}}; Layers{{1}}; Recombine; }}')
+    layered_extrusion(geo_commands, layer_thicknesses, offset=0, rlim=rlim)
+
+    print("Extruded with Bump",growth_factor)
+    print()
     
     return
 
 def assign_boundary_z(geo_commands, zloc, name, rlim=[]):
-    # Extract the surface closest to final_z
-    tolerance = 1e-6  # Small tolerance to handle floating-point precision
-    matching_surfaces = []
-    for entity in gmsh.model.getEntities(2):  # Get all 2D surfaces
-        _, tag = entity
-        x_min, y_min, z_min, x_max, y_max, z_max = gmsh.model.getBoundingBox(2, tag)
-
-        # Check if the surface is at final_z (considering numerical precision)
-        if (abs(z_max - zloc) < tolerance and abs(z_max - z_min) < tolerance):
-            ifonsurface = True
-            if(rlim != []):
-                points = get_surface_points(tag)
-                for p in points:
-                    x = p[0]
-                    y = p[1]
-                    z = p[2]
-                    rad = np.sqrt(x**2 + y**2)
-                    if(rad + tolerance < rlim[0] or rad - tolerance > rlim[1]):
-                        ifonsurface = False
-                        break
-            if(ifonsurface):
-                matching_surfaces.append(tag)
-
-        
-            
-
-    # Print the identified surfaces
-    print(f"Surfaces at z={zloc}: {matching_surfaces}")
+    
+    matching_surfaces = extract_surface_z(zloc, rlim)
 
     # Assign boundary conditions using Physical Groups
     if matching_surfaces:
@@ -128,6 +151,8 @@ def assign_boundary_z(geo_commands, zloc, name, rlim=[]):
         gmsh.model.setPhysicalName(2, top_surface_physical_group, name)
         
     geo_commands.append(f'Physical Surface("{name}") = {{{", ".join(map(str, matching_surfaces))}}};\n')
+
+    print(f"Assigned '{name}' at z={zloc} to: {matching_surfaces}")
 
     return
 
@@ -163,7 +188,8 @@ def assign_boundary_circle_xy(geo_commands, rloc, name, zlim=[]):
             matching_surfaces.append(tag)
 
     # Print the identified surfaces
-    print(f"Surfaces at r={rloc}: {matching_surfaces}")
+    #print(f"Surfaces at r={rloc}: {matching_surfaces}")
+    print(f"Assigned '{name}' at r={rloc} to: {matching_surfaces}")
 
     # Assign boundary conditions using Physical Groups
     if matching_surfaces:
@@ -214,9 +240,6 @@ def main():
     # Add the original geometry to the new .geo file
     geo_commands.append(f'Merge \"{geo_file}\";')
 
-    #Injector surfaces
-    inj_surf = {1, 2, 3, 4, 5}
-
     num_layers = 10      # Total number of layers
     deltae1 = 0.1
     
@@ -228,13 +251,13 @@ def main():
     # Bump extrude in +Z
     final_z = 20.0       # Location of interface
     initial_height = deltae1
-    extrude_bump(geo_commands, entities, final_z, num_layers, initial_height,excluded_surfaces=inj_surf)
+    extrude_bump(geo_commands, entities, final_z, num_layers, initial_height, rlim=[1.5875,25])
 
     # Extrude in +Z
     final_z = 10.0      # Delta Z from interface to outlet
     initial_height = deltae1
     off = 20.0          # Location of interface
-    extrude_layers(geo_commands, entities, final_z, num_layers, initial_height,excluded_surfaces=inj_surf,offset=off)
+    extrude_layers(geo_commands, entities, final_z, num_layers, initial_height,rlim=[1.5875,25],offset=off)
     
     # Synchronize the model after modifications
     gmsh.model.geo.synchronize()
