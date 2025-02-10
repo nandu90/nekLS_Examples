@@ -89,7 +89,7 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      ! call surfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
+      call surfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
