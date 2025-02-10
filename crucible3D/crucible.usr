@@ -35,9 +35,6 @@ c-----------------------------------------------------------------------
 !     To Do: change the flow, so that this routine is called
 !     similar to RANS. Will avoid confusion
 
-      charl = 1.397e-3 !inlet orifice diameter
-      gdim = 9.81
-
       rhol = 970.0
       mul = 1.0
       nul = mul/rhol
@@ -45,12 +42,6 @@ c-----------------------------------------------------------------------
       rhog = 1.1839
       nug = 1.562e-5
       mug = nug * rhog
-
-      gamm = 0.0216
-      
-      flowrate = 10.0/60.0 * 1e-6
-      areainlet = PI*(charl/2.0)**2.0
-      udim = flowrate/areainlet
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
@@ -97,9 +88,9 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      call surfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
+      ! call surfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
       
-      call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
+      ! call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
       ffx = -sfx + svvx
       ffy = -sfy + svvy
@@ -148,7 +139,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer e
 
-      real xx, yy
+      real xx, yy, zz
       real func
       real injradius, xinj
 
@@ -164,6 +155,7 @@ c-----------------------------------------------------------------------
 
       xx = xm1(ix,iy,iz,e)
       yy = ym1(ix,iy,iz,e)
+      zz = zm1(ix,iy,iz,e)
 
       if(ifield.eq.ifld_clsr)then
         temp = t(ix,iy,iz,e,ifld_cls-1)
@@ -171,7 +163,7 @@ c-----------------------------------------------------------------------
 
       injradius = charl/2.0 *1e3*gfac
       xinj = sqrt(xx**2.0 + yy**2.0)/injradius
-      func = 0.5*(tanh(1.5*PI*(xinj-0.4)))-0.5
+      func = 0.5*(tanh(0.5*PI*(xinj-1.0)))-0.5
       if(cbc(iside,e,1).eq.'v  ')then
         ux = 0.0
         uy = 0.0
@@ -184,6 +176,7 @@ c-----------------------------------------------------------------------
           temp = 1.0 + func
         else if(cbc(iside,e,ifld_cls).eq.'t  ')then
           temp = t(ix,iy,iz,e,ifld_cls-1)
+          if(zz .lt. 10.0*gfac) temp = 1.0
         endif
       endif
 
@@ -228,8 +221,15 @@ c-----------------------------------------------------------------------
       phiz = 20.0 * gfac - zz
       temp = phiz
       radius = charl/2.0 *1e3*gfac
-      temp2 = sqrt((xx)**2.0 + (yy)**2.0 + (zz)**2.0)-radius
+      temp2 = sqrt((xx)**2.0 + (yy)**2.0 + zz**2.0)-radius
       temp = min(temp,temp2)
+
+      ! temp2 = sqrt(xx**2.0 + yy**2.0) - radius
+
+      ! if(temp2 .lt. 0.0)then
+      !   phiz = -1.0 * gfac - zz
+      !   temp = min(phiz,temp2)
+      ! endif
 
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
@@ -296,6 +296,8 @@ c-----------------------------------------------------------------------
       common /dimen/ charl,gamm,gdim,gfac,udim
       real charl,gamm,gdim,gfac,udim
 
+      real flowrate,areainlet
+
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
@@ -305,6 +307,15 @@ c-----------------------------------------------------------------------
 
       !Dimensionalize mesh
       gfac = 1e-3
+      charl = 1.397e-3 !inlet orifice diameter
+      gdim = 9.81
+
+      gamm = 0.0216
+      
+      flowrate = 10.0/60.0 * 1e-6
+      areainlet = PI*(charl/2.0)**2.0
+      udim = flowrate/areainlet
+
       call cmult(xm1,gfac,ntot)
       call cmult(ym1,gfac,ntot)
       call cmult(zm1,gfac,ntot)
@@ -373,7 +384,7 @@ c-----------------------------------------------------------------------
       integer ifdebug
       integer ifixCLSbdry
 
-      eps = 2.0/(lx1-1.0)
+      eps = 4.0/(lx1-1.0)
       ! nsteps_cls = uparam(1)
       ! nsteps_tls = uparam(2)
       ! dt_cls_in = dt * uparam(3)
@@ -427,7 +438,7 @@ c     scalar 3
       ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
       svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5

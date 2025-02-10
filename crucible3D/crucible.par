@@ -5,20 +5,20 @@
 #startFrom = crucible.fld
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 1 #10000000 #100000 #10000 #00000 #12000 #1000 #16000 #4000 #400 #400 #200000
+numSteps =  10000 #10000000 #100000 #10000 #00000 #12000 #1000 #16000 #4000 #400 #400 #200000
 #endTime = 2 #10e-4
 
-dt = 1.0e-06
+dt = 10.0e-07
 timeStepper = bdf2 #With bdf2 SF does not work well
-variabledt = yes
-targetCFL = 0.01
+#variabledt = yes
+#targetCFL = 0.01
 #extrapolation = OIFS
 
 #writeControl = runTime
-writeInterval = 10000
+writeInterval = 100
 
-userParam01 = 1000     #Freq of TLSR
-userParam02 = 200      #Freq of CLSR
+userParam01 = 10000     #Freq of TLSR
+userParam02 = 5000      #Freq of CLSR
 
 #filtering = hpfrt
 #filterModes = 1
@@ -33,12 +33,12 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-6
+residualTol = 1e-2
 residualProj = yes
 preconditioner = semg_amg_hypre
 
 [VELOCITY]
-residualTol = 1e-6
+residualTol = 1e-4
 density = 1
 viscosity = -1.0 #dummy
 
