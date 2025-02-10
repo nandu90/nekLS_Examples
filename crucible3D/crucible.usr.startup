@@ -42,7 +42,7 @@ c-----------------------------------------------------------------------
       rhog = 1.1839
       nug = 1.562e-5
       mug = nug * rhog
-      mul = mug * 10.0
+      mul = mug * 100.0
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
