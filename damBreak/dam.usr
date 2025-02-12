@@ -288,7 +288,7 @@ c-----------------------------------------------------------------------
 
       eps = 4.0/(lx1-1.0)
       ifdebug = 0
-      ifixCLSbdry = 1
+      ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
      $             eps, ifdebug, ifixCLSbdry)
