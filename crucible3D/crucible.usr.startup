@@ -42,7 +42,7 @@ c-----------------------------------------------------------------------
       rhog = 1.1839
       nug = 1.562e-5
       mug = nug * rhog
-      mul = mug * 10.0
+      mul = mug * 100.0
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
@@ -178,6 +178,7 @@ c-----------------------------------------------------------------------
         else if(cbc(iside,e,ifld_cls).eq.'t  ')then
           temp = t(ix,iy,iz,e,ifld_cls-1)
           if(zz .lt. 10.0*gfac) temp = 1.0
+          if(zz .gt. 25.0*gfac) temp = 0.0
         endif
       endif
 
@@ -330,9 +331,9 @@ c-----------------------------------------------------------------------
             cbc(ifc,iel,ifld_tlsr) = 'I  '
           elseif(id_face.eq.2)then
             cbc(ifc,iel,1) = 'O  '
-            cbc(ifc,iel,ifld_cls) = 'I  '
+            cbc(ifc,iel,ifld_cls) = 't  '
             cbc(ifc,iel,ifld_tls) = 'I  '
-            cbc(ifc,iel,ifld_clsr) = 'I  '
+            cbc(ifc,iel,ifld_clsr) = 't  '
             cbc(ifc,iel,ifld_tlsr) = 'I  '
           elseif(id_face.eq.1)then
             cbc(ifc,iel,1) = 'W  '

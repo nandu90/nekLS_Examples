@@ -42,7 +42,6 @@ c-----------------------------------------------------------------------
       rhog = 1.1839
       nug = 1.562e-5
       mug = nug * rhog
-      mul = mug * 10.0
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
@@ -178,6 +177,7 @@ c-----------------------------------------------------------------------
         else if(cbc(iside,e,ifld_cls).eq.'t  ')then
           temp = t(ix,iy,iz,e,ifld_cls-1)
           if(zz .lt. 10.0*gfac) temp = 1.0
+          if(zz .gt. 25.0*gfac) temp = 0.0
         endif
       endif
 
@@ -243,6 +243,9 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
 
       integer ntlsr, nclsr
+      real flux, dflux, w(lx1*ly1*lz1),sc
+      integer ie, ifc
+      real glsum
 
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
@@ -250,6 +253,26 @@ c-----------------------------------------------------------------------
       nclsr = uparam(2) !freq of CLS re-distancing
 
       call LS_default_driver(ntlsr,nclsr)
+
+      !Post-process
+      !Compute the inlet flux
+      if(istep.eq.1)then
+        flux = 0.0
+        do ie=1,nelv
+          do ifc = 1,ndim*2
+            if(cbc(ifc,ie,1).eq.'v  ')then
+              call surface_flux(dflux,vx,vy,vz,ie,ifc,w)
+              flux = flux+dflux
+            endif
+          enddo
+        enddo
+        flux = glsum(flux,1)
+        if(nio.eq.0)then 
+          write(*,*)"Inlet flowrate (m^3/s):",flux
+          sc = 6.0e7
+          write(*,*)"Inlet flowrate (cc/min):",flux*sc
+        endif
+      endif
       
       return
       end
@@ -330,9 +353,9 @@ c-----------------------------------------------------------------------
             cbc(ifc,iel,ifld_tlsr) = 'I  '
           elseif(id_face.eq.2)then
             cbc(ifc,iel,1) = 'O  '
-            cbc(ifc,iel,ifld_cls) = 'I  '
+            cbc(ifc,iel,ifld_cls) = 't  '
             cbc(ifc,iel,ifld_tls) = 'I  '
-            cbc(ifc,iel,ifld_clsr) = 'I  '
+            cbc(ifc,iel,ifld_clsr) = 't  '
             cbc(ifc,iel,ifld_tlsr) = 'I  '
           elseif(id_face.eq.1)then
             cbc(ifc,iel,1) = 'W  '
