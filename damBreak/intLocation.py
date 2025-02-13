@@ -103,7 +103,7 @@ def getloc(direc,files,tol,wall):
 def main():
     hfiles = np.arange(0,90,2)
     vfiles = np.arange(1,90,2)
-    tol = [1e-3,1e-2,1e-3]
+    tol = [1e-3,1e-4,1e-3]
 
     hwall, time1 = getloc('25X100',hfiles,tol[0],'h')
     vwall, time2 = getloc('25X100',vfiles,tol[0],'v')
@@ -114,7 +114,7 @@ def main():
 
     hfiles = np.arange(0,170,2)
     vfiles = np.arange(1,170,2)
-    hwall, time1 = getloc('50X200',hfiles,tol[1],'h')
+    hwall, time1 = getloc('50X200',hfiles,tol[0],'h')
     vwall, time2 = getloc('50X200',vfiles,tol[0],'v')
     xh2 = time1
     yh2 = hwall
@@ -122,14 +122,14 @@ def main():
     yv2 = vwall
     #print(yh)
     
-    # hfiles = np.arange(0,90,2)
-    # vfiles = np.arange(1,90,2)
-    # hwall, time1 = getloc('400X100',hfiles,tol[0],'h')
-    # vwall, time2 = getloc('400X100',vfiles,tol[0],'v')
-    # xh3 = time1
-    # yh3 = hwall
-    # xv3 = time2
-    # yv3 = vwall
+    hfiles = np.arange(0,148,2)
+    vfiles = np.arange(1,148,2)
+    hwall, time1 = getloc('.',hfiles,tol[1],'h')
+    vwall, time2 = getloc('.',vfiles,tol[0],'v')
+    xh3 = time1
+    yh3 = hwall
+    xv3 = time2
+    yv3 = vwall
     #print(yh)
 
     data = np.loadtxt('exp_front.dat',delimiter=' ')
@@ -140,17 +140,17 @@ def main():
     xv_exp = data[:,0]
     yv_exp = data[:,1]
 
-    labels = ['25X100','50X200','Martin et al (1952)']
-    lines = ['-','--','','','']
-    marks = ['.','','v','v','o']
+    labels = ['25X100','50X200','100X400','Martin et al (1952)']
+    lines = ['-','--','--','','']
+    marks = ['.','','','v','o']
 
-    x = [xh,xh2,xh_exp]#,x2,x3,xchiu,xg]
-    y = [yh,yh2,yh_exp]#,y2,y3,ychiu,yg]
+    x = [xh,xh2,xh3,xh_exp]#,x2,x3,xchiu,xg]
+    y = [yh,yh2,yh3,yh_exp]#,y2,y3,ychiu,yg]
         
     plotnow('horizontal','$t*$','Surge front location $(x/a)$',x,y,labels,linestyles=lines,markers=marks)
 
-    x = [xv,xv2,xv_exp]#,x2,x3,xchiu,xg]
-    y = [yv,yv2,yv_exp]#,y2,y3,ychiu,yg]    
+    x = [xv,xv2,xv3,xv_exp]#,x2,x3,xchiu,xg]
+    y = [yv,yv2,yv3,yv_exp]#,y2,y3,ychiu,yg]    
     
     plotnow('vertical','$t*$','Column height $(y/a)$',x,y,labels,linestyles=lines,markers=marks)
     
