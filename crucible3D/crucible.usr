@@ -331,7 +331,7 @@ c-----------------------------------------------------------------------
       
       flowrate = 10.0/60.0 * 1e-6
       areainlet = PI*(charl/2.0)**2.0
-      udim = flowrate/areainlet * 5.0
+      udim = flowrate/areainlet
 
       call cmult(xm1,gfac,ntot)
       call cmult(ym1,gfac,ntot)
@@ -401,6 +401,8 @@ c-----------------------------------------------------------------------
       integer ifdebug
       integer ifixCLSbdry
 
+      integer ntls_max, ncls_max
+
       eps = 4.0/(lx1-1.0)
       ! nsteps_cls = uparam(1)
       ! nsteps_tls = uparam(2)
@@ -409,10 +411,13 @@ c-----------------------------------------------------------------------
       ifdebug = 0
       ifixCLSbdry = 0
       
+      ntls_max = 200
+      ncls_max = 10
 
-      call ls_init(ifld_cls, ifld_clsr,
+      call ls_init_maxiter(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
-     $             eps, ifdebug, ifixCLSbdry)
+     $             eps, ifdebug, ifixCLSbdry,
+     $             ntls_max, ncls_max)
 
       ! call ls_init2(nsteps_cls,nsteps_tls,eps,
       ! $             dt_cls_in,dt_tls_in,
@@ -456,7 +461,7 @@ c     scalar 3
 
 c     scalar 3      
       svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      svvcut(ifld_tlsr) = max(1.0,(lx1-1.0)/2.0-1.0)
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
