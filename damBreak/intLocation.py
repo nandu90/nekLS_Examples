@@ -76,10 +76,20 @@ def getloc(direc,files,tol,wall):
         else:
             y = data[:,1]
         cls = data[:,5]-0.5
+
+        if(wall=='h'):
+            y = np.flip(y)
+            cls = np.flip(cls)
+            #print(y,cls)
+            #raise SystemExit(1)
         
         tol2 = tol
         y = y[np.abs(cls) < 0.5-tol2]
         cls = cls[np.abs(cls) < 0.5-tol2]
+
+        if(wall=='h'): #otherwise i get erroneous value
+            y=y[:20]
+            cls=cls[:20]
     
         func = interpolate.interp1d(y,cls,fill_value="extrapolate",kind="linear")
         root = optimize.fsolve(func,np.mean(y))
@@ -91,21 +101,21 @@ def getloc(direc,files,tol,wall):
     return loc, time
 
 def main():
-    hfiles = np.arange(0,158,2)
-    vfiles = np.arange(1,158,2)
-    tol = [1e-4,1e-4,1e-3]
+    hfiles = np.arange(0,90,2)
+    vfiles = np.arange(1,90,2)
+    tol = [1e-3,1e-2,1e-3]
 
-    hwall, time1 = getloc('.',hfiles,tol[0],'h')
-    vwall, time2 = getloc('.',vfiles,tol[0],'v')
+    hwall, time1 = getloc('25X100',hfiles,tol[0],'h')
+    vwall, time2 = getloc('25X100',vfiles,tol[0],'v')
     xh = time1
     yh = hwall
     xv = time2
     yv = vwall
 
-    hfiles = np.arange(0,1958,2)
-    vfiles = np.arange(1,1958,2)
-    hwall, time1 = getloc('CFL0.01',hfiles,tol[0],'h')
-    vwall, time2 = getloc('CFL0.01',vfiles,tol[0],'v')
+    hfiles = np.arange(0,170,2)
+    vfiles = np.arange(1,170,2)
+    hwall, time1 = getloc('50X200',hfiles,tol[1],'h')
+    vwall, time2 = getloc('50X200',vfiles,tol[0],'v')
     xh2 = time1
     yh2 = hwall
     xv2 = time2
@@ -130,7 +140,7 @@ def main():
     xv_exp = data[:,0]
     yv_exp = data[:,1]
 
-    labels = ['CFL=0.2','CFL=0.02','Martin et al (1952)']
+    labels = ['25X100','50X200','Martin et al (1952)']
     lines = ['-','--','','','']
     marks = ['.','','v','v','o']
 
