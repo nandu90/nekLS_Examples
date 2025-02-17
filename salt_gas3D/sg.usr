@@ -38,18 +38,6 @@ c-----------------------------------------------------------------------
       nul = mul/rhol
       nug = mug/rhog
 
-
-      if(icalld.eq.0)then
-        icalld = 1
-        if(nio.eq.0)then
-          write(*,*)"Characteristic length",charl
-          write(*,*)"Characteristic velocity",udim
-          write(*,*)"Reynolds number",Re
-          write(*,*)"Froude number",Fr
-          write(*,*)"Weber number",We
-        endif
-      endif
-
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
         psi = max(0.0,psi)
@@ -58,7 +46,7 @@ c-----------------------------------------------------------------------
         !in non-dimensional form you must have kinematic
         !viscosity here
         udiff = ((1.0-psi)*mug + psi*mul)
-        vtrans0(ix,iy,iz,e) = rhog/rhol
+        vtrans0(ix,iy,iz,e) = rhog
       else
         utrans = 1.0
         udiff = 1e-10
@@ -165,9 +153,9 @@ c-----------------------------------------------------------------------
         if(ifield.eq.ifld_cls) temp = 0.0
       endif
 
-      ! if(ifield.eq.ifld_clsr)then
-      !   temp = t(ix,iy,iz,e,ifld_cls-1)
-      ! endif
+      if(ifield.eq.ifld_clsr)then
+        temp = t(ix,iy,iz,e,ifld_cls-1)
+      endif
 
       if(ifield.eq.1)then
         call traction_ls(ix,iy,iz,e,iside)
@@ -217,18 +205,32 @@ c-----------------------------------------------------------------------
       implicit none
       include 'SIZE'
       include 'TOTAL'
+      include 'LVLSET'
 
       integer ntlsr, nclsr
       common /myoutflow/ d(lx1,ly1,lz1,lelt),m1(lx1*ly1*lz1,lelt)
       real d, m1
       real rq,uin
+      integer cstep, ntot
+
+      integer i
+      real zz
 
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
-      ntlsr = uparam(5) !freq of TLS re-distancing
-      nclsr = uparam(6) !freq of CLS re-distancing
+      ntlsr = uparam(1) !freq of TLS re-distancing
+      nclsr = uparam(2) !freq of CLS re-distancing
 
       call LS_default_driver(ntlsr,nclsr)
+
+      !testing
+      ! ntot = lx1*ly1*lz1*nelt
+      ! do i=1,ntot
+      !   zz = zm1(i,1,1,1)
+      !   t(i,1,1,1,ifld_tls-1) = -0.07454340 - zz
+      ! enddo
+      ! cstep = 0
+      ! call LS_CLS_driver(cstep,nclsr)
       
       rq=4.0
       uin = 0.
@@ -256,8 +258,6 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
-      include 'AVM'
-      include 'SVV'
 
       real eps,dt_cls_in,dt_tls_in
       integer nsteps_cls, nsteps_tls
@@ -266,71 +266,13 @@ c-----------------------------------------------------------------------
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
-      integer ifdebug
       integer ie,ifc
-      integer ifixCLSbdry
 
-
-      eps = 4.0/(lx1-1.0)
-      nsteps_cls = uparam(1)
-      nsteps_tls = uparam(2)
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
-      dt_cls_in = dt * uparam(3)
-      dt_tls_in = dt * uparam(4)
-      ifdebug = 0
-      ifixCLSbdry = 1
-      call ls_init(nsteps_cls,nsteps_tls,eps,
-     $             dt_cls_in,dt_tls_in,
-     $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr,ifdebug,ifixCLSbdry)
 
-c---------------------------------------------------      
-c     This section to specify user defined parameters
-c     for AVM/SVV. Leave commented to use default parameters
-c     parameters. 
-
-      !fluid
-      svv_c0(1) = 1.0
-
-      svv_c0(ifld_cls) = 1.0                 !ifld_cls
-      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
-      ! svv_k0(1) = 1.5
-      ! svv_k1(1) = 1.5
-      ! ifnlsvv(1) = .true.
-
-      ! avm_c1(1) = 1.0
-      ! avm_ncut(1) = 1.0
-      ! icont(1) = .false.
-      ifupwindsvv(ifld_cls) = .true.
-
-c     scalar 2      
-      svv_c0(ifld_tls) = 1.0                  !ifld_tls
-      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
-      ! svv_k0(2) = 1.5
-      ! svv_k1(2) = 1.5
-      ! ifnlsvv(2) = .false.
-      ifupwindsvv(ifld_tls) = .true.
-
-c     scalar 3      
-      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
-      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
-      ! svv_k0(3) = 1.5
-      ! svv_k1(3) = 1.5
-      ! ifnlsvv(3) = .false.
-      ! ifupwindsvv(ifld_clsr) = .true.
-
-c     scalar 3      
-      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
-      ! svv_k0(4) = 1.5
-      ! svv_k1(4) = 1.5
-      ! ifnlsvv(4) = .false.
-      ! ifupwindsvv(ifld_tlsr) = .true.
-
-c--------------------------------------------------
       do ie=1,nelt
         do ifc=1,2*ndim
           if(bc(5,ifc,ie,1).eq.2)then
@@ -375,8 +317,68 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
+      include 'SVV'
+      include 'AVM'
       
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      integer ifdebug, ifixCLSbdry
+
+      real eps
+
+      eps = 4.0/(lx1-1.0)
+      ifdebug = 0
+      ifixCLSbdry = 0
+      call ls_init(ifld_cls, ifld_clsr,
+     $             ifld_tls, ifld_tlsr,
+     $             eps, ifdebug, ifixCLSbdry)
+
+c---------------------------------------------------      
+c     This section to specify user defined parameters
+c     for AVM/SVV. Leave commented to use default parameters
+c     parameters. 
+
+      !fluid
+      svv_c0(1) = 1.0
+
+      svv_c0(ifld_cls) = 2.0                 !ifld_cls
+      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(1) = 1.5
+      ! svv_k1(1) = 1.5
+      ! ifnlsvv(1) = .true.
+
+      ! avm_c1(1) = 1.0
+      ! avm_ncut(1) = 1.0
+      ! icont(1) = .false.
+      ifupwindsvv(ifld_cls) = .true.
+
+c     scalar 2      
+      svv_c0(ifld_tls) = 2.0                  !ifld_tls
+      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(2) = 1.5
+      ! svv_k1(2) = 1.5
+      ! ifnlsvv(2) = .false.
+      ifupwindsvv(ifld_tls) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(3) = 1.5
+      ! svv_k1(3) = 1.5
+      ! ifnlsvv(3) = .false.
+      ! ifupwindsvv(ifld_clsr) = .true.
+
+c     scalar 3      
+      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      ! svv_k0(4) = 1.5
+      ! svv_k1(4) = 1.5
+      ! ifnlsvv(4) = .false.
+      ! ifupwindsvv(ifld_tlsr) = .true.
       return
+
       end
 c---------------------------------------------------------------------
       subroutine extrappr(pe,p,plag,plag1)
