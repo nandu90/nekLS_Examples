@@ -145,16 +145,17 @@ c-----------------------------------------------------------------------
 
       e = gllel(eg)
 
+      if(ifield.eq.ifld_clsr)then
+        temp = t(ix,iy,iz,e,ifld_cls-1)
+      endif
+
       !Inlet
       if(cbc(iside,e,1).eq.'v  ')then
         ux = 0.0
         uy = 0.0
         uz = -5.31
         if(ifield.eq.ifld_cls) temp = 0.0
-      endif
-
-      if(ifield.eq.ifld_clsr)then
-        temp = t(ix,iy,iz,e,ifld_cls-1)
+        if(ifield.eq.ifld_clsr) temp = 0.0
       endif
 
       if(ifield.eq.1)then
@@ -285,25 +286,25 @@ c-----------------------------------------------------------------------
             cbc(ifc,ie,1) = 'O  '
             cbc(ifc,ie,ifld_cls) = 'I  '
             cbc(ifc,ie,ifld_tls) = 'I  '
-            cbc(ifc,ie,ifld_clsr) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 't  '
             cbc(ifc,ie,ifld_tlsr) = 'I  '
           elseif(bc(5,ifc,ie,1).eq.4)then
             cbc(ifc,ie,1) = 'shl'
-            cbc(ifc,ie,ifld_cls) = 'I  '
+            cbc(ifc,ie,ifld_cls) = 't  '
             cbc(ifc,ie,ifld_tls) = 'I  '
-            cbc(ifc,ie,ifld_clsr) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 't  '
             cbc(ifc,ie,ifld_tlsr) = 'I  '
           elseif(bc(5,ifc,ie,1).eq.5)then !bottom
             cbc(ifc,ie,1) = 'shl'
             cbc(ifc,ie,ifld_cls) = 'I  '
             cbc(ifc,ie,ifld_tls) = 'I  '
-            cbc(ifc,ie,ifld_clsr) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 't  '
             cbc(ifc,ie,ifld_tlsr) = 'I  '
           elseif(bc(5,ifc,ie,1).eq.6)then !vessel
             cbc(ifc,ie,1) = 'shl'
             cbc(ifc,ie,ifld_cls) = 'I  '
             cbc(ifc,ie,ifld_tls) = 'I  '
-            cbc(ifc,ie,ifld_clsr) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 't  '
             cbc(ifc,ie,ifld_tlsr) = 'I  '
           endif
         enddo

@@ -3,22 +3,22 @@
 #
 [GENERAL]
 startFrom = sg.fld
-#stopAt = numSteps
+stopAt = numSteps
 stopAt = endTime
-numSteps =  10000 #00000 #12000 #1000 #16000 #4000 #400 #400 #200000
+#numSteps =  10000 #00000 #12000 #1000 #16000 #4000 #400 #400 #200000
 endTime = 2 #10e-4
 
 dt = 2.0e-06
 timeStepper = bdf2 #With bdf2 SF does not work well
 variabledt = yes
-targetCFL = 1.0
-#extrapolation = OIFS
+targetCFL = 3.0
+extrapolation = OIFS
 
 writeControl = runTime
-writeInterval = 0.001
+writeInterval = 0.005
 
-userParam01 = 1000     #Freq of TLSR
-userParam02 = 200      #Freq of CLSR
+userParam01 = 500     #Freq of TLSR
+userParam02 = 50      #Freq of CLSR
 
 [MESH]
 numberOfBCFields = 1
@@ -29,37 +29,37 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-3
+residualTol = 1e-4
 residualProj = yes
 preconditioner = semg_amg_hypre
 
 [VELOCITY]
 residualProj = yes
-residualTol = 1e-3
+residualTol = 1e-6
 density = 1
 viscosity = -1.0 #dummy
 
 [TEMPERATURE] #cls field
 rhocp = 1.
 conductivity = 1.
-residualTol = 1e-6
+residualTol = 1e-4
 regularization = svv
 
 [SCALAR01] #tls field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-4
 regularization = svv
 
 [SCALAR02] #cls re-distanacing
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-4
 regularization = svv
 
 [SCALAR03] #tls re-distancing field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-4
 regularization = svv
 
