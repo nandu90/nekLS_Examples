@@ -344,7 +344,7 @@ c     parameters.
       !fluid
       svv_c0(1) = 1.0
 
-      svv_c0(ifld_cls) = 2.0                 !ifld_cls
+      svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
@@ -356,7 +356,7 @@ c     parameters.
       ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls) = 2.0                  !ifld_tls
+      svv_c0(ifld_tls) = 1.0                  !ifld_tls
       ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
@@ -373,7 +373,7 @@ c     scalar 3
 
 c     scalar 3      
       svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      svvcut(ifld_tlsr) = max(1.0,(lx1-1.0)/2.0-2.0)
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
