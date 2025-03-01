@@ -90,7 +90,7 @@ c-----------------------------------------------------------------------
       gvec(2) = 0.0
       gvec(3) = -9.81
 
-      gamm = 0.01
+      gamm = 0.1
 
       call surfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
       
@@ -217,6 +217,8 @@ c-----------------------------------------------------------------------
       integer i
       real zz
 
+      ! if(istep.eq.0) call gfldr('sg.fld')
+
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
       ntlsr = uparam(1) !freq of TLS re-distancing
@@ -289,19 +291,19 @@ c-----------------------------------------------------------------------
             cbc(ifc,ie,ifld_clsr) = 't  '
             cbc(ifc,ie,ifld_tlsr) = 'I  '
           elseif(bc(5,ifc,ie,1).eq.4)then
-            cbc(ifc,ie,1) = 'shl'
+            cbc(ifc,ie,1) = 'W  '
             cbc(ifc,ie,ifld_cls) = 't  '
             cbc(ifc,ie,ifld_tls) = 'I  '
             cbc(ifc,ie,ifld_clsr) = 't  '
             cbc(ifc,ie,ifld_tlsr) = 'I  '
           elseif(bc(5,ifc,ie,1).eq.5)then !bottom
-            cbc(ifc,ie,1) = 'shl'
+            cbc(ifc,ie,1) = 'W  '
             cbc(ifc,ie,ifld_cls) = 'I  '
             cbc(ifc,ie,ifld_tls) = 'I  '
             cbc(ifc,ie,ifld_clsr) = 't  '
             cbc(ifc,ie,ifld_tlsr) = 'I  '
           elseif(bc(5,ifc,ie,1).eq.6)then !vessel
-            cbc(ifc,ie,1) = 'shl'
+            cbc(ifc,ie,1) = 'W  '
             cbc(ifc,ie,ifld_cls) = 'I  '
             cbc(ifc,ie,ifld_tls) = 'I  '
             cbc(ifc,ie,ifld_clsr) = 't  '
@@ -328,13 +330,17 @@ c-----------------------------------------------------------------------
       integer ifdebug, ifixCLSbdry
 
       real eps
+      integer ntls_max, ncls_max
 
-      eps = 4.0/(lx1-1.0)
+      eps = 6.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
-      call ls_init(ifld_cls, ifld_clsr,
+      ntls_max = 100
+      ncls_max = 10
+      call ls_init_maxiter(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
-     $             eps, ifdebug, ifixCLSbdry)
+     $             eps, ifdebug, ifixCLSbdry,
+     $             ntls_max, ncls_max)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -344,7 +350,7 @@ c     parameters.
       !fluid
       svv_c0(1) = 1.0
 
-      svv_c0(ifld_cls) = 2.0                 !ifld_cls
+      svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
@@ -356,7 +362,7 @@ c     parameters.
       ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls) = 2.0                  !ifld_tls
+      svv_c0(ifld_tls) = 1.0                  !ifld_tls
       ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
@@ -364,7 +370,7 @@ c     scalar 2
       ifupwindsvv(ifld_tls) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
+      svv_c0(ifld_clsr) = 2.0                  !ifld_clsr
       ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
@@ -372,8 +378,8 @@ c     scalar 3
       ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = max(1.0,(lx1-1.0)/2.0-2.0)
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
