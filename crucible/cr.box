@@ -9,7 +9,7 @@ base.rea
 Box                                       
 -60 -80                            Nelx  Nely
 0 22.9125 1.                        x0 x1 ratio
-10 50 1.			      y0 y1 ratio
+10 40 1.			      y0 y1 ratio
 W  ,W  ,E  ,O                     BC's
 I  ,I  ,E  ,I   
 I  ,I  ,E  ,I   
@@ -63,7 +63,7 @@ E  ,I  ,I  ,E
 Box                                       
 -60 -80                            Nelx  Nely
 26.0875 49.0 1.                        x0 x1 ratio
-10 50 1.			      y0 y1 ratio
+10 40 1.			      y0 y1 ratio
 W  ,W  ,E  ,O                     BC's
 I  ,I  ,E  ,I   
 I  ,I  ,E  ,I   
@@ -72,7 +72,7 @@ I  ,I  ,E  ,I
 Box                                       
 -10 -80                            Nelx  Nely
 23.8015 25.1985 1.                        x0 x1 ratio
-10 50 1.			      y0 y1 ratio
+10 40 1.			      y0 y1 ratio
 W  ,W  ,E  ,v                     BC's
 I  ,I  ,E  ,t   
 I  ,I  ,E  ,I   
