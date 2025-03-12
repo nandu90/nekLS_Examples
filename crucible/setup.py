@@ -10,18 +10,20 @@ from CoolProp.CoolProp import PropsSI
 from scipy.optimize import curve_fit
 
 def main():
-    L = 6.57e-3 #Bubble effective dia
-    g = 10.0
+    L = 1.397e-3 #Bubble effective dia
+    g = 9.81
     rhol = 970.0
     rhog = 1.1839 
     rhoratio = rhol/rhog
     mul = 1.0
     nug = 1.562e-5
     mug = nug * rhog
-    gamma = 40e-3
+    gamma = 0.0216
     nul = mul/rhol
     nug = mug/rhog
-    U = 13.15e-3      #From Donna
+    flowrate = 10.0/60.0 * 1e-6
+    areainlet = math.pi*(L/2.0)**2.0
+    U = flowrate/areainlet
     muratio = mul/mug
     nuratio = nul/nug
 

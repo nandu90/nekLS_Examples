@@ -29,7 +29,7 @@ Box
 22.9125 23.8015 1.                        x0 x1 ratio
 0 10 1.			      y0 y1 ratio
 E  ,E  ,W  ,W                     BC's
-E  ,E  ,I  ,I   
+E  ,E  ,I  ,t   
 E  ,E  ,I  ,I   
 E  ,E  ,t  ,t   
 E  ,E  ,I  ,I   
@@ -47,7 +47,7 @@ Box
 25.1985 26.0875 1.                        x0 x1 ratio
 0 10 1.			      y0 y1 ratio
 E  ,E  ,W  ,W                     BC's
-E  ,E  ,I  ,I   
+E  ,E  ,I  ,t   
 E  ,E  ,I  ,I   
 E  ,E  ,t  ,t   
 E  ,E  ,I  ,I   
@@ -74,7 +74,7 @@ Box
 23.8015 25.1985 1.                        x0 x1 ratio
 10 40 1.			      y0 y1 ratio
 W  ,W  ,E  ,v                     BC's
-I  ,I  ,E  ,t   
+t  ,t  ,E  ,t   
 I  ,I  ,E  ,I   
-I  ,I  ,E  ,t   
+t  ,t  ,E  ,t   
 I  ,I  ,E  ,I   
