@@ -12,7 +12,7 @@ dt = 5e-04
 timeStepper = bdf2
 
 #writeControl = runTime
-writeInterval = 2000
+writeInterval = 200
 
 userParam01 = 1000    #Freq of TLSR
 userParam02 = 100     #Freq of CLSR
