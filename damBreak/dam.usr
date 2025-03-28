@@ -144,6 +144,7 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
       integer e
+      real yplus
 
       e = gllel(eg)
 
@@ -157,7 +158,8 @@ c-----------------------------------------------------------------------
       endif
 
       if(ifield.eq.1)then
-        call traction_ls(ix,iy,iz,e,iside)
+        yplus = 11.0
+        call traction_ls(ix,iy,iz,e,iside,yplus)
       endif
 
       return

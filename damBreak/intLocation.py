@@ -112,20 +112,20 @@ def main():
     xv = time2
     yv = vwall
 
-    hfiles = np.arange(0,170,2)
-    vfiles = np.arange(1,170,2)
-    hwall, time1 = getloc('50X200',hfiles,tol[0],'h')
-    vwall, time2 = getloc('50X200',vfiles,tol[0],'v')
+    hfiles = np.arange(0,120,2)
+    vfiles = np.arange(1,120,2)
+    hwall, time1 = getloc('38X150',hfiles,tol[0],'h')
+    vwall, time2 = getloc('38X150',vfiles,tol[0],'v')
     xh2 = time1
     yh2 = hwall
     xv2 = time2
     yv2 = vwall
     #print(yh)
     
-    hfiles = np.arange(0,148,2)
-    vfiles = np.arange(1,148,2)
-    hwall, time1 = getloc('.',hfiles,tol[1],'h')
-    vwall, time2 = getloc('.',vfiles,tol[0],'v')
+    hfiles = np.arange(0,170,2)
+    vfiles = np.arange(1,170,2)
+    hwall, time1 = getloc('50X200',hfiles,tol[1],'h')
+    vwall, time2 = getloc('50X200',vfiles,tol[0],'v')
     xh3 = time1
     yh3 = hwall
     xv3 = time2
@@ -140,7 +140,7 @@ def main():
     xv_exp = data[:,0]
     yv_exp = data[:,1]
 
-    labels = ['25X100','50X200','100X400','Martin et al (1952)']
+    labels = ['25X100','38X150','50X200','Martin et al (1952)']
     lines = ['-','--','--','','']
     marks = ['.','','','v','o']
 
