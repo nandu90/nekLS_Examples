@@ -5,13 +5,13 @@
 #stopAt = numSteps
 stopAt = endTime
 #numSteps = 4000 #200000
-endTime = 1.0
+endTime = 2.0
 
-dt = 1.0e-04
+dt = 2.0e-05
 timeStepper = bdf2
 
 writeControl = runTime
-writeInterval = 1.0
+writeInterval = 2.0
 
 [PROBLEMTYPE]
 variableProperties = yes
@@ -45,7 +45,14 @@ residualTol = 1e-8
 regularization = svv
 
 [SCALAR03]
-#solver=none
+#solver = none
+density = 1.0
+diffusivity = 1e-8 
+residualTol = 1e-8
+regularization = svv
+
+[SCALAR04]
+#solver = none
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
