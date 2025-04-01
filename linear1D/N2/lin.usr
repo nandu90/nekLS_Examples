@@ -162,15 +162,15 @@ c     scalar 1
 
 c     scalar 2
       svv_c0(4) = 0.01
-      ! svvcut(4) = (lx1-1.0)
+      svvcut(4) = (lx1-1.0)
 
 c     scalar 3
       svv_c0(5) = 0.1
-      ! svvcut(5) = (lx1-1.0)
+      svvcut(5) = (lx1-1.0)
 
 c     scalar 4
       svv_c0(6) = 1.0
-      ! svvcut(6) = (lx1-1.0)
+      svvcut(6) = (lx1-1.0)
       
       return
       end

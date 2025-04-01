@@ -4,14 +4,14 @@
 [GENERAL]
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 4000 #200000
+numSteps =  500000 #200000
 #endTime = 1.0
 
-dt = 2.5e-04
+dt = 2.0e-04
 timeStepper = bdf2
 
 writeControl = runTime
-writeInterval = 0.1
+writeInterval = 100.0
 
 [PROBLEMTYPE]
 variableProperties = yes
@@ -28,9 +28,8 @@ viscosity = -100
 [TEMPERATURE]
 solver = none
 rhocp = 1.
-conductivity = 1.
+conductivity = 1e-8
 residualTol = 1e-8
-regularization = none
 
 [SCALAR01]
 density = 1.0
@@ -39,14 +38,18 @@ residualTol = 1e-8
 regularization = avm
 
 [SCALAR02]
-#solver = none
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
 regularization = svv
 
 [SCALAR03]
-#solver=none
+density = 1.0
+diffusivity = 1e-8 
+residualTol = 1e-8
+regularization = svv
+
+[SCALAR04]
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
