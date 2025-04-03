@@ -219,7 +219,7 @@ c-----------------------------------------------------------------------
       ifld_clsr = 4
       ifld_tlsr = 5
 
-      gfac = 0.001
+      gfac = 1
       call cmult(xm1,gfac,ntot)
       call cmult(ym1,gfac,ntot)
 
@@ -245,7 +245,7 @@ c-----------------------------------------------------------------------
 
       !Note - the normals in the cls re-distancing equation
       !are taken from the ifld_tls field
-      eps = 4.0/(lx1-1.0)
+      eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
