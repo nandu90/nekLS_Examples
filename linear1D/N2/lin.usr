@@ -1,5 +1,6 @@
       include "experimental/lvlSet.f"
       include "lineplot.f"
+      include "avmLegacy.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -9,15 +10,27 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
 
+      common /usrvisc/ visc(lx1,ly1,lz1,lelv)
+      real visc
+      real glmin, glmax
+      real vmin,vmax
+      integer ntot
+
       e = gllel(eg)
 
       utrans = 1.0
       udiff = cpfld(ifield,1)
 
+      if(ix*iy*iz*e.eq.1 .and. ifield.eq.3)then
+        ntot = lx1*ly1*lz1*nelt
+        call evm_setvisc(t(1,1,1,1,2),visc)
+      endif
+      if(ifield.eq.3) udiff = visc(ix,iy,iz,e)
+
       if(ifavm(ifield-1))then
-        udiff = 1e-20       !must be tiny for hyperbolic
+        udiff = 1e-32       !must be tiny for hyperbolic
       elseif(ifsvv(ifield-1))then
-        udiff = 1e-20      !must be tiny for hyperbolic
+        udiff = 1e-32      !must be tiny for hyperbolic
       endif
 
       return
@@ -157,8 +170,8 @@ c     parameters.
 c     scalar 0 (temp - off)      
 
 c     scalar 1      
-      ! avm_ncut(3) = 1
-      ! avm_c1(3) = 1.0
+      ! avm_ncut(3) = (lx1-1)/5
+      ! avm_c1(3) = 0.5
 
 c     scalar 2
       svv_c0(4) = 0.01

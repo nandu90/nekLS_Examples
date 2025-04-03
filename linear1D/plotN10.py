@@ -8,7 +8,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
-def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]):
+def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],xlim=[],ylim=[]):
     default_cycler = (cycler(color=['k','b','r','g','m'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
@@ -23,6 +23,12 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     # if(len(linestyles) == 0):
     #     linestyles = ['-']*len(x)
     #     markers = ['']*len(x)
+
+    if(xlim != []):
+        ax.set_xlim([xlim[0],xlim[1]])
+        
+    if(ylim != []):
+        ax.set_ylim([ylim[0],ylim[1]])
 
     print(linestyles)
     print(len(x))
@@ -39,7 +45,7 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     
             
     ax.grid()
-    ax.legend(loc='best',fontsize=10)
+    ax.legend(loc='best',fontsize=8)
     fig.savefig(fname+'.png',\
                 bbox_inches='tight',dpi=100)
     plt.close()
@@ -80,14 +86,16 @@ def main():
     xdata = [x,x,x,x,x]
     ydata = [exact,svv01,svv01N]
     
-    labels=['Exact','SVV-$N/4$','SVV-$N/2$']
-    lines = [':','-.','--','--','-']
+    labels=['Exact','SVV-$N/4$','SVV-$N/2$','AVM']
+    lines = [':','--','--','-.','-']
     marks = ['','','','','']
     plotnow('t1_N10','$x$','$u$',xdata,ydata,labels,linestyles=lines,markers=marks)
+    plotnow('t1_N10_zoom','$x$','$u$',xdata,ydata,labels,linestyles=lines,markers=marks,xlim=[0.1,0.5],ylim=[0.8,1.1])
 
     #t100
     data = np.loadtxt('t100_N10.dat',skiprows=1)
     x = data[:,0]
+    avm = data[:,6]
     svv001 = data[:,7]
     svv01 = data[:,8]
     svv1 = data[:,9]
@@ -103,6 +111,7 @@ def main():
     xdata = [x,x,x,x,x]
     ydata = [exact,svv01,svv01N]
     plotnow('t100_N10','$x$','$u$',xdata,ydata,labels,linestyles=lines,markers=marks)
+    plotnow('t100_N10_zoom','$x$','$u$',xdata,ydata,labels,linestyles=lines,markers=marks,xlim=[0.1,0.5],ylim=[0.8,1.1])
     
     return
 
