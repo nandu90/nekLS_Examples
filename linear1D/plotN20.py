@@ -35,7 +35,7 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
 
     for i in range(len(y)):
         if(ptype=='line'):
-            ax.plot(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=1.5)
+            ax.plot(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
         elif(ptype=='semilogx'):
             ax.semilogx(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i])
         elif(ptype=='semilogy'):

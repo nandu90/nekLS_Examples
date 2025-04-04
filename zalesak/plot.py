@@ -29,13 +29,13 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
 
     for i in range(len(y)):
         if(ptype=='line'):
-            ax.plot(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=1.5)
+            ax.plot(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
         elif(ptype=='semilogx'):
-            ax.semilogx(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i])
+            ax.semilogx(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
         elif(ptype=='semilogy'):
-            ax.semilogy(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i])
+            ax.semilogy(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
         else:
-            ax.loglog(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i])
+            ax.loglog(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
     
             
     ax.grid()
@@ -73,7 +73,7 @@ def getdata(case,t=1):
     return x,exact,svv
 
 def main():
-    N = 'N7'
+    N = 'N5'
     xdata = []
     ydata = []
 
