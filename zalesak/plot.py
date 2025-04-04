@@ -8,7 +8,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
-def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],xlim=[],ylim=[]):
+def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]):
     default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
@@ -23,12 +23,6 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     # if(len(linestyles) == 0):
     #     linestyles = ['-']*len(x)
     #     markers = ['']*len(x)
-
-    if(xlim != []):
-        ax.set_xlim([xlim[0],xlim[1]])
-        
-    if(ylim != []):
-        ax.set_ylim([ylim[0],ylim[1]])
 
     print(linestyles)
     print(len(x))
@@ -45,7 +39,7 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     
             
     ax.grid()
-    ax.legend(loc='best',fontsize=9)
+    ax.legend(loc='best',fontsize=10)
     fig.savefig(fname+'.pdf',\
                 bbox_inches='tight',dpi=100)
     plt.close()
@@ -65,53 +59,66 @@ def getexact(x,exact):
     
     return
 
+def getdata(case,t=1):
+    if(t==1):
+        tname = 'zale.00001.dat'
+    else:
+        tname = 'zale.00002.dat'
+
+    data = np.loadtxt(case+'/'+tname,skiprows=1)
+    x = data[:,0]
+    exact = data[:,5][(np.abs(x) > 0.3) & (np.abs(x) < 0.7)]
+    svv = data[:,7][(np.abs(x) > 0.3) & (np.abs(x) < 0.7)]
+    x = data[:,0][(np.abs(x) > 0.3) & (np.abs(x) < 0.7)]
+    return x,exact,svv
+
 def main():
-    
-    data = np.loadtxt('t1_N20.dat',skiprows=1)
-    x = data[:,0]
-    exact = data[:,5]
-    avm = data[:,6]
-    svv001 = data[:,7]
-    svv01 = data[:,8]
-    svv1 = data[:,9]
+    N = 'N7'
+    xdata = []
+    ydata = []
 
-    data = np.loadtxt('N2/t1_N20.dat',skiprows=1)
-    x = data[:,0]
-    svv001N = data[:,7]
-    svv01N = data[:,8]
-    svv1N = data[:,9]
-    
-    getexact(x,exact)
+    x,exact,svv = getdata(N+'/0.5')
+    xdata.append(x)
+    ydata.append(exact)
+    xdata.append(x)
+    ydata.append(svv)
 
-    xdata = [x,x,x,x,x]
-    ydata = [exact,svv01,svv01N,avm]
+    x,exact,svv = getdata(N+'/1')
+    xdata.append(x)
+    ydata.append(svv)
+
+    x,exact,svv = getdata(N+'/1.5')
+    xdata.append(x)
+    ydata.append(svv)
     
-    labels=['Exact','SVV-$N/4$','SVV-$N/2$','AVM']
-    lines = [':','--','--','-.','-']
+    labels=['Initial','$\\epsilon=0.5$','$\\epsilon=1$','$\\epsilon=1.5$']
+    lines = [':','-.','--','--','-']
     marks = ['','','','','']
-    plotnow('t1_N20','$x$','$u$',xdata,ydata,labels,linestyles=lines,markers=marks)
-    plotnow('t1_N20_zoom','$x$','$u$',xdata,ydata,labels,linestyles=lines,markers=marks,xlim=[0.1,0.5],ylim=[0.8,1.1])
+    plotnow('t2_'+N,'$x$','$\\psi$',xdata,ydata,labels,linestyles=lines,markers=marks)
 
-    #t100
-    data = np.loadtxt('t100_N20.dat',skiprows=1)
-    x = data[:,0]
-    avm = data[:,6]
-    svv001 = data[:,7]
-    svv01 = data[:,8]
-    svv1 = data[:,9]
+    xdata = []
+    ydata = []
 
-    data = np.loadtxt('N2/t100_N20.dat',skiprows=1)
-    x = data[:,0]
-    svv001N = data[:,7]
-    svv01N = data[:,8]
-    svv1N = data[:,9]
+    x,exact,svv = getdata(N+'/0.5',t=100)
+    xdata.append(x)
+    ydata.append(exact)
+    xdata.append(x)
+    ydata.append(svv)
+
+    x,exact,svv = getdata(N+'/1',t=100)
+    xdata.append(x)
+    ydata.append(svv)
+
+    x,exact,svv = getdata(N+'/1.5',t=100)
+    xdata.append(x)
+    ydata.append(svv)
     
-    getexact(x,exact)
+    labels=['Initial','$\\epsilon=0.5$','$\\epsilon=1$','$\\epsilon=1.5$']
+    lines = [':','-.','--','--','-']
+    marks = ['','','','','']
+    plotnow('t20_'+N,'$x$','$\\psi$',xdata,ydata,labels,linestyles=lines,markers=marks)
 
-    xdata = [x,x,x,x,x]
-    ydata = [exact,svv01,svv01N,avm]
-    plotnow('t100_N20','$x$','$u$',xdata,ydata,labels,linestyles=lines,markers=marks)
-    plotnow('t100_N20_zoom','$x$','$u$',xdata,ydata,labels,linestyles=lines,markers=marks,xlim=[0.1,0.5],ylim=[0.8,1.1])
+    
     
     return
 

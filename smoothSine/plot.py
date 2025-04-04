@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
 def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]):
-    default_cycler = (cycler(color=['k','b','r','g','m'])*\
+    default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
     plt.rc('axes',prop_cycle=default_cycler)
@@ -40,7 +40,7 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
             
     ax.grid()
     ax.legend(loc='best',fontsize=12)
-    fig.savefig(fname+'.png',\
+    fig.savefig(fname+'.pdf',\
                 bbox_inches='tight',dpi=100)
     plt.close()
     return

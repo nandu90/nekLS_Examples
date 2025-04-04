@@ -1,4 +1,5 @@
       include "experimental/lvlSet.f"
+      include "lineplot.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -14,9 +15,9 @@ c-----------------------------------------------------------------------
       udiff = cpfld(ifield,1)
 
       if(ifavm(ifield-1))then
-        udiff = 1e-10       !must be tiny for hyperbolic
+        udiff = 1e-20       !must be tiny for hyperbolic
       elseif(ifsvv(ifield-1))then
-        udiff = 1e-10      !must be tiny for hyperbolic
+        udiff = 1e-20      !must be tiny for hyperbolic
       endif
 
       return
@@ -80,13 +81,17 @@ c-----------------------------------------------------------------------
       real rcen(5,5)
 
       real thet,ucx,ucy,x1,y1,xlim,ylim
+      real distx,disty,dist
+
+      logical in_slot, below_slot, in_disk
+
+      real heaviside
+      real eps 
 
       e = gllel(eg)
 
-      thet = 0. !(45./180.)*PI
-
-      ucx = 0.5*cos(thet)-0.5*sin(thet)
-      ucy = 0.5*sin(thet)+0.5*cos(thet)
+      ucx = 0.5
+      ucy = 0.5
 
       ux = (PI)*(ucy-ym1(ix,iy,iz,e))
       uy = (PI)*(xm1(ix,iy,iz,e)-ucx)
@@ -94,29 +99,25 @@ c-----------------------------------------------------------------------
 
       x1 = 0.5
       y1 = 0.75
-      rcen(1,1) = x1*cos(thet)-0.5*sin(thet)
-      rcen(1,2) = 0.5*sin(thet)+y1*cos(thet)
-
-      temp = sqrt((xm1(ix,iy,iz,e)-rcen(1,1))**2.
-     &        +(ym1(ix,iy,iz,e)-rcen(1,2))**2.)-0.15
-
-      if(temp.le.0.)then
-        temp = 1.
-      else
-        temp = 0.
-      endif
 
       x = xm1(ix,iy,iz,e)
       y = ym1(ix,iy,iz,e)
 
-      x1 = 0.5
-      y1 = 0.85
-      xlim = x1*cos(thet)-0.5*sin(thet)
-      ylim = 0.5*sin(thet)+y1*cos(thet)
+      dist = sqrt((x-x1)**2.+(y-y1)**2.)-0.15
 
-      if(abs(x-xlim) .lt. 0.05/2. .and. y .lt. ylim)then
-        temp = 0.
-      endif
+      in_slot = (abs(x-x1) < 0.025)
+      below_slot = (y < 0.85)
+      in_disk = (dist < 0.0)
+      distx = 0.025 - abs(x - 0.5d0)
+      disty = 0.85 - y
+      
+      temp = dist
+
+      temp = max(dist,min(distx,disty))
+
+      eps = 0.5/(lx1-1)
+
+      temp = heaviside(ix,iy,iz,e,-temp,eps)
       
       return
       end
@@ -126,11 +127,17 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
+      real pta(3),ptb(3)
 
-      if(istep.eq.0)then
-        call outfld('  ')
+      if(istep.eq.nsteps .or. istep.eq.20000)then
+        pta(1) = 0.0
+        pta(2) = 0.75
+        pta(3) = 0.0
+        ptb(1) = 1.0
+        ptb(2) = 0.75
+        ptb(3) = 0.0
+        call lineplot(pta,ptb,1001)
       endif
-
       return
       end
 c-----------------------------------------------------------------------
@@ -154,6 +161,12 @@ c-----------------------------------------------------------------------
       subroutine usrdat2()  ! This routine to modify mesh coordinates
       implicit none
 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
       include 'SIZE'
       include 'TOTAL'
       include 'AVM'
@@ -164,36 +177,15 @@ c     This section to specify user defined parameters
 c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
+c     scalar 0 (temp - off)      
+
 c     scalar 1      
-      avm_c1(2) = 2.0
-      avm_ncut(2) = 2.0
-      ifcont(2) = .false.
-      !ifupwindavm(2) = .true.
+      ! avm_ncut(2) = 1
+      ! avm_c1(2) = 1.0
 
-c     scalar 2      
-      svv_c0(3) = 1.0
-      ! svvcut(3) = (lx1-1.0)/2.0
-      ! svv_k0(3) = 1.5
-      ! svv_k1(3) = 1.5
-      ! ifnlsvv(3) = .false.
-      ifupwindsvv(3) = .true.
-
-c     scalar 3
-      svv_c0(4) = 2.0
-      ! svvcut(4) = (lx1-1.0)/2.0
-      ! svv_k0(4) = 1.5
-      ! svv_k1(4) = 1.5
-      ifnlsvv(4) = .true.
-      ifupwindsvv(4) = .true.
-c--------------------------------------------------
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine usrdat3()
-      implicit none
-
-      include 'SIZE'
-      include 'TOTAL'
+c     scalar 2
+      ! svv_c0(3) = 0.01
+      svvcut(3) = (lx1-1.0)
       
       return
       end
