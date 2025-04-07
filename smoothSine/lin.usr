@@ -1,5 +1,6 @@
       include "experimental/lvlSet.f"
       include "avmLegacy.f"
+      include "experimental/lserrors.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -110,6 +111,7 @@ c-----------------------------------------------------------------------
       integer ntot
       real glsc3, glmin, glmax
       real emin,emax
+      real ls_l2norm
 
       ntot = lx1*ly1*lz1*nelt
 
@@ -120,29 +122,19 @@ c-----------------------------------------------------------------------
       if(mod(istep,10000).eq.0)then
         call getexact(exact)
 
-        call sub3(err,t(1,1,1,1,1),exact,ntot)
-        er = glsc3(err,err,bm1,ntot)/VOLVM1
-        er = sqrt(er)
+        er = ls_l2norm(2,exact)
         if(nio.eq.0)write(*,*)"SC1: ",er
 
-        call sub3(err,t(1,1,1,1,2),exact,ntot)
-        er = glsc3(err,err,bm1,ntot)/VOLVM1
-        er = sqrt(er)
+        er = ls_l2norm(3,exact)
         if(nio.eq.0)write(*,*)"SC2: ",er
 
-        call sub3(err,t(1,1,1,1,3),exact,ntot)
-        er = glsc3(err,err,bm1,ntot)/VOLVM1
-        er = sqrt(er)
+        er = ls_l2norm(4,exact)
         if(nio.eq.0)write(*,*)"SC3: ",er
 
-        call sub3(err,t(1,1,1,1,4),exact,ntot)
-        er = glsc3(err,err,bm1,ntot)/VOLVM1
-        er = sqrt(er)
+        er = ls_l2norm(5,exact)
         if(nio.eq.0)write(*,*)"SC4: ",er
 
-        call sub3(err,t(1,1,1,1,5),exact,ntot)
-        er = glsc3(err,err,bm1,ntot)/VOLVM1
-        er = sqrt(er)
+        er = ls_l2norm(6,exact)
         if(nio.eq.0)write(*,*)"SC5: ",er
       endif
 
