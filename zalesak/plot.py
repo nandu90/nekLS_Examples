@@ -39,7 +39,7 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     
             
     ax.grid()
-    ax.legend(loc='best',fontsize=15)
+    ax.legend(loc='best',fontsize=12)
     fig.savefig(fname+'.pdf',\
                 bbox_inches='tight',dpi=100)
     plt.close()
@@ -73,7 +73,7 @@ def getdata(case,t=1):
     return x,exact,svv
 
 def main():
-    N = 'N5'
+    N = 'N7'
     xdata = []
     ydata = []
 
@@ -91,7 +91,7 @@ def main():
     xdata.append(x)
     ydata.append(svv)
     
-    labels=['Initial','$\\epsilon=0.5$','$\\epsilon=1$','$\\epsilon=1.5$']
+    labels=['Initial','$\\xi=0.5/N$','$\\xi=1/N$','$\\xi=1.5/N$']
     lines = [':','-.','--','--','-']
     marks = ['','','','','']
     plotnow('t2_'+N,'$x$','$\\psi$',xdata,ydata,labels,linestyles=lines,markers=marks)
@@ -113,9 +113,6 @@ def main():
     xdata.append(x)
     ydata.append(svv)
     
-    labels=['Initial','$\\epsilon=0.5$','$\\epsilon=1$','$\\epsilon=1.5$']
-    lines = [':','-.','--','--','-']
-    marks = ['','','','','']
     plotnow('t20_'+N,'$x$','$\\psi$',xdata,ydata,labels,linestyles=lines,markers=marks)
 
 
