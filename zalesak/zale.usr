@@ -1,5 +1,7 @@
       include "experimental/lvlSet.f"
       include "lineplot.f"
+      include "experimental/lserrors.f"
+      include "avmLegacy.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -8,6 +10,9 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
+
+      common /usrvisc/ visc(lx1,ly1,lz1,lelv)
+      real visc
 
       e = gllel(eg)
 
@@ -19,6 +24,11 @@ c-----------------------------------------------------------------------
       elseif(ifsvv(ifield-1))then
         udiff = 1e-20      !must be tiny for hyperbolic
       endif
+
+      if(ix*iy*iz*e.eq.1 .and. ifield.eq.3)then
+        call evm_setvisc(t(1,1,1,1,2),visc)
+      endif
+      if(ifield.eq.3) udiff = visc(ix,iy,iz,e)
 
       return
       end
@@ -115,7 +125,7 @@ c-----------------------------------------------------------------------
 
       temp = max(dist,min(distx,disty))
 
-      eps = 0.5/(lx1-1)
+      eps = 1.0/(lx1-1)
 
       temp = heaviside(ix,iy,iz,e,-temp,eps)
       
@@ -128,6 +138,12 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       real pta(3),ptb(3)
+      real err
+      real exact(lx1,ly1,lz1,lelv)
+
+      real ls_shapeerr,ls_volerr,ls_relerr
+      real enclosedVol
+      integer ifld
 
       if(istep.eq.nsteps .or. istep.eq.20000)then
         pta(1) = 0.0
@@ -137,7 +153,21 @@ c-----------------------------------------------------------------------
         ptb(2) = 0.75
         ptb(3) = 0.0
         call lineplot(pta,ptb,1001)
+
+        call getexact(exact)
+
+        do ifld = 3,4
+          err = ls_shapeerr(ifld,exact)
+          if(nio.eq.0) write(*,*)"ifield, Shape error",ifld,err
+
+          err = ls_volerr(ifld,exact,t(1,1,1,1,1))
+          if(nio.eq.0) write(*,*)"ifield, Volume error",ifld,err
+
+          err = ls_relerr(ifld,exact) 
+          if(nio.eq.0) write(*,*)"ifield, Relative error",ifld,err
+        enddo
       endif
+
       return
       end
 c-----------------------------------------------------------------------
@@ -187,6 +217,43 @@ c     scalar 2
       ! svv_c0(3) = 0.01
       svvcut(3) = (lx1-1.0)
       
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine getexact(exact)
+      include 'SIZE'
+      include 'TOTAL'
+
+      integer ntot,i
+      real xx,yy
+      real x1,y1
+      real dist,distx,disty
+      logical in_slot, below_slot, in_disk
+      real exact(1)
+
+      ntot = lx1*ly1*lz1*nelv
+
+      do i=1,ntot
+        xx = xm1(i,1,1,1)
+        yy = ym1(i,1,1,1)
+
+        x1 = 0.5
+        y1 = 0.75
+
+        dist = sqrt((xx-x1)**2.+(yy-y1)**2.)-0.15
+
+        in_slot = (abs(xx-x1) < 0.025)
+        below_slot = (yy < 0.85)
+        in_disk = (dist < 0.0)
+        distx = 0.025 - abs(xx - 0.5d0)
+        disty = 0.85 - yy
+
+        dist = -max(dist,min(distx,disty))
+
+        exact(i) = 0.0
+        if(dist.ge.0.0)exact(i) = 1.0
+      enddo
+
       return
       end
 c---------------------------------------------------------------------
