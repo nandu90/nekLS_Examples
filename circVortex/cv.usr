@@ -1,5 +1,6 @@
       include "experimental/lvlSet.f"
       include "experimental/lserrors.f"
+      include "lineplot.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -159,6 +160,8 @@ c-----------------------------------------------------------------------
       real enclosedVol
       real ls_shapeerr,ls_volerr,ls_relerr
 
+      real pta(3),ptb(3)
+
       ntot = lx1*ly1*lz1*nelv
 
       if(istep.eq.0 .and. nio.eq.0)then
@@ -196,6 +199,15 @@ c-----------------------------------------------------------------------
         if(nio.eq.0) write(*,*)"Relative error",err
 
         close(100)
+
+        call copy(pr,psiini,ntot)
+        pta(1) = 0.0
+        pta(2) = 0.75
+        pta(3) = 0.0
+        ptb(1) = 1.0
+        ptb(2) = 0.75
+        ptb(3) = 0.0
+        call lineplot(pta,ptb,1001)
       endif
       
       call velupdate
