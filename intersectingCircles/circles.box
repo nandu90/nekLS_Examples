@@ -1,5 +1,5 @@
 -2                     spatial dimension (will create box.re2)
-3                      number of fields
+5                      number of fields
 #
 #    comments: two dimensional periodic hill
 #
@@ -10,5 +10,7 @@ Box
 -2.0 2.0 1.                        x0 x1 ratio
 -2.0 2.0 1.			      y0 y1 ratio
 O  ,O  ,O  ,O                     BC's
+I  ,I  ,I  ,I   
+I  ,I  ,I  ,I   
 I  ,I  ,I  ,I   
 I  ,I  ,I  ,I   
