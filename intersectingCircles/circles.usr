@@ -64,7 +64,6 @@ c-----------------------------------------------------------------------
 
       if(ifield.eq.ifld_tlsr)then
         qvol = signls(ix,iy,iz,e)
-        pr(ix,iy,iz,e) = qvol
       endif
 
       return
@@ -150,12 +149,13 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
       
-      integer ntot
+      integer ntot,i
       integer ntlsr,nclsr
 
       real exact(lx1,ly1,lz1,lelv)
-      real err
+      real err,eps
       real ls_relerr
+      real glmax
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -164,9 +164,17 @@ c-----------------------------------------------------------------------
       call LS_default_driver(ntlsr,nclsr)
 
       call getexact(exact)
-      call copy(t(1,1,1,1,ifld_tls-1),exact,ntot)
       err = ls_relerr(ifld_tlsr,exact)
+
+      call sub3(pr,t(1,1,1,1,ifld_tlsr-1),exact,ntot) 
+      do i=1,ntot
+        pr(i,1,1,1) = abs(pr(i,1,1,1))
+      enddo
       if(nio.eq.0) write(*,*)"Er norm:",err
+
+      err = glmax(pr,ntot)
+      if(nio.eq.0) write(*,*)"Linf norm:",err
+
       
       return
       end
@@ -234,8 +242,8 @@ c-----------------------------------------------------------------------
      $             eps, ifdebug, ifixCLSbdry,
      $             ntls_max,ncls_max)
       
-      svv_c0(ifld_tlsr) = 1.0
-      svvcut(ifld_tlsr) = (lx1-1.0)/3.0
+      svv_c0(ifld_tlsr) = 2.0
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0
       ! svv_k0(ifld_tlsr-1) = 1.5
       ! svv_k1(ifld_tlsr-1) = 1.5
       ! ifnlsvv(ifld_tlsr-1) = .true.
@@ -280,4 +288,4 @@ c---------------------------------------------------------------------
 
       return
       end
-
+c-----------------------------------------------------------------------
