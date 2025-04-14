@@ -168,7 +168,6 @@ c-----------------------------------------------------------------------
         open(unit=100,file='vol.dat',status='unknown')
       endif
 
-      if(istep.eq.0)call outfld('  ')
 
       if(istep.eq.0)then
         call getexact(exact)
@@ -180,20 +179,19 @@ c-----------------------------------------------------------------------
       nclsr = uparam(2)
       call LS_default_driver(ntlsr,nclsr)
 
-      if(mod(istep,100).eq.0)then
-        vol = enclosedVol(t(1,1,1,1,ifld_cls-1),-1)
-        if(nio.eq.0)then 
-          write(*,*)"V/V0",istep,vol/volini
-          write(100,*)istep,vol/volini
-        endif
+      if(istep.eq.0)call outfld('  ')
+
+      vol = enclosedVol(t(1,1,1,1,ifld_cls-1),-1)
+      err = ls_volerr(ifld_cls,exact,psiini)
+      if(nio.eq.0)then 
+        write(*,*)"V/V0",istep,vol/volini
+        write(*,*)"Volume error",err
+        write(100,*)istep,vol/volini,err
       endif
 
       if(istep.eq.nsteps)then 
         err = ls_shapeerr(ifld_cls,exact)
         if(nio.eq.0) write(*,*)"Shape error",err
-
-        err = ls_volerr(ifld_cls,exact,psiini)
-        if(nio.eq.0) write(*,*)"Volume error",err
 
         err = ls_relerr(ifld_cls,exact) 
         if(nio.eq.0) write(*,*)"Relative error",err
@@ -306,7 +304,7 @@ c     scalar 3
       ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
       svvcut(ifld_tlsr) = (lx1-1.0)/2.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
