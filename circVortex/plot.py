@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 from matplotlib.ticker import MaxNLocator
 
-def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],ylim=[]):
+def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],ylim=[],xlim=[]):
     default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
@@ -23,6 +23,9 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
 
     if(ylim != []):
         ax.set_ylim(ylim[0],ylim[1])
+
+    if(xlim != []):
+        ax.set_xlim(xlim[0],xlim[1])
 
     # if(len(linestyles) == 0):
     #     linestyles = ['-']*len(x)
@@ -42,7 +45,7 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
             ax.loglog(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
     
 
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    #ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     ax.grid()
     ax.legend(loc='best',fontsize=12)
@@ -74,22 +77,15 @@ def getdata(dname,dt):
     Ev = np.abs(data[:,2])
     return t,Ev
 
-def main():
-    # N = 'N7'
-    # xdata = []
-    # ydata = []
-
-    # x,exact,svv = getdata()
-    # xdata.append(x)
-    # ydata.append(exact)
-    # xdata.append(x)
-    # ydata.append(svv)
+def getLineData(fname):
+    data = np.loadtxt(fname+'/cv.00001.dat',skiprows=1)
+    x = data[:,0]
+    y = data[:,5]
+    phi = data[:,6]
     
-    # labels=['Initial','Final']
-    # lines = [':','-.','--','--','-']
-    # marks = ['','','','','']
-    # plotnow('N'+N,'$x$','$\\psi$',xdata,ydata,labels,linestyles=lines,markers=marks)
+    return x,y,phi
 
+def main():
     N = np.array((4,5,6))
     Er_128 = np.array((9.0121430053904573E-009,4.7573261079374876E-009,2.9125131521457678E-009))
     Es_128 = np.array((4.8170952421264479E-004,2.4951990365227537E-004,1.4472237085229599E-004))
@@ -148,7 +144,30 @@ def main():
     
     plotnow('Ev_4','$t$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',ylim=[1e-14,1e-4])
     
+    #Line plot across y=0.75
+    x4,psi4,phi4 = getLineData('128/4') 
+    x5,psi5,phi5 = getLineData('128/5') 
+    x6,psi6,phi6 = getLineData('128/6') 
+
+    data = np.loadtxt('128/6/cv.00001.dat',skiprows=1)
+    xini = data[:,0]
+    yini = data[:,4]
+
+    xdata = [x4,x5,x6,xini]
+    ydata = [psi4,psi5,psi6,yini]
+    marks = ['','','','']
+    labels=['$N=4$','$N=5$','$N=6$','Initial']
+    lines = ['-.','-.','-.',':','-']
+    plotnow('psi','$x$','$\\psi$',xdata,ydata,labels,linestyles=lines,markers=marks,xlim=[0.25,0.75])
+
+    xdata = [x4,x5,x6,xini]
+    exact = np.sqrt((xini-0.5)**2) - 0.15
+    ydata = [phi4,phi5,phi6,exact]
+    marks = ['','','','']
     
+    labels=['$N=4$','$N=5$','$N=6$','Exact']
+    lines = ['-.','-.','-.',':','-']
+    plotnow('phi','$x$','$\\phi$',xdata,ydata,labels,linestyles=lines,markers=marks,ylim=[-0.1,0.1],xlim=[0.25,0.75])
     return
 
 if __name__=="__main__":
