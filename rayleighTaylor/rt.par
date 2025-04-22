@@ -12,14 +12,10 @@ dt = 1.25e-04
 timeStepper = bdf2
 
 #writeControl = runTime
-writeInterval = 200
+writeInterval = 2000
 
-userParam01 = 4       #Number of CLS re-distancing steps
-userParam02 = 200     #Number of TLS re-distancing steps
-userParam03 = 0.02    #dt factor for CLSR
-userParam04 = 0.2     #dt factor for TLSR
-userParam05 = 1000     #Freq of TLSR
-userParam06 = 100      #Freq of CLSR
+userParam01 = 2000     #Freq of TLSR
+userParam02 = 200      #Freq of CLSR
 
 [PROBLEMTYPE]
 equation = lowMachNS
