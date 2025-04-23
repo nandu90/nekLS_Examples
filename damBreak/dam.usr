@@ -1,5 +1,7 @@
       include "experimental/lvlSet.f"
       include "lineplot.f"
+      include "experimental/lserrors.f"
+      
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -158,7 +160,10 @@ c-----------------------------------------------------------------------
       endif
 
       if(ifield.eq.1)then
-        yplus = 11.0
+        yplus = uparam(3)
+        if(nio.eq.0 .and. istep.eq.1)then
+          write(*,*)"Specified yplus :",yplus
+        endif
         call traction_ls(ix,iy,iz,e,iside,yplus)
       endif
 
@@ -207,8 +212,48 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
 
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
       integer ntlsr, nclsr
       real pta(3),ptb(3)
+
+      integer ntot,i
+
+      real exact(lx1*ly1*lz1*lelv)
+      save exact
+      real psiini(lx1,ly1,lz1,lelv)
+      save psiini
+      real err
+      
+      real ls_volerr
+
+      COMMON /SCRNS/ DVC  (LX1,LY1,LZ1,LELV),
+     $               DV1  (LX1,LY1,LZ1,LELV),
+     $               DV2  (LX1,LY1,LZ1,LELV),
+     $               DFC  (LX1,LY1,LZ1,LELV)
+      real DVC,DV1,DV2,DFC
+      real DIV1, DIV2
+      real glsum
+
+      ntot = lx1*ly1*lz1*nelv
+
+      if(istep.eq.0)then
+        call copy(psiini,t(1,1,1,1,ifld_cls-1),ntot)
+        call copy(exact,t(1,1,1,1,ifld_tls-1),ntot)
+        do i=1,ntot
+          if(exact(i).ge.0.0)then
+            exact(i) = 1.0
+          else
+            exact(i) = 0.0
+          endif
+        enddo
+      endif
+      if(istep.eq.0 .and. nio.eq.0)then
+        open(unit=100,file='vol.dat',status='unknown')
+      endif
 
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
@@ -216,6 +261,27 @@ c-----------------------------------------------------------------------
       nclsr = uparam(2) !freq of CLS re-distancing
 
       call LS_default_driver(ntlsr,nclsr)
+
+      err = ls_volerr(ifld_cls,exact,psiini)
+
+      !Calculate Divergence norms of new VX,VY,VZ
+      CALL OPDIV   (DVC,VX,VY,VZ)
+      CALL DSSUM   (DVC,lx1,ly1,lz1)
+      CALL COL2    (DVC,BINVM1,NTOT)
+
+      CALL COL3    (DV1,DVC,BM1,NTOT)
+      DIV1 = GLSUM (DV1,NTOT)/VOLVM1
+
+      CALL COL3    (DV2,DVC,DVC,NTOT)
+      CALL COL2    (DV2,BM1   ,NTOT)
+      DIV2 = GLSUM (DV2,NTOT)/VOLVM1
+      DIV2 = SQRT  (DIV2)
+      if(nio.eq.0)then 
+        write(*,*)"Volume error",err
+        write(100,*)time,err,DIV1,DIV2
+      endif
+
+      if(istep.eq.nsteps .and. nio.eq.0) close(100)
       
       if(mod(istep,100).eq.0)then
         pta(1) = 0.0
@@ -288,7 +354,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
 
-      eps = 4.0/(lx1-1.0)
+      eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
@@ -301,9 +367,10 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      svv_c0(1) = 1.0
+      ! svv_c0(1) = 1.0
+      ! svvcut(1) = (lx1-1.0)/2.0
 
-      svv_c0(ifld_cls) = 2.0                 !ifld_cls
+      ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
@@ -312,100 +379,32 @@ c     parameters.
       ! avm_c1(1) = 1.0
       ! avm_ncut(1) = 1.0
       ! icont(1) = .false.
-      ifupwindsvv(ifld_cls) = .true.
+      ! ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls) = 2.0                  !ifld_tls
+      ! svv_c0(ifld_tls) = 1.0                  !ifld_tls
       ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
       ! ifnlsvv(2) = .false.
-      ifupwindsvv(ifld_tls) = .true.
+      ! ifupwindsvv(ifld_tls) = .true.
 
 c     scalar 3      
       svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
-      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
       ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-2.0)/2.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
       ! ifupwindsvv(ifld_tlsr) = .true.
-
-c--------------------------------------------------
       
       return
       end
 c---------------------------------------------------------------------
-      subroutine extrappr(pe,p,plag,plag1)
-C
-C     Pressure extrapolation
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'SOLN'
-      INCLUDE 'TSTEP'
-
-      real  p    (lx2,ly2,lz2,1)
-     $     ,pe   (lx2,ly2,lz2,1)
-     $     ,plag (lx2,ly2,lz2,1)
-     $     ,plag1(lx2,ly2,lz2,1)
-
-      iord_ext = 1
-      istp_str = 10
-      ntot2 = lx2*ly2*lz2*nelv
-
-      dt0 = dtlag(1)
-      dt1 = dtlag(2)
-      dt2 = dtlag(3)
-
-      dts =  dt1 + dt2
-      dta =  dt0 / dt1
-      dtb =  dt1 / dt2
-      dtc =  dt0 / dt2
-      dtd =  dts / dt1
-      dte =  dt0 / dts
-C
-      if     (istep.le.istp_str.and. nbd.le.3 .or. iord_ext.eq.1) then
-
-         call copy(pe,  p,ntot2)
-
-      elseif (istep.gt.istp_str.and. nbd.le.3 .and. iord_ext.eq.2) then
-
-         const = dt0/dt1
-
-         do i=1,ntot2
-            pn            = p   (i,1,1,1)
-            pnm1          = plag(i,1,1,1)
-            pe  (i,1,1,1) = pn   + const*(pn  -pnm1)
-         enddo
-
-      elseif (istep.gt.10.and. nbd.le.3 .and. iord_ext.eq.3) then
-
-         const3=  dte*(dtb + dtc)
-         const2= -dta*(1.0 + dtb + dtc)
-         const1=  1.0 - const2 - const3
-
-         do i=1,ntot2
-            pn            = p    (i,1,1,1)
-            pnm1          = plag (i,1,1,1)
-            pnm2          = plag1(i,1,1,1)
-            pe  (i,1,1,1) = const1*pn + const2*pnm1 - const3*pnm2
-         enddo
-
-      elseif (nbd.gt.3) then
-         WRITE (6,*) 'Pressure extrapolation cannot be completed'
-         WRITE (6,*) 'Try a lower-order temporal scheme'
-         call exitt
-      endif
-
-  3   format(A,1p4e17.9,I4)
-
-      return
-      end
-
