@@ -399,7 +399,7 @@ c     scalar 3
 
 c     scalar 3      
       svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-2.0)/2.0
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
