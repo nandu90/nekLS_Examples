@@ -158,9 +158,9 @@ c-----------------------------------------------------------------------
         if(ifield.eq.ifld_clsr) temp = 0.0
       endif
 
-      if(ifield.eq.1)then
-        call traction_ls(ix,iy,iz,e,iside)
-      endif
+      ! if(ifield.eq.1)then
+      !   call traction_ls(ix,iy,iz,e,iside)
+      ! endif
 
       return
       end
@@ -225,15 +225,6 @@ c-----------------------------------------------------------------------
       nclsr = uparam(2) !freq of CLS re-distancing
 
       call LS_default_driver(ntlsr,nclsr)
-
-      !testing
-      ! ntot = lx1*ly1*lz1*nelt
-      ! do i=1,ntot
-      !   zz = zm1(i,1,1,1)
-      !   t(i,1,1,1,ifld_tls-1) = -0.07454340 - zz
-      ! enddo
-      ! cstep = 0
-      ! call LS_CLS_driver(cstep,nclsr)
       
       rq=4.0
       uin = 0.
@@ -332,15 +323,20 @@ c-----------------------------------------------------------------------
       real eps
       integer ntls_max, ncls_max
 
-      eps = 6.0/(lx1-1.0)
+      eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       ntls_max = 100
       ncls_max = 10
-      call ls_init_maxiter(ifld_cls, ifld_clsr,
+
+      call ls_init(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
-     $             eps, ifdebug, ifixCLSbdry,
-     $             ntls_max, ncls_max)
+     $             eps, ifdebug, ifixCLSbdry)
+
+      ! call ls_init_maxiter(ifld_cls, ifld_clsr,
+      ! $             ifld_tls, ifld_tlsr,
+      ! $             eps, ifdebug, ifixCLSbdry,
+      ! $             ntls_max, ncls_max)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -348,9 +344,9 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      svv_c0(1) = 1.0
+      ! svv_c0(1) = 1.0
 
-      svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
@@ -359,18 +355,18 @@ c     parameters.
       ! avm_c1(1) = 1.0
       ! avm_ncut(1) = 1.0
       ! icont(1) = .false.
-      ifupwindsvv(ifld_cls) = .true.
+      ! ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      ! svv_c0(ifld_tls) = 1.0                  !ifld_tls
       ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
       ! ifnlsvv(2) = .false.
-      ifupwindsvv(ifld_tls) = .true.
+      ! ifupwindsvv(ifld_tls) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_clsr) = 2.0                  !ifld_clsr
+      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
       ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
@@ -379,7 +375,7 @@ c     scalar 3
 
 c     scalar 3      
       svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = max(1.0,(lx1-1.0)/2.0-2.0)
+      svvcut(ifld_tlsr) = (lx1-2.0)/2.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
@@ -388,68 +384,3 @@ c     scalar 3
 
       end
 c---------------------------------------------------------------------
-      subroutine extrappr(pe,p,plag,plag1)
-C
-C     Pressure extrapolation
-C
-      INCLUDE 'SIZE'
-      INCLUDE 'SOLN'
-      INCLUDE 'TSTEP'
-
-      real  p    (lx2,ly2,lz2,1)
-     $     ,pe   (lx2,ly2,lz2,1)
-     $     ,plag (lx2,ly2,lz2,1)
-     $     ,plag1(lx2,ly2,lz2,1)
-
-      iord_ext = 1
-      istp_str = 10
-      ntot2 = lx2*ly2*lz2*nelv
-
-      dt0 = dtlag(1)
-      dt1 = dtlag(2)
-      dt2 = dtlag(3)
-
-      dts =  dt1 + dt2
-      dta =  dt0 / dt1
-      dtb =  dt1 / dt2
-      dtc =  dt0 / dt2
-      dtd =  dts / dt1
-      dte =  dt0 / dts
-C
-      if     (istep.le.istp_str.and. nbd.le.3 .or. iord_ext.eq.1) then
-
-         call copy(pe,  p,ntot2)
-
-      elseif (istep.gt.istp_str.and. nbd.le.3 .and. iord_ext.eq.2) then
-
-         const = dt0/dt1
-
-         do i=1,ntot2
-            pn            = p   (i,1,1,1)
-            pnm1          = plag(i,1,1,1)
-            pe  (i,1,1,1) = pn   + const*(pn  -pnm1)
-         enddo
-
-      elseif (istep.gt.10.and. nbd.le.3 .and. iord_ext.eq.3) then
-
-         const3=  dte*(dtb + dtc)
-         const2= -dta*(1.0 + dtb + dtc)
-         const1=  1.0 - const2 - const3
-
-         do i=1,ntot2
-            pn            = p    (i,1,1,1)
-            pnm1          = plag (i,1,1,1)
-            pnm2          = plag1(i,1,1,1)
-            pe  (i,1,1,1) = const1*pn + const2*pnm1 - const3*pnm2
-         enddo
-
-      elseif (nbd.gt.3) then
-         WRITE (6,*) 'Pressure extrapolation cannot be completed'
-         WRITE (6,*) 'Try a lower-order temporal scheme'
-         call exitt
-      endif
-
-  3   format(A,1p4e17.9,I4)
-
-      return
-      end
