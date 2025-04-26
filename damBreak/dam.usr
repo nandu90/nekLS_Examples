@@ -235,6 +235,9 @@ c-----------------------------------------------------------------------
       real DVC,DV1,DV2,DFC
       real DIV1, DIV2
       real glsum
+      real fplot,fplot_next
+      save fplot_next
+      data fplot_next /0.0/
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -281,7 +284,9 @@ c-----------------------------------------------------------------------
 
       if(istep.eq.nsteps .and. nio.eq.0) close(100)
       
-      if(mod(istep,100).eq.0)then
+      fplot = 0.1
+      if(time .ge. fplot_next)then
+        fplot_next = fplot_next + fplot
         pta(1) = 0.0
         pta(2) = 0.0
         pta(3) = 0.0
