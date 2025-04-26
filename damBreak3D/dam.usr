@@ -213,7 +213,7 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      integer ntlsr, nclsr
+      real ntlsr, nclsr
       real pta(3),ptb(3)
 
       integer ntot,i
@@ -233,6 +233,9 @@ c-----------------------------------------------------------------------
       real DVC,DV1,DV2,DFC
       real DIV1, DIV2
       real glsum
+      real fplot,fplot_next
+      save fplot_next
+      data fplot_next /0.0/
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -279,7 +282,9 @@ c-----------------------------------------------------------------------
 
       if(istep.eq.nsteps .and. nio.eq.0) close(100)
       
-      if(mod(istep,100).eq.0)then
+      fplot = 0.1
+      if(time .ge. fplot_next)then
+        fplot_next = fplot_next + fplot
         pta(1) = 0.0
         pta(2) = 0.0
         pta(3) = 0.5
@@ -350,7 +355,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
 
-      eps = 1.0/(lx1-1.0)
+      eps = 1.5/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
