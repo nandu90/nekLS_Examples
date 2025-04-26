@@ -56,9 +56,7 @@ c-----------------------------------------------------------------------
         psi = max(0.0,psi)
         psi = min(1.0,psi)
         utrans = ((1.0-psi)*rhog + psi*rhol)/rhol
-        !in non-dimensional form you must have kinematic 
-        !viscosity here
-        udiff = ((1.0-psi)*nug + psi*nul)/nul/Re
+        udiff = ((1.0-psi)*mug + psi*mul)/mul/Re
         vtrans0(ix,iy,iz,e) = rhog/rhol
       else
         utrans = 1.0
@@ -354,7 +352,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
 
-      eps = 1.0/(lx1-1.0)
+      eps = 1.5/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
