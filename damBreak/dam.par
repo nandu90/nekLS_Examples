@@ -36,7 +36,7 @@ residualProj = yes
 #preconditioner = semg_amg_hypre
 
 [VELOCITY]
-residualProj = yes
+# residualProj = yes
 residualTol = 1e-6
 density = 1
 viscosity = -1.0 #dummy
