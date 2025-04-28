@@ -57,7 +57,7 @@ c-----------------------------------------------------------------------
         utrans = ((1.0-psi)*rhog + psi*rhol)/rhol
         !in non-dimensional form you must have kinematic 
         !viscosity here
-        udiff = ((1.0-psi)*nug + psi*nul)/nul/Re
+        udiff = ((1.0-psi)*mug + psi*mul)/mul/Re
         vtrans0(ix,iy,iz,e) = rhog/rhol
       else
         utrans = 1.0
