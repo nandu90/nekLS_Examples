@@ -4,14 +4,16 @@
 [GENERAL]
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 2000 #200000
+numSteps = 0 #2000 #200000
 #endTime = 1.0
 
 dt = 10e-04
 timeStepper = bdf2
 
 #writeControl = runTime
-writeInterval = 20
+writeInterval = 100
+
+userParam01 = 6000    #Freq of TLSR
 
 [PROBLEMTYPE]
 variableProperties = yes
@@ -25,14 +27,27 @@ residualTol = 1e-8
 density = 1
 viscosity = -100
 
-[TEMPERATURE] #tls field
+[TEMPERATURE] #cls field
 solver = none
 rhocp = 1.
 conductivity = 1.
 residualTol = 1e-8
-#regularization = none
+regularization = svv
 
-[SCALAR01] #tls re-distancing field
+[SCALAR01] #tls field
+solver = none
+density = 1.0
+diffusivity = 1e-8 
+residualTol = 1e-8
+regularization = svv
+
+[SCALAR02] #cls re-distanacing
+density = 1.0
+diffusivity = 1e-8 
+residualTol = 1e-8
+regularization = svv
+
+[SCALAR03] #tls re-distancing field
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8

@@ -1,4 +1,6 @@
       include "experimental/lvlSet.f"
+      include "experimental/lserrors.f"
+      include "lineplot.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -143,19 +145,22 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      integer ntot,i,xx,yy,ux,uy
-      real rad
-      integer ie,ifc
-
       integer ntlsr, nclsr
-      real evolC, enclosedVol, exactVol
-      real Em, EL1
-      real volini
-      save volini
+      real err
+
+      integer ntot
+
+      real exact(lx1,ly1,lz1,lelv)
+      save exact
       real psiini(lx1,ly1,lz1,lelv)
       save psiini
-      real wrk(lx1,ly1,lz1,lelv)
-      real glsum
+      real volini
+      save volini
+      real vol
+      real enclosedVol
+      real ls_shapeerr,ls_volerr,ls_relerr
+
+      real pta(3),ptb(3)
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -163,41 +168,45 @@ c-----------------------------------------------------------------------
         open(unit=100,file='vol.dat',status='unknown')
       endif
 
-      if(istep.eq.0)call outfld('  ')
+
+      if(istep.eq.0)then
+        call getexact(exact)
+        call copy(psiini,t(1,1,1,1,ifld_cls-1),ntot)
+        volini = enclosedVol(t(1,1,1,1,ifld_cls-1),-1)
+      endif
 
       ntlsr = uparam(1)
       nclsr = uparam(2)
       call LS_default_driver(ntlsr,nclsr)
-      
-      if(mod(istep,100).eq.0)then
-        rad = 0.3/2.0
-        evolC = enclosedVol(-1)
-        if(istep.eq.0)then 
-          volini = evolC
-        endif
-        exactVol = PI*rad**2.0
-        ! Em = (evolC - volini)/exactVol
-        Em = evolC/volini
-        
-        !calc L1 norm at final time step
-        if(istep.eq.0)call copy(psiini,t(1,1,1,1,ifld_cls-1),ntot)
-        if(istep.eq.0 .or.istep.eq.nsteps)then
-          call copy(wrk,psiini,ntot)
-          call sub2(wrk,t(1,1,1,1,ifld_cls-1),ntot)
-          do i=1,ntot
-            wrk(i,1,1,1) = abs(wrk(i,1,1,1))
-          enddo
-          call col2(wrk,bm1,ntot)
-          EL1 = glsum(wrk,ntot)
-        endif
-        if(nio.eq.0)then 
-          write(*,*)"Step, Volume Error, Em",istep,Em
-          write(*,*)"Step, L1 Error, E1",istep,EL1
-          write(100,*)istep,Em
-        endif
+
+      if(istep.eq.0)call outfld('  ')
+
+      vol = enclosedVol(t(1,1,1,1,ifld_cls-1),-1)
+      err = ls_volerr(ifld_cls,exact,psiini)
+      if(nio.eq.0)then 
+        write(*,*)"V/V0",istep,vol/volini
+        write(*,*)"Volume error",err
+        write(100,*)istep,vol/volini,err
       endif
 
-      if(istep.eq.nsteps)close(100)
+      if(istep.eq.nsteps)then 
+        err = ls_shapeerr(ifld_cls,exact)
+        if(nio.eq.0) write(*,*)"Shape error",err
+
+        err = ls_relerr(ifld_cls,exact) 
+        if(nio.eq.0) write(*,*)"Relative error",err
+
+        close(100)
+
+        call copy(pr,psiini,ntot)
+        pta(1) = 0.0
+        pta(2) = 0.75
+        pta(3) = 0.0
+        ptb(1) = 1.0
+        ptb(2) = 0.75
+        ptb(3) = 0.0
+        call lineplot(pta,ptb,1001)
+      endif
       
       call velupdate
 
@@ -255,7 +264,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
 
-      eps = 4.0/(lx1-1.0)
+      eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
@@ -267,8 +276,8 @@ c     This section to specify user defined parameters
 c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
-      svv_c0(ifld_cls) = 1.0                 !ifld_cls
-      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
+      ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      ! svvcut(ifld_cls) = (lx1-1.0)/2.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
       ! ifnlsvv(1) = .true.
@@ -276,31 +285,31 @@ c     parameters.
       ! avm_c1(1) = 1.0
       ! avm_ncut(1) = 1.0
       ! icont(1) = .false.
-      ifupwindsvv(ifld_cls) = .true.
+      ! ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls) = 1.0                  !ifld_tls
-      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
+      ! svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      ! svvcut(ifld_tls) = (lx1-1.0)/2.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
       ! ifnlsvv(2) = .false.
-      ifupwindsvv(ifld_tls) = .true.
+      ! ifupwindsvv(ifld_tls) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
-      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
+      ! svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
+      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
-      ifupwindsvv(ifld_clsr) = .true.
+      ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
-      ifupwindsvv(ifld_tlsr) = .true.
+      ! ifupwindsvv(ifld_tlsr) = .true.
 
 c--------------------------------------------------
       
@@ -328,6 +337,35 @@ c---------------------------------------------------------------------
 
         vx(i,1,1,1) = ux
         vy(i,1,1,1) = uy
+      enddo
+
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine getexact(exact)
+      include 'SIZE'
+      include 'TOTAL'
+
+      integer ntot,i
+      real xx,yy
+      real x1,y1
+      real dist,distx,disty
+      logical in_slot, below_slot, in_disk
+      real exact(1)
+
+      ntot = lx1*ly1*lz1*nelv
+
+      do i=1,ntot
+        xx = xm1(i,1,1,1)
+        yy = ym1(i,1,1,1)
+
+        x1 = 0.5
+        y1 = 0.75
+
+        dist = sqrt((xx-x1)**2.+(yy-y1)**2.)-0.3/2.0
+
+        exact(i) = 0.0
+        if(dist.ge.0.0)exact(i) = 1.0
       enddo
 
       return

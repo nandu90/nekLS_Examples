@@ -6,19 +6,20 @@
 #stopAt = numSteps
 stopAt = endTime
 #numSteps = 500000 #12000 #1000 #16000 #4000 #400 #400 #200000
-endTime = 15 #10e-4
+endTime = 10 #10e-4
 
-dt = 1.0e-03
+dt = 1.25e-04
 timeStepper = bdf2 #With bdf2 SF does not work well
 variabledt = yes
-targetCFL = 0.2
+targetCFL = 0.5
 #extrapolation = OIFS
 
 writeControl = runTime
-writeInterval = 0.1
+writeInterval = 0.5
 
-userParam01 = 200     #Freq of TLSR
-userParam02 = 20      #Freq of CLSR
+userParam01 = 0.1     #Freq of TLSR
+userParam02 = 0.01      #Freq of CLSR
+userParam03 = 30.0    #yplus value
 
 #filtering = hpfrt
 #filterModes = 1
@@ -35,6 +36,7 @@ residualProj = yes
 preconditioner = semg_amg_hypre
 
 [VELOCITY]
+#residualProj = yes
 residualTol = 1e-6
 density = 1
 viscosity = -1.0 #dummy

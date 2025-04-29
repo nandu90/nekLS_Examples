@@ -1,4 +1,5 @@
-      include "experimental/lvlSet.f"
+      include "lvlSet.f"
+      include "experimental/lserrors.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -98,6 +99,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
 
       real xx,yy,func,rad,a,b,c,d,e1,e2
+      real heaviside
 
       e = gllel(eg)
 
@@ -128,6 +130,12 @@ c-----------------------------------------------------------------------
         temp = func*(min(e1,e2))
       endif
       
+      if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
+        continue
+      elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
+        temp = heaviside(ix,iy,iz,e,temp,0.0)
+      endif
+
       return
       end
 c-----------------------------------------------------------------------
@@ -140,20 +148,38 @@ c-----------------------------------------------------------------------
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
+      
+      integer ntot,i
+      integer ntlsr,nclsr
 
-      real evolS, exactVol, errS
-      real enclosedVol
+      real exact(lx1,ly1,lz1,lelv)
+      real err,eps
+      real ls_relerr
+      real glmax
 
-      if(istep.gt.0)then
-        call ls_drive(ifld_tlsr)
-      endif
+      ntot = lx1*ly1*lz1*nelv
+
+      ntlsr = 1
+      nclsr = 1
+      call LS_default_driver(ntlsr,nclsr)
+
+      call getexact(exact)
+      err = ls_relerr(ifld_tlsr,exact)
+
+      call sub3(pr,t(1,1,1,1,ifld_tlsr-1),exact,ntot) 
+      do i=1,ntot
+        pr(i,1,1,1) = abs(pr(i,1,1,1))
+      enddo
+      if(nio.eq.0) write(*,*)"Er norm:",err
+
+      err = glmax(pr,ntot)
+      if(nio.eq.0) write(*,*)"Linf norm:",err
+
       
       return
       end
 c-----------------------------------------------------------------------
       subroutine userqtl ! Set thermal divergence
-
-      call userqtl_scig 
 
       return
       end
@@ -174,46 +200,17 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
-      include 'AVM'
-      include 'SVV'
-
-      real eps,dt_in
-      integer nsteps_ls
 
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
-      integer ifdebug
 
-      eps = 1.0
-      nsteps_ls = 1
-      ifld_cls = 0
-      ifld_tls = 2
-      ifld_clsr = 0
-      ifld_tlsr = 3
-      dt_in = dt
-      ifdebug = 2
-      call ls_init(nsteps_ls,eps,dt_in,
-     $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr,ifdebug)
+      ifld_cls = 2
+      ifld_tls = 3
+      ifld_clsr = 4
+      ifld_tlsr = 5
 
-c---------------------------------------------------      
-c     This section to specify user defined parameters
-c     for AVM/SVV. Leave commented to use default parameters
-c     parameters. 
-
-      avm_ncut(ifld_tlsr-1) = 2
-      avm_c1(ifld_tlsr-1) = 5.0
-      ifcont(ifld_tlsr-1) = .true.
-
-      svv_c0(ifld_tlsr-1) = 5.0
-      ! svvcut(ifld_tlsr-1) = (lx1-1.0)/2.0
-      ! svv_k0(ifld_tlsr-1) = 1.5
-      ! svv_k1(ifld_tlsr-1) = 1.5
-      ! ifnlsvv(ifld_tlsr-1) = .true.
-
-c--------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
@@ -222,7 +219,73 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
+      include 'AVM'
+      include 'SVV'
+
+      real eps,dt_cls_in,dt_tls_in
+      integer nsteps_cls, nsteps_tls
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+      integer ifdebug, ifixCLSbdry
+      integer ntls_max, ncls_max
+
+      eps = 1.0/(lx1-1.0)
+      ifdebug = 0
+      ifixCLSbdry = 0
+      ntls_max = uparam(1)
+      ncls_max = 0
+      call ls_init_maxiter(ifld_cls, ifld_clsr,
+     $             ifld_tls, ifld_tlsr,
+     $             eps, ifdebug, ifixCLSbdry,
+     $             ntls_max,ncls_max)
       
+      svv_c0(ifld_tlsr) = 2.0
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0
+      ! svv_k0(ifld_tlsr-1) = 1.5
+      ! svv_k1(ifld_tlsr-1) = 1.5
+      ! ifnlsvv(ifld_tlsr-1) = .true.
+
       return
       end
 c---------------------------------------------------------------------
+      subroutine getexact(exact)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+
+      real exact(1)
+
+      real rad,a,b,c,d
+      real e1,e2
+      real xx,yy
+
+      integer i,ntot
+
+      ntot = lx1*ly1*lz1*nelv
+
+      do i=1,ntot
+        xx = xm1(i,1,1,1)
+        yy = ym1(i,1,1,1)
+
+        rad = 1.
+        a = 0.7
+        b = (a-xx)/sqrt((a-xx)**2+yy**2)
+        c = (a+xx)/sqrt((a+xx)**2+yy**2)
+        d = a/rad
+        if(b.ge.d .and. c.ge.d)then
+          e1 = -sqrt(xx**2 + (yy + sqrt(rad**2-a**2))**2)
+          e2 = -sqrt(xx**2 + (yy - sqrt(rad**2-a**2))**2)
+          exact(i) = (max(e1,e2))
+        else
+          e1 = sqrt((xx+a)**2 + yy**2)-rad
+          e2 = sqrt((xx-a)**2 + yy**2)-rad
+          exact(i) = (min(e1,e2))
+        endif
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------

@@ -13,17 +13,23 @@ from scipy import stats
 from scipy import optimize
 import scipy.interpolate as interpolate
 
-def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]):
-    default_cycler = (cycler(color=['k','b','r','g','k','k'])*\
+def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],ylim=[],xlim=[]):
+    default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
     plt.rc('axes',prop_cycle=default_cycler)
-    fig = plt.figure(figsize=(10,5))
+    fig = plt.figure(figsize=(8,5))
     ax = fig.add_subplot(111)  
 
     ax.set_xlabel(xlabel,fontsize=15)
     ax.set_ylabel(ylabel,fontsize=15)
     ax.tick_params(axis='both',labelsize=12)
+
+    if(ylim != []):
+        ax.set_ylim(ylim[0],ylim[1])
+
+    if(xlim != []):
+        ax.set_xlim(xlim[0],xlim[1])
 
     # if(len(linestyles) == 0):
     #     linestyles = ['-']*len(x)
@@ -34,18 +40,20 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
 
     for i in range(len(y)):
         if(ptype=='line'):
-            ax.plot(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=1.5)
+            ax.plot(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
         elif(ptype=='semilogx'):
-            ax.semilogx(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i])
+            ax.semilogx(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
         elif(ptype=='semilogy'):
-            ax.semilogy(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i])
+            ax.semilogy(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
         else:
-            ax.loglog(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i])
+            ax.loglog(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
     
-            
+
+    #ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
     ax.grid()
     ax.legend(loc='best',fontsize=12)
-    fig.savefig(fname+'.png',\
+    fig.savefig(fname+'.pdf',\
                 bbox_inches='tight',dpi=100)
     plt.close()
     return
@@ -87,13 +95,19 @@ def getloc(direc,files,tol):
     time = np.array(time).reshape(-1)
     return loc, time
 
+def geterr(fname):
+    data = np.loadtxt(fname+'vol.dat')
+    t = data[:,0]*1.25e-4
+    err = np.abs(data[:,1])
+    return t,err
+
 def main():
     nosefiles = np.arange(0,50,2)
     neckfiles = np.arange(1,50,2)
-    tol = [1e-2,1e-2,1e-3]
+    tol = [1e-1,1e-2,1e-2]
 
-    nose, time1 = getloc('',nosefiles,tol[0])
-    neck, time2 = getloc('',neckfiles,tol[0])
+    nose, time1 = getloc('coarse/',nosefiles,tol[0])
+    neck, time2 = getloc('coarse/',neckfiles,tol[0])
     x1 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
     y1 = np.concatenate((nose,np.array([np.nan]),neck))
 
@@ -117,11 +131,58 @@ def main():
 
     x = [x1,x2,x3,xchiu,xg]
     y = [y1,y2,y3,ychiu,yg]
-    labels = ['$25X100$','$50X200$','$100X400$','Chiu et al','Guermond et al']
-    lines = ['--','-.',':','','']
+    labels = ['$H=1/25$','$H=1/50$','$H=1/100$','Chiu et al','Guermond et al']
+    lines = [':','-.','--','','']
     marks = ['','','','v','o']
     
-    plotnow('location','$t*$','$y$',x,y,labels,linestyles=lines,markers=marks)
+    plotnow('location','$t$','$y$',x,y,labels,linestyles=lines,markers=marks)
+
+
+    #plot location for N
+    nose, time1 = getloc('fine/3/',nosefiles,tol[0])
+    neck, time2 = getloc('fine/3/',neckfiles,tol[0])
+    x1 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
+    y1 = np.concatenate((nose,np.array([np.nan]),neck))
+
+    nose, time1 = getloc('fine/',nosefiles,tol[1])
+    neck, time2 = getloc('fine/',neckfiles,tol[1])
+    x2 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
+    y2 = np.concatenate((nose,np.array([np.nan]),neck))
+
+    nose, time1 = getloc('fine/5/',nosefiles,tol[2])
+    neck, time2 = getloc('fine/5/',neckfiles,tol[2])
+    x3 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
+    y3 = np.concatenate((nose,np.array([np.nan]),neck))
+    x = [x1,x2,x3,xchiu,xg]
+    y = [y1,y2,y3,ychiu,yg]
+    labels = ['$N3$','$N4$','$N5$','Chiu et al','Guermond et al']
+    lines = [':','-.','--','','']
+    marks = ['','','','v','o']
+    
+    plotnow('location_N','$t$','$y$',x,y,labels,linestyles=lines,markers=marks)
+
+    
+
+    #plot vol err
+    t1,e1 = geterr('coarse/')
+    t2,e2 = geterr('fine/')
+    t3,e3 = geterr('finest/')
+    labels = ['$H=1/25$','$H=1/50$','$H=1/100$']
+    lines = [':','-.','--','','']
+    marks = ['','','']
+    x = [t1,t2,t3]
+    y = [e1,e2,e3]
+    plotnow('Ev','$t$','$|E_v|$',x,y,labels,linestyles=lines,markers=marks,ptype='semilogy')
+
+    t1,e1 = geterr('fine/3/')
+    t2,e2 = geterr('fine/')
+    t3,e3 = geterr('fine/5/')
+    labels = ['$N3$','$N4$','$N5$']
+    lines = [':','-.','--','','']
+    marks = ['','','']
+    x = [t1,t2,t3]
+    y = [e1,e2,e3]
+    plotnow('Ev_N','$t$','$|E_v|$',x,y,labels,linestyles=lines,markers=marks,ptype='semilogy')
     
     return
 
