@@ -210,6 +210,7 @@ c-----------------------------------------------------------------------
       real err
       
       real ls_volerr
+      real sfx,sfy,sfz
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -244,6 +245,10 @@ c-----------------------------------------------------------------------
 
       if(istep.eq.nsteps .and. nio.eq.0) close(100)
       
+      do i=1,ntot
+        call mysurfacetension(i,1,1,1,1.0,sfx,sfy,sfz)
+        t(i,1,1,1,5) = sqrt(sfx*sfx+sfy*sfy)
+      enddo
 
       return
       end
@@ -350,4 +355,82 @@ c     scalar 3
 
       return
       end
-c---------------------------------------------------------------------
+c-----------------------------------------------------------------------
+      subroutine mysurfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
+      implicit none
+      include 'SIZE'
+      include 'TOTAL'
+      include 'LVLSET'
+
+      integer ix,iy,iz,e
+      real sfx,sfy,sfz
+      common /sforce/ stx(lx1,ly1,lz1,lelv),
+     $                sty(lx1,ly1,lz1,lelv), 
+     $                stz(lx1,ly1,lz1,lelv), 
+     $                curv(lx1,ly1,lz1,lelv),
+     $                delta(lx1,ly1,lz1,lelv)
+
+      real stx,sty,stz,curv,delta
+      real gamm
+
+      integer ntot,i
+
+      ntot = lx1*ly1*lz1*nelv
+
+      if(ix*iy*iz*e.eq.1)then
+
+        call deltals(t(1,1,1,1,ifld_cls-1),delta)
+        call col2(delta,bm1,ntot)
+        call dssum(delta,lx1,ly1,lz1)
+        call col2(delta,binvm1,ntot)
+
+        call cls_normals(clsnx,clsny,clsnz,ifld_tls)
+
+        call rzero(curv,ntot)
+        if (if3d) then
+          call cdtp    (stx,clsnx,rxm1,sxm1,txm1,1)
+          call cdtp    (sty,clsny,rym1,sym1,tym1,1)
+          call cdtp    (stz,clsnz,rzm1,szm1,tzm1,1)
+          do i=1,ntot
+            curv(i,1,1,1) = curv(i,1,1,1)+
+     $                    stx(i,1,1,1) +
+     $                    sty(i,1,1,1) +
+     $                    stz(i,1,1,1)
+          enddo
+        else
+          call cdtp    (stx,clsnx,rxm1,sxm1,txm1,1)
+          call cdtp    (sty,clsny,rym1,sym1,tym1,1)
+          do i=1,ntot
+            curv(i,1,1,1) = curv(i,1,1,1)+
+     $                    stx(i,1,1,1) +
+     $                    sty(i,1,1,1)
+          enddo
+        endif
+
+        ! call opdiv(curv,clsnx,clsny,clsnz)
+        ! call dssum(curv,lx1,ly1,lz1)
+        ! call col2(curv,binvm1,ntot)
+
+        ! call col4(stx,curv,delta,clsnx,ntot)
+        ! call col4(sty,curv,delta,clsny,ntot)
+        ! if(if3d) call col4(stz,curv,delta,clsnz,ntot)
+
+        ! call cmult(stx,gamm,ntot)
+        ! call cmult(sty,gamm,ntot)
+        ! if(if3d)call cmult(stz,gamm,ntot)
+
+        call col3(stx,curv,delta,ntot)
+        call rzero(sty,ntot)
+        call copy(vx,clsnx,ntot)
+        call copy(vy,clsny,ntot)
+      endif
+
+      !BEWARE: forces are internally multiplied by density
+      !So you need to account for that here. 
+      !sfx,sfy,sfz MUST be accelerations
+      sfx = stx(ix,iy,iz,e) !/ vtrans(ix,iy,iz,e,1)
+      sfy = sty(ix,iy,iz,e) !/ vtrans(ix,iy,iz,e,1)
+      if(if3d) sfz = stz(ix,iy,iz,e) !/ vtrans(ix,iy,iz,e,1)
+
+      return
+      end
