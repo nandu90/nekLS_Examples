@@ -1,4 +1,5 @@
       include "experimental/lvlSet.f"
+      include "experimental/lserrors.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
       implicit none
@@ -14,8 +15,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
 
       real Re, We, Fr, rhoratio, muratio
-      real udim, charl, rhol, mul, gdim, gamm
-      real rhog,mug
+      real nuratio
       real psi
       integer icalld
       save icalld
@@ -29,22 +29,29 @@ c-----------------------------------------------------------------------
 !     To Do: change the flow, so that this routine is called
 !     similar to RANS. Will avoid confusion
 
-      Re = 500.0
+      rhoratio = 1e-3
+      muratio = 1e-2
+      nuratio = muratio/rhoratio
+
+      Re = 70.7
       Fr = 1.0
-      We = 25.0
+      We = 20.0
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
         psi = max(0.0,psi)
         psi = min(1.0,psi)
-        utrans = ((1.0-psi)*1.0 + psi*1000.0)/1000.0
-        udiff = 1.0/Re
+        utrans = (1.0-psi) + psi/rhoratio
+        !in non-dimensional form you must have kinematic 
+        !viscosity here
+        udiff = (1.0-psi + psi/muratio)/Re
+        vtrans0(ix,iy,iz,e) = 1.0
       else
         utrans = 1.0
         udiff = 1e-10
-        if(ifavm(ifield))then
+        if(ifavm(ifield-1))then
           udiff = 1e-10       !must be tiny for hyperbolic
-        elseif(ifsvv(ifield))then
+        elseif(ifsvv(ifield-1))then
           udiff = 1e-10      !must be tiny for hyperbolic
         endif
       endif
@@ -59,7 +66,6 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
-      include 'SVV'
 
       common /dimen/ Re,We,Fr
       real Re,We,Fr
@@ -67,18 +73,27 @@ c-----------------------------------------------------------------------
 
       real svvx,svvy,svvz
 
+      real dpdz,rhoratio
+
       e = gllel(eg)
 
+      sfx = 0.0
+      sfy = 0.0
+      sfz = 0.0
+      svvx = 0.0
+      svvy = 0.0
+      svvz = 0.0
+
       call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
-
-      t(ix,iy,iz,e,5) = sqrt(sfx*sfx+sfy*sfy)
-
-      !Add SVV regularization to fluid
+      
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
+      rhoratio = 1e-3
+      dpdz = 1./Fr/rhoratio/vtrans(ix,iy,iz,e,1)
+
       ffx = -sfx + svvx
-      ffy = -sfy - 1./Fr + svvy
-      ffz = -sfz
+      ffy = -sfy + svvy
+      ffz = -sfz + svvz - 1.0/Fr + dpdz
 
       return
       end
@@ -105,6 +120,8 @@ c-----------------------------------------------------------------------
         qvol = signls(ix,iy,iz,e)
       endif
 
+      call limit_cls(ix,iy,iz,e)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -120,6 +137,7 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
       integer e
+      real yplus
 
       e = gllel(eg)
 
@@ -148,22 +166,19 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      real xx,yy,heaviside
-      real phi1,phi2
+      real xx,yy,heaviside,zz
 
       e = gllel(eg)
 
       xx = xm1(ix,iy,iz,e)
       yy = ym1(ix,iy,iz,e)
+      zz = zm1(ix,iy,iz,e)
 
       ux = 0.0
       uy = 0.0
       uz = 0.0
 
-      phi1 = 6.0 - yy
-      phi2 = sqrt((xx-1.5)**2.0 + (yy-2.0)**2.0)-0.5
-      temp = min(phi1,phi2)
-      ! temp = sqrt((xx-2.5)**2.0 + (yy-0.625)**2.0)-0.5
+      temp = sqrt(xx**2.0+yy**2.0)-0.5
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
       elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
@@ -178,13 +193,58 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
 
-      integer ntlsr, nclsr
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
 
-      ntlsr = uparam(5) !freq of TLS re-distancing
-      nclsr = uparam(6) !freq of CLS re-distancing
+      integer ntlsr, nclsr
+      real pta(3),ptb(3)
+
+      integer ntot,i
+
+      real exact(lx1*ly1*lz1*lelv)
+      save exact
+      real psiini(lx1,ly1,lz1,lelv)
+      save psiini
+      real err
+      
+      real ls_volerr
+
+      ntot = lx1*ly1*lz1*nelv
+
+      if(istep.eq.0)then
+        call copy(psiini,t(1,1,1,1,ifld_cls-1),ntot)
+        call copy(exact,t(1,1,1,1,ifld_tls-1),ntot)
+        do i=1,ntot
+          if(exact(i).ge.0.0)then
+            exact(i) = 1.0
+          else
+            exact(i) = 0.0
+          endif
+        enddo
+      endif
+      if(istep.eq.0 .and. nio.eq.0)then
+        open(unit=100,file='vol.dat',status='unknown')
+      endif
+
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
+
+      ntlsr = uparam(1) !freq of TLS re-distancing
+      nclsr = uparam(2) !freq of CLS re-distancing
 
       call LS_default_driver(ntlsr,nclsr)
+
+      err = ls_volerr(ifld_cls,exact,psiini)
+
+      if(nio.eq.0)then 
+        write(*,*)"Volume error",err
+        write(100,*)time,err
+      endif
+
+      if(istep.eq.nsteps .and. nio.eq.0) close(100)
       
+
       return
       end
 c-----------------------------------------------------------------------
@@ -207,8 +267,27 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
-      include 'AVM'
+
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      ifld_cls = 2
+      ifld_tls = 3
+      ifld_clsr = 4
+      ifld_tlsr = 5
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine usrdat3()
+      implicit none
+
+      include 'SIZE'
+      include 'TOTAL'
       include 'SVV'
+      include 'AVM'
 
       real eps,dt_cls_in,dt_tls_in
       integer nsteps_cls, nsteps_tls
@@ -217,22 +296,14 @@ c-----------------------------------------------------------------------
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
-      integer ifdebug
+      integer ifdebug, ifixCLSbdry
 
-      eps = 4.0/(lx1-1.0)
-      nsteps_cls = uparam(1)
-      nsteps_tls = uparam(2)
-      ifld_cls = 2
-      ifld_tls = 3
-      ifld_clsr = 4
-      ifld_tlsr = 5
-      dt_cls_in = dt * uparam(3)
-      dt_tls_in = dt * uparam(4)
+      eps = 1.0/(lx1-1.0)
       ifdebug = 0
-      call ls_init(nsteps_cls,nsteps_tls,eps,
-     $             dt_cls_in,dt_tls_in,
-     $             ifld_cls,ifld_clsr,
-     $             ifld_tls,ifld_tlsr,ifdebug)
+      ifixCLSbdry = 0
+      call ls_init(ifld_cls, ifld_clsr,
+     $             ifld_tls, ifld_tlsr,
+     $             eps, ifdebug, ifixCLSbdry)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -240,9 +311,9 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      svv_c0(1) = 1.0
+      ! svv_c0(1) = 1.0
 
-      svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      ! svv_c0(ifld_cls) = 2.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
@@ -251,15 +322,15 @@ c     parameters.
       ! avm_c1(1) = 1.0
       ! avm_ncut(1) = 1.0
       ! icont(1) = .false.
-      ifupwindsvv(ifld_cls) = .true.
+      ! ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      ! svv_c0(ifld_tls) = 2.0                  !ifld_tls
       ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
       ! ifnlsvv(2) = .false.
-      ifupwindsvv(ifld_tls) = .true.
+      ! ifupwindsvv(ifld_tls) = .true.
 
 c     scalar 3      
       svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
@@ -270,23 +341,13 @@ c     scalar 3
       ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/2.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
       ! ifupwindsvv(ifld_tlsr) = .true.
 
-c--------------------------------------------------
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine usrdat3()
-      implicit none
-
-      include 'SIZE'
-      include 'TOTAL'
-      
       return
       end
 c---------------------------------------------------------------------
