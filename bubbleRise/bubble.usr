@@ -94,7 +94,7 @@ c-----------------------------------------------------------------------
       dpdz = (1./Fr)*rhol/vtrans(ix,iy,iz,e,1)
 
       ffx = -sfx + svvx
-      ffy = -sfy + svvy - 1.0/Fr !+ dpdz
+      ffy = -sfy + svvy - 1.0/Fr + dpdz
 
 
       sffx = sfx * vtrans(ix,iy,iz,e,1)
@@ -247,13 +247,13 @@ c-----------------------------------------------------------------------
 
       if(istep.eq.nsteps .and. nio.eq.0) close(100)
 
-      if(istep.eq.0 .and. time.eq.0.0)then
-        rhol = 1.0
-        ymax = glmax(ym1,ntot)
-        do i=1,ntot
-            pr(i,1,1,1) = rhol*(ymax-ym1(i,1,1,1))
-        enddo
-      endif
+      ! if(istep.eq.0 .and. time.eq.0.0)then
+      !   rhol = 1.0
+      !   ymax = glmax(ym1,ntot)
+      !   do i=1,ntot
+      !       pr(i,1,1,1) = rhol*(ymax-ym1(i,1,1,1))
+      !   enddo
+      ! endif
 
       ! call col2(vx,t(1,1,1,1,ifld_cls-1),ntot)
       ! call col2(vy,t(1,1,1,1,ifld_cls-1),ntot)
