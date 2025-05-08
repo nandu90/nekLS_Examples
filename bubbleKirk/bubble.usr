@@ -23,28 +23,29 @@ c-----------------------------------------------------------------------
 
       common /dimen/ Re,We,Fr
 
-      real rhog,rhol,mul,mug
-
       e = gllel(eg)
 
 !     These routine is not called by external solver
 !     To Do: change the flow, so that this routine is called
 !     similar to RANS. Will avoid confusion
 
-      rhol = 2042.3
-      rhog = 0.0567
-      mul = 0.00459
-      mug = 3.73e-5
+      rhoratio = 0.0567/2042.3
+      muratio = 3.73e-5/0.00459
+      nuratio = muratio/rhoratio
+
+      Re = 586.0
+      Fr = 1.0
+      We = 3.24
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
         psi = max(0.0,psi)
         psi = min(1.0,psi)
-        utrans = ((1.0-psi)*rhog + psi*rhol)
+        utrans = (1.0-psi)*rhoratio + psi
         !in non-dimensional form you must have kinematic 
         !viscosity here
-        udiff = ((1.0-psi)*mug + psi*mul)
-        vtrans0(ix,iy,iz,e) = rhog
+        udiff = ((1.0-psi)*muratio + psi)/Re
+        vtrans0(ix,iy,iz,e) = rhoratio
       else
         utrans = 1.0
         udiff = 1e-10
@@ -72,11 +73,9 @@ c-----------------------------------------------------------------------
 
       real svvx,svvy,svvz
 
-      real dpdz,rhoratio
+      real dpdz,rhol
 
       real sffx,sffy
-
-      real gdim,gamm,rhol
 
       e = gllel(eg)
 
@@ -87,18 +86,15 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      gdim = -9.81
-      gamm = 0.186
-
-      call surfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
+      call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      rhol = 2042.3
-      dpdz = gdim*rhol/vtrans(ix,iy,iz,e,1)
+      rhol = 1.0
+      dpdz = (1./Fr)*rhol/vtrans(ix,iy,iz,e,1)
 
       ffx = -sfx + svvx
-      ffy = -sfy + svvy + gdim !- dpdz
+      ffy = -sfy + svvy - 1.0/Fr + dpdz
 
 
       sffx = sfx * vtrans(ix,iy,iz,e,1)
@@ -125,10 +121,6 @@ c-----------------------------------------------------------------------
       
       qvol = 0.0
       avol = 0.0
-
-      if(ifield.eq.ifld_tlsr)then
-        qvol = signls(ix,iy,iz,e)
-      endif
 
       call limit_cls(ix,iy,iz,e)
 
@@ -188,7 +180,7 @@ c-----------------------------------------------------------------------
       uy = 0.0
       uz = 0.0
 
-      temp = sqrt(xx**2.0+(yy-10e-3)**2.0)-(5.75e-3/2.0)
+      temp = sqrt(xx**2.0+yy**2.0)-1.0/2.0
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
       elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
@@ -220,6 +212,7 @@ c-----------------------------------------------------------------------
       real err
       
       real ls_volerr
+      real rhol,ymax,glmax
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -253,6 +246,17 @@ c-----------------------------------------------------------------------
       endif
 
       if(istep.eq.nsteps .and. nio.eq.0) close(100)
+
+      ! if(istep.eq.0 .and. time.eq.0.0)then
+      !   rhol = 1.0
+      !   ymax = glmax(ym1,ntot)
+      !   do i=1,ntot
+      !       pr(i,1,1,1) = rhol*(ymax-ym1(i,1,1,1))
+      !   enddo
+      ! endif
+
+      ! call col2(vx,t(1,1,1,1,ifld_cls-1),ntot)
+      ! call col2(vy,t(1,1,1,1,ifld_cls-1),ntot)
       
 
       return
@@ -308,7 +312,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
 
-      eps = 1.0/(lx1-1.0)
+      eps = 1.5/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
@@ -352,8 +356,8 @@ c     scalar 3
       ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0
+      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/3.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.

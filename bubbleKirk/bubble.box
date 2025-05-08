@@ -6,10 +6,10 @@
 #========================================================
 #
 Box                                       
--30 -150                            Nelx  Nely
--0.0097 0.0097 1.                        x0 x1 ratio
-0 0.097 1.			      y0 y1 ratio
-SYM,SYM,W  ,O                     BC's
+-40 -280                            Nelx  Nely
+-1.75 1.75 1.                        x0 x1 ratio
+0 24.5 1.			      y0 y1 ratio
+W  ,W  ,W  ,O                     BC's
 I  ,I  ,I  ,I   
 I  ,I  ,I  ,I   
 I  ,I  ,I  ,I   
