@@ -2,13 +2,13 @@
 # nek parameter file
 #
 [GENERAL]
-#startFrom = dam.fld
-stopAt = numSteps
-#stopAt = endTime
-numSteps = 0 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
-endTime = 2 #10e-4
+#startFrom = bubble.fld
+#stopAt = numSteps
+stopAt = endTime
+#numSteps = 1 #400 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
+endTime = 5.0 #10e-4
 
-dt = 2.5e-04
+dt = 10.0e-05
 timeStepper = bdf2 #With bdf2 SF does not work well
 #variabledt = yes
 #targetCFL = 0.2
@@ -17,8 +17,8 @@ timeStepper = bdf2 #With bdf2 SF does not work well
 writeControl = runTime
 writeInterval = 0.5
 
-userParam01 = 0.01     #Freq of TLSR
-userParam02 = 0.1     #Freq of CLSR
+userParam01 = 0.1     #Freq of TLSR
+userParam02 = 0.01     #Freq of CLSR
 
 #filtering = hpfrt
 #filterModes = 1
@@ -30,12 +30,12 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-4
+residualTol = 1e-6
 residualProj = yes
-preconditioner = semg_amg_hypre
+#preconditioner = semg_amg_hypre
 
 [VELOCITY]
-residualProj = yes
+#residualProj = yes
 residualTol = 1e-6
 density = 1
 viscosity = -1.0 #dummy
@@ -55,16 +55,16 @@ regularization = svv
 [SCALAR02] #cls re-distanacing
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-8
 regularization = svv
 
 [SCALAR03] #tls re-distancing field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-12
 regularization = svv
 
-[SCALAR04] #tls re-distancing field
+[SCALAR04] #curvature
 solver=none
 density = 1.0
 diffusivity = 1e-8 
