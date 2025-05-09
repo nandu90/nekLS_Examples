@@ -75,7 +75,7 @@ c-----------------------------------------------------------------------
 
       real dpdz,rhol
 
-      real sffx,sffy
+      real sffx,sffy,sffz
 
       e = gllel(eg)
 
@@ -95,11 +95,13 @@ c-----------------------------------------------------------------------
 
       ffx = -sfx + svvx
       ffy = -sfy + svvy - 1.0/Fr !+ dpdz
+      ffz = -sfz + svvz
 
 
       sffx = sfx * vtrans(ix,iy,iz,e,1)
       sffy = sfy * vtrans(ix,iy,iz,e,1)
-      t(ix,iy,iz,e,5) = sqrt(sffx*sffx+sffy*sffy)
+      sffz = sfz * vtrans(ix,iy,iz,e,1)
+      t(ix,iy,iz,e,5) = sqrt(sffx*sffx+sffy*sffy+sffz*sffz)
 
       return
       end

@@ -32,7 +32,7 @@ stressFormulation = yes
 [PRESSURE]
 residualTol = 1e-6
 residualProj = yes
-#preconditioner = semg_amg_hypre
+preconditioner = semg_amg_hypre
 
 [VELOCITY]
 #residualProj = yes
