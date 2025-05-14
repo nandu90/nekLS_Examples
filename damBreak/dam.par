@@ -17,8 +17,8 @@ targetCFL = 0.5
 writeControl = runTime
 writeInterval = 0.5
 
-userParam01 = 0.1     #Freq of TLSR
-userParam02 = 0.01      #Freq of CLSR
+userParam01 = 0.05     #Freq of TLSR
+userParam02 = 0.005      #Freq of CLSR
 userParam03 = 30.0      #yplus value
 
 #filtering = hpfrt
