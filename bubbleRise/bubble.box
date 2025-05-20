@@ -6,9 +6,9 @@
 #========================================================
 #
 Box                                       
--41 -160                            Nelx  Nely
+-80 -160                            Nelx  Nely
 -4 4 1.                        x0 x1 ratio
--16 16 1.			      y0 y1 ratio
+0 16 1.			      y0 y1 ratio
 SYM,SYM,W  ,O                     BC's
 I  ,I  ,I  ,I   
 I  ,I  ,I  ,I   
