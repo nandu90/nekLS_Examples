@@ -57,7 +57,11 @@ c-----------------------------------------------------------------------
         psi = min(1.0,psi)
         utrans = ((1.0-psi)*rhog + psi*rhol)/rhol
         udiff = ((1.0-psi)*mug + psi*mul)/mul/Re
-        vtrans0(ix,iy,iz,e) = rhog/rhol
+        if(istep.le.2)then
+          vtrans0(ix,iy,iz,e) = utrans
+        else
+          vtrans0(ix,iy,iz,e) = rhog/rhol
+        endif
       else
         utrans = 1.0
         udiff = 1e-10
@@ -98,9 +102,9 @@ c-----------------------------------------------------------------------
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      ffx = -sfx + svvx
-      ffy = -sfy -1./Fr + svvy
-      ffz = -sfz
+      ffx = sfx + svvx
+      ffy = sfy -1./Fr + svvy
+      ffz = sfz
 
       return
       end
@@ -122,10 +126,6 @@ c-----------------------------------------------------------------------
       
       qvol = 0.0
       avol = 0.0
-
-      if(ifield.eq.ifld_tlsr)then
-        qvol = signls(ix,iy,iz,e)
-      endif
 
       call limit_cls(ix,iy,iz,e)
 
@@ -238,6 +238,7 @@ c-----------------------------------------------------------------------
       real fplot,fplot_next
       save fplot_next
       data fplot_next /0.0/
+      integer pord
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -256,7 +257,8 @@ c-----------------------------------------------------------------------
         open(unit=100,file='vol.dat',status='unknown')
       endif
 
-      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
+      pord = 1
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
