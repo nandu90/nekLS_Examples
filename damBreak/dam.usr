@@ -239,6 +239,7 @@ c-----------------------------------------------------------------------
       save fplot_next
       data fplot_next /0.0/
       integer pord
+      integer ncut
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -259,7 +260,8 @@ c-----------------------------------------------------------------------
 
       pord = 2
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
-      if(pord.ne.1) call cut_off_filter(prext,lx1-1,1)
+      ncut = lx1-2
+      if(pord.ne.1) call cut_off_filter(prext,ncut,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing

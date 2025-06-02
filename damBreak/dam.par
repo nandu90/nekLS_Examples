@@ -11,14 +11,14 @@ endTime = 4 #10e-4
 dt = 1.25e-04
 timeStepper = bdf2 #With bdf2 SF does not work well
 variabledt = yes
-targetCFL = 0.5
+targetCFL = 0.2
 #extrapolation = OIFS
 
 writeControl = runTime
 writeInterval = 0.5
 
-userParam01 = 0.1     #Freq of TLSR
-userParam02 = 0.01      #Freq of CLSR
+userParam01 = 0.025     #Freq of TLSR
+userParam02 = 0.0025      #Freq of CLSR
 userParam03 = 30.0      #yplus value
 
 #filtering = hpfrt
