@@ -257,8 +257,9 @@ c-----------------------------------------------------------------------
         open(unit=100,file='vol.dat',status='unknown')
       endif
 
-      pord = 1
+      pord = 2
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
+      if(pord.ne.1) call cut_off_filter(prext,lx1-1,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
