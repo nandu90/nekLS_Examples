@@ -258,7 +258,7 @@ c-----------------------------------------------------------------------
         open(unit=100,file='vol.dat',status='unknown')
       endif
 
-      pord = 2
+      pord = uparam(4)
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
       ncut = lx1-2
       if(pord.ne.1) call cut_off_filter(prext,ncut,1)
