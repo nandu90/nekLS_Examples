@@ -5,20 +5,20 @@
 #startFrom = bubble.fld
 #stopAt = numSteps
 stopAt = endTime
-#numSteps = 0 #400 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
-endTime = 5.0 #10e-4
+#numSteps = 1 #400 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
+endTime = 3.0 #10e-4
 
-dt = 25.0e-05
+dt = 1.0e-05
 timeStepper = bdf2 #With bdf2 SF does not work well
-#variabledt = yes
-#targetCFL = 0.2
+variabledt = yes
+targetCFL = 0.2
 #extrapolation = OIFS
 
 writeControl = runTime
 writeInterval = 0.1
 
-userParam01 = 0.05     #Freq of TLSR
-userParam02 = 0.005     #Freq of CLSR
+userParam01 = 0.01     #Freq of TLSR
+userParam02 = 0.001     #Freq of CLSR
 
 #filtering = hpfrt
 #filterModes = 1
