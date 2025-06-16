@@ -33,23 +33,14 @@ c-----------------------------------------------------------------------
 !     To Do: change the flow, so that this routine is called
 !     similar to RANS. Will avoid confusion
 
-      charl = 0.05715
-      gdim = 9.81
-      rhol = 1000.0
-      rhog = 1.2
-      mul = 1e-3
-      mug = 1.8e-5 !/5.0
-      nul = mul/rhol
-      nug = mug/rhog
-      charl = 0.05715
+      rhol = 1.0
+      rhog = 1.0
+      mul = 1.0
+      mug = 1.0 !/5.0
 
-      !https://www.sciencedirect.com/science/article/pii/S0021999197958472
-      udim = sqrt(gdim*charl)
-
-      Re = rhol*udim*charl/mul
-      Fr = udim**2.0/(gdim*charl)
-      gamm = 0.06
-      We = charl*rhol*udim**2.0/gamm
+      Re = 10.0
+      We = 1.0
+      !Laplace number = Re**2/We
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
@@ -86,6 +77,7 @@ c-----------------------------------------------------------------------
       common /dimen/ Re,We,Fr
       real Re,We,Fr
       real sfx,sfy,sfz
+      real sffx,sffy,sffz
 
       real svvx,svvy,svvz
 
@@ -102,9 +94,16 @@ c-----------------------------------------------------------------------
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      ffx = sfx + svvx
-      ffy = sfy -1./Fr + svvy
-      ffz = sfz
+      ffx = sfx !+ svvx
+      ffy = sfy !+ svvy
+      ffz = sfz !+ svvz
+
+      sffx = sfx * vtrans(ix,iy,iz,e,1)
+      sffy = sfy * vtrans(ix,iy,iz,e,1)
+      sffz = sfz * vtrans(ix,iy,iz,e,1)
+      t(ix,iy,iz,e,5) = sffx**2+sffy**2
+      if(if3d) t(ix,iy,iz,e,5) = t(ix,iy,iz,e,5)+sffz**2
+      t(ix,iy,iz,e,5) = sqrt(t(ix,iy,iz,e,5))
 
       return
       end
@@ -153,18 +152,6 @@ c-----------------------------------------------------------------------
       uz   = 0.0
       temp = 0.0
 
-      if(ifield.eq.ifld_clsr)then
-        temp = t(ix,iy,iz,e,ifld_cls-1)
-      endif
-
-      if(ifield.eq.1)then
-        yplus = uparam(3)
-        if(nio.eq.0 .and. istep.eq.1)then
-          write(*,*)"Specified yplus :",yplus
-        endif
-        call traction_ls(ix,iy,iz,e,iside,yplus)
-      endif
-
       return
       end
 c-----------------------------------------------------------------------
@@ -181,21 +168,22 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      real xx,yy,heaviside
+      real xx,yy,zz,heaviside
       real phix,phiy
 
       e = gllel(eg)
 
       xx = xm1(ix,iy,iz,e)
       yy = ym1(ix,iy,iz,e)
+      zz = zm1(ix,iy,iz,e)
 
       ux = 0.0
       uy = 0.0
       uz = 0.0
 
-      phix = 1.0 - xx
-      phiy = 1.0 - yy
-      temp = min(phix,phiy)
+      temp = xx**2 + yy**2
+      if(if3d) temp = temp + zz**2
+      temp = sqrt(temp)-0.5
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
       elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
@@ -219,96 +207,54 @@ c-----------------------------------------------------------------------
       real pta(3),ptb(3)
 
       integer ntot,i
-
-      real exact(lx1*ly1*lz1*lelv)
-      save exact
-      real psiini(lx1,ly1,lz1,lelv)
-      save psiini
-      real err
-      
-      real ls_volerr
-
-      COMMON /SCRNS/ DVC  (LX1,LY1,LZ1,LELV),
-     $               DV1  (LX1,LY1,LZ1,LELV),
-     $               DV2  (LX1,LY1,LZ1,LELV),
-     $               DFC  (LX1,LY1,LZ1,LELV)
-      real DVC,DV1,DV2,DFC
-      real DIV1, DIV2
-      real glsum
-      real fplot,fplot_next
-      save fplot_next
-      data fplot_next /0.0/
       integer pord
       integer ncut
 
+      common /rms/ urms(lx1,ly1,lz1,lelv),
+     $             curv(lx1,ly1,lz1,lelv)
+      real urms
+      real rms
+      real curv
+      real glsum
+
       ntot = lx1*ly1*lz1*nelv
 
-      if(istep.eq.0)then
-        call copy(psiini,t(1,1,1,1,ifld_cls-1),ntot)
-        call copy(exact,t(1,1,1,1,ifld_tls-1),ntot)
-        do i=1,ntot
-          if(exact(i).ge.0.0)then
-            exact(i) = 1.0
-          else
-            exact(i) = 0.0
-          endif
-        enddo
-      endif
       if(istep.eq.0 .and. nio.eq.0)then
-        open(unit=100,file='vol.dat',status='unknown')
+        open(unit=100,file='rms.dat',status='unknown')
       endif
 
-      pord = uparam(4)
+      pord = uparam(3)
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
-      ncut = lx1-2
-      if(pord.ne.1) call cut_off_filter(prext,ncut,1)
+      ! ncut = lx1-2
+      ! if(pord.ne.1) call cut_off_filter(prext,ncut,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
 
       call LS_default_driver(ntlsr,nclsr)
 
-      err = ls_volerr(ifld_cls,exact,psiini)
+      ! if(istep .eq. nsteps)then
+      !   pta(1) = 0.0
+      !   pta(2) = 0.0
+      !   pta(3) = 0.0
+      !   ptb(1) = 5.0
+      !   ptb(2) = 0.0
+      !   ptb(3) = 0.0
+      !   call lineplot(pta,ptb,1001)
+      ! endif
 
-      !Calculate Divergence norms of new VX,VY,VZ
-      CALL OPDIV   (DVC,VX,VY,VZ)
-      CALL DSSUM   (DVC,lx1,ly1,lz1)
-      CALL COL2    (DVC,BINVM1,NTOT)
+      call col3(urms,vx,vx,ntot)
+      call addcol3(urms,vy,vy,ntot)
+      if(if3d) call addcol3(urms,vz,vz,ntot)
+      call col2(urms,bm1,ntot)
+      rms = sqrt(glsum(urms,ntot)/volvm1)
 
-      CALL COL3    (DV1,DVC,BM1,NTOT)
-      DIV1 = GLSUM (DV1,NTOT)/VOLVM1
-
-      CALL COL3    (DV2,DVC,DVC,NTOT)
-      CALL COL2    (DV2,BM1   ,NTOT)
-      DIV2 = GLSUM (DV2,NTOT)/VOLVM1
-      DIV2 = SQRT  (DIV2)
       if(nio.eq.0)then 
-        write(*,*)"Volume error",err
-        write(100,*)time,err,DIV1,DIV2
+        write(*,*)"RMS velocity",rms
+        write(100,*)time,rms
       endif
 
       if(istep.eq.nsteps .and. nio.eq.0) close(100)
-      
-      fplot = 0.1
-      if(time .ge. fplot_next)then
-        fplot_next = fplot_next + fplot
-        pta(1) = 0.0
-        pta(2) = 0.0
-        pta(3) = 0.0
-        ptb(1) = 5.0
-        ptb(2) = 0.0
-        ptb(3) = 0.0
-        call lineplot(pta,ptb,1001)
-
-        pta(1) = 0.0
-        pta(2) = 0.0
-        pta(3) = 0.0
-        ptb(1) = 0.0
-        ptb(2) = 1.25
-        ptb(3) = 0.0
-        call lineplot(pta,ptb,1001)
-      endif
-
       return
       end
 c-----------------------------------------------------------------------
@@ -362,7 +308,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
 
-      eps = 1.5/(lx1-1.0)
+      eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
@@ -379,7 +325,7 @@ c     parameters.
       ! svvcut(1) = (lx1-1.0)/2.0
 
       ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
-      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
+      ! svvcut(ifld_cls) = (lx1-1.0)/2.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
       ! ifnlsvv(1) = .true.
@@ -391,7 +337,7 @@ c     parameters.
 
 c     scalar 2      
       ! svv_c0(ifld_tls) = 1.0                  !ifld_tls
-      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
+      ! svvcut(ifld_tls) = (lx1-1.0)/2.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
       ! ifnlsvv(2) = .false.
@@ -399,15 +345,15 @@ c     scalar 2
 
 c     scalar 3      
       svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
-      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0
+      svvcut(ifld_clsr) = (lx1-1.0)/2.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
       ! ifupwindsvv(ifld_clsr) = .true.
 
 c     scalar 3      
-      svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0
+      svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
+      svvcut(ifld_tlsr) = (lx1-1.0)/3.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.
