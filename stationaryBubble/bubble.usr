@@ -211,11 +211,24 @@ c-----------------------------------------------------------------------
       integer ncut
 
       common /rms/ urms(lx1,ly1,lz1,lelv),
-     $             curv(lx1,ly1,lz1,lelv)
-      real urms
+     $             vmag(lx1,ly1,lz1,lelv),
+     $             curv(lx1,ly1,lz1,lelv),
+     $             curvi(lx1,ly1,lz1,lelv),
+     $             delta(lx1,ly1,lz1,lelv),
+     $             cx(lx1,ly1,lz1,lelv),
+     $             cy(lx1,ly1,lz1,lelv),
+     $             cz(lx1,ly1,lz1,lelv)
+      real urms,vmag
       real rms
-      real curv
-      real glsum
+      real curv, curvi
+      real glsum, glsc3, glsc2
+      real delta, cx,cy,cz
+      real e1norm, e2norm, glmax
+
+      common /dimen/ Re,We,Fr
+      real Re,We,Fr
+
+      real Ca
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -227,6 +240,41 @@ c-----------------------------------------------------------------------
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
       ! ncut = lx1-2
       ! if(pord.ne.1) call cut_off_filter(prext,ncut,1)
+
+      !Get RMS velocity
+      call col3(urms,vx,vx,ntot)
+      call addcol3(urms,vy,vy,ntot)
+      if(if3d) call addcol3(urms,vz,vz,ntot)
+      call vsqrt2(vmag,urms,ntot)
+      Ca = (We/Re)*glmax(vmag,ntot)
+      call col2(urms,bm1,ntot)
+      rms = sqrt(glsum(urms,ntot)/volvm1)
+
+      !Get curvature
+      call cls_normals(cx,cy,cz,ifld_tls)
+      call opdiv(curv,cx,cy,cz)
+      call dssum(curv,lx1,ly1,lz1)
+      call col2(curv,binvm1,ntot)
+
+      call deltals(t(1,1,1,1,ifld_cls-1),delta)
+      call col2(curv,delta,ntot)
+      if(istep.eq.0)call copy(curvi,curv,ntot)
+      !Calc error in curv
+      call sub2(curv,curvi,ntot)
+      call vabs(curv,ntot)
+      e1norm = glsc2(curv,bm1,ntot)
+      e2norm = glsc3(curv,curv,bm1,ntot)
+      e2norm = sqrt(e2norm)
+      
+
+      if(nio.eq.0)then 
+        write(*,*)"RMS velocity",rms
+        write(*,*)"Capillary number",Ca
+        write(*,*)"Curvature err norm",e1norm,e2norm
+        write(100,*)time,rms,e1norm,e2norm,Ca
+      endif
+
+      if(istep.eq.nsteps .and. nio.eq.0) close(100)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
@@ -243,18 +291,6 @@ c-----------------------------------------------------------------------
       !   call lineplot(pta,ptb,1001)
       ! endif
 
-      call col3(urms,vx,vx,ntot)
-      call addcol3(urms,vy,vy,ntot)
-      if(if3d) call addcol3(urms,vz,vz,ntot)
-      call col2(urms,bm1,ntot)
-      rms = sqrt(glsum(urms,ntot)/volvm1)
-
-      if(nio.eq.0)then 
-        write(*,*)"RMS velocity",rms
-        write(100,*)time,rms
-      endif
-
-      if(istep.eq.nsteps .and. nio.eq.0) close(100)
       return
       end
 c-----------------------------------------------------------------------
@@ -362,3 +398,22 @@ c     scalar 3
       return
       end
 c---------------------------------------------------------------------
+      subroutine vabs(a,n)
+      real a(1)
+      integer n,i
+
+      do i=1,n
+        a(i) = abs(a(i))
+      enddo
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine vsqrt2(a,b,n)
+      real a(1),b(1)
+      integer n,i
+
+      do i=1,n
+        a(i) = sqrt(b(i))
+      enddo
+      return
+      end
