@@ -41,7 +41,11 @@ c-----------------------------------------------------------------------
         psi = min(1.0,psi)
         utrans = rhol*psi + rhog*(1.0-psi)
         udiff = mu
-        vtrans0(ix,iy,iz,e) = rhog
+        if(istep.le.2)then
+          vtrans0(ix,iy,iz,e) = utrans
+        else
+          vtrans0(ix,iy,iz,e) = rhog
+        endif
       else
         utrans = 1.0
         udiff = 1e-10
@@ -175,7 +179,7 @@ c-----------------------------------------------------------------------
       real eps, deltael
       integer ie,ifc
 
-      integer ntlsr, nclsr
+      real ntlsr, nclsr
       real pta(3),ptb(3)
 
       real exact(lx1*ly1*lz1*lelv)
@@ -185,6 +189,7 @@ c-----------------------------------------------------------------------
       real err
 
       real ls_volerr
+      integer pord
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -203,7 +208,9 @@ c-----------------------------------------------------------------------
         open(unit=100,file='vol.dat',status='unknown')
       endif
 
-      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
+
+      pord = 2
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing

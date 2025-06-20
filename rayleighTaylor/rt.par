@@ -14,8 +14,8 @@ timeStepper = bdf2
 #writeControl = runTime
 writeInterval = 2000
 
-userParam01 = 2000     #Freq of TLSR
-userParam02 = 200      #Freq of CLSR
+userParam01 = 0.25     #Freq of TLSR
+userParam02 = 0.025      #Freq of CLSR
 
 [PROBLEMTYPE]
 equation = lowMachNS
