@@ -55,6 +55,8 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     ax.legend(loc='best',fontsize=12)
     fig.savefig(fname+'.pdf',\
                 bbox_inches='tight',dpi=100)
+    fig.savefig(fname+'.png',\
+                bbox_inches='tight',dpi=100)
     plt.close()
     return
 
@@ -104,7 +106,7 @@ def geterr(fname):
 def main():
     nosefiles = np.arange(0,50,2)
     neckfiles = np.arange(1,50,2)
-    tol = [1e-1,1e-2,1e-2]
+    tol = [1e-1,1e-1,1e-2]
 
     nose, time1 = getloc('coarse/',nosefiles,tol[0])
     neck, time2 = getloc('coarse/',neckfiles,tol[0])
