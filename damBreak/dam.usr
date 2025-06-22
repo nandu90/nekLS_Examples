@@ -157,14 +157,6 @@ c-----------------------------------------------------------------------
         temp = t(ix,iy,iz,e,ifld_cls-1)
       endif
 
-      if(ifield.eq.1)then
-        yplus = uparam(3)
-        if(nio.eq.0 .and. istep.eq.1)then
-          write(*,*)"Specified yplus :",yplus
-        endif
-        call traction_ls(ix,iy,iz,e,iside,yplus)
-      endif
-
       return
       end
 c-----------------------------------------------------------------------
@@ -258,7 +250,7 @@ c-----------------------------------------------------------------------
         open(unit=100,file='vol.dat',status='unknown')
       endif
 
-      pord = uparam(4)
+      pord = uparam(3)
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
       ncut = lx1-2
       if(pord.ne.1) call cut_off_filter(prext,ncut,1)
@@ -375,8 +367,8 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      ! svv_c0(1) = 1.0
-      ! svvcut(1) = (lx1-1.0)/2.0
+      svv_c0(1) = 1.0
+      svvcut(1) = (lx1-1.0)/2.0
 
       ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
@@ -399,7 +391,7 @@ c     scalar 2
 
 c     scalar 3      
       svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
-      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0
+      svvcut(ifld_clsr) = (lx1-1.0)/2.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
@@ -408,6 +400,7 @@ c     scalar 3
 c     scalar 3      
       svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
       svvcut(ifld_tlsr) = (lx1-1.0)/2.0
+      if(lx1.gt.7) svvcut(ifld_tlsr) = (lx1-1.0)/3.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.

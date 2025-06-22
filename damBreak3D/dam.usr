@@ -55,10 +55,12 @@ c-----------------------------------------------------------------------
         psi = max(0.0,psi)
         psi = min(1.0,psi)
         utrans = ((1.0-psi)*rhog + psi*rhol)/rhol
-        !in non-dimensional form you must have kinematic 
-        !viscosity here
         udiff = ((1.0-psi)*mug + psi*mul)/mul/Re
-        vtrans0(ix,iy,iz,e) = rhog/rhol
+        if(istep.le.2)then
+          vtrans0(ix,iy,iz,e) = utrans
+        else
+          vtrans0(ix,iy,iz,e) = rhog/rhol
+        endif
       else
         utrans = 1.0
         udiff = 1e-10
@@ -99,9 +101,9 @@ c-----------------------------------------------------------------------
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      ffx = -sfx + svvx
-      ffy = -sfy -1./Fr + svvy
-      ffz = -sfz + svvz
+      ffx = sfx + svvx
+      ffy = sfy -1./Fr + svvy
+      ffz = sfz + svvz
 
       return
       end
@@ -123,10 +125,6 @@ c-----------------------------------------------------------------------
       
       qvol = 0.0
       avol = 0.0
-
-      if(ifield.eq.ifld_tlsr)then
-        qvol = signls(ix,iy,iz,e)
-      endif
 
       call limit_cls(ix,iy,iz,e)
 
@@ -156,11 +154,6 @@ c-----------------------------------------------------------------------
 
       if(ifield.eq.ifld_clsr)then
         temp = t(ix,iy,iz,e,ifld_cls-1)
-      endif
-
-      if(ifield.eq.1)then
-        yplus = uparam(3)
-        call traction_ls(ix,iy,iz,e,iside,yplus)
       endif
 
       return
@@ -236,6 +229,8 @@ c-----------------------------------------------------------------------
       real fplot,fplot_next
       save fplot_next
       data fplot_next /0.0/
+      integer pord
+      integer ncut
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -254,7 +249,10 @@ c-----------------------------------------------------------------------
         open(unit=100,file='vol.dat',status='unknown')
       endif
 
-      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
+      pord = uparam(3)
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
+      ncut = lx1-2
+      if(pord.ne.1) call cut_off_filter(prext,ncut,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
@@ -368,9 +366,10 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      ! svv_c0(1) = 1.0
+      svv_c0(1) = 1.0
+      svvcut(1) = (lx1-1.0)/2.0
 
-      ! svv_c0(ifld_cls) = 2.0                 !ifld_cls
+      ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
@@ -382,7 +381,7 @@ c     parameters.
       ! ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      ! svv_c0(ifld_tls) = 2.0                  !ifld_tls
+      ! svv_c0(ifld_tls) = 1.0                  !ifld_tls
       ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
@@ -391,7 +390,7 @@ c     scalar 2
 
 c     scalar 3      
       svv_c0(ifld_clsr) = 1.0                  !ifld_clsr
-      ! svvcut(ifld_clsr) = (lx1-1.0)/2.0-1.0
+      svvcut(ifld_clsr) = (lx1-1.0)/2.0
       ! svv_k0(3) = 1.5
       ! svv_k1(3) = 1.5
       ! ifnlsvv(3) = .false.
@@ -400,6 +399,7 @@ c     scalar 3
 c     scalar 3      
       svv_c0(ifld_tlsr) = 2.0                  !ifld_tlsr
       svvcut(ifld_tlsr) = (lx1-1.0)/2.0
+      if(lx1.gt.7) svvcut(ifld_tlsr) = (lx1-1.0)/3.0
       ! svv_k0(4) = 1.5
       ! svv_k1(4) = 1.5
       ! ifnlsvv(4) = .false.

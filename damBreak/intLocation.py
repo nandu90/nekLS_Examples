@@ -55,6 +55,8 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     ax.legend(loc='best',fontsize=12)
     fig.savefig(fname+'.pdf',\
                 bbox_inches='tight',dpi=100)
+    fig.savefig(fname+'.png',\
+                bbox_inches='tight',dpi=100)
     plt.close()
     return
 
@@ -122,39 +124,39 @@ def getEvdata(fname):
     return t,Ev,div1,div2
 
 def main():
-    hfiles = np.arange(0,270,2)
-    vfiles = np.arange(1,270,2)
-    tol = [1e-3,1e-3,1e-3]
+    hfiles = np.arange(0,70,2)
+    vfiles = np.arange(1,80,2)
+    tol = [1e-2,1e-3,1e-3]
 
-    hwall, time1 = getloc('40X160/y5',hfiles,tol[0],'h')
-    vwall, time2 = getloc('40X160/y5',vfiles,tol[0],'v')
+    hwall, time1 = getloc('40X160/3',hfiles,tol[0],'h')
+    vwall, time2 = getloc('40X160/3',vfiles,tol[0],'v')
     xh = time1
     yh = hwall
     xv = time2
     yv = vwall
 
-    hwall, time1 = getloc('40X160/y11',hfiles,tol[0],'h')
-    vwall, time2 = getloc('40X160/y11',vfiles,tol[0],'v')
+    hwall, time1 = getloc('40X160/5',hfiles,tol[0],'h')
+    vwall, time2 = getloc('40X160/5',vfiles,tol[0],'v')
     xh2 = time1
     yh2 = hwall
     xv2 = time2
     yv2 = vwall
     #print(yh)
     
-    hwall, time1 = getloc('40X160/y30',hfiles,tol[1],'h')
-    vwall, time2 = getloc('40X160/y30',vfiles,tol[0],'v')
+    hwall, time1 = getloc('40X160/7',hfiles,tol[0],'h')
+    vwall, time2 = getloc('40X160/7',vfiles,tol[0],'v')
     xh3 = time1
     yh3 = hwall
     xv3 = time2
     yv3 = vwall
 
-    hwall, time1 = getloc('40X160/y100',hfiles,tol[1],'h')
-    vwall, time2 = getloc('40X160/y100',vfiles,tol[0],'v')
+    hwall, time1 = getloc('40X160/9',hfiles,tol[0],'h')
+    vwall, time2 = getloc('40X160/9',vfiles,tol[0],'v')
     xh4 = time1
     yh4 = hwall
     xv4 = time2
     yv4 = vwall
-    #print(yh)
+
 
     data = np.loadtxt('exp_front.dat',delimiter=' ')
     xh_exp = data[:,0]
@@ -164,92 +166,82 @@ def main():
     xv_exp = data[:,0]
     yv_exp = data[:,1]
 
-    labels = ['$y^+=5$','$y^+=11$','$y^+=30$','$y^+=100$','Martin et al (1952)']
-    lines = [':','-.','--','--','']
-    marks = ['','','','','v']
+    data = np.loadtxt('phasta.csv',delimiter=',')
+    xh_phasta = data[:,0]
+    yh_phasta = data[:,1]
 
-    x = [xh,xh2,xh3,xh4,xh_exp]#,x2,x3,xchiu,xg]
-    y = [yh,yh2,yh3,yh4,yh_exp]#,y2,y3,ychiu,yg]
+    data = np.loadtxt('phasta_h.csv',delimiter=',')
+    xv_phasta = data[:,0]
+    yv_phasta = data[:,1]
+
+    labels = ['$N=3$','$N=5$','$N=7$','$N=9$','Martin et al (1952)','Rodriguez et al (2013)']
+    lines = [':','-.','--','--','','']
+    marks = ['','','','','v','*']
+
+    x = [xh,xh2,xh3,xh4,xh_exp,xh_phasta]#,x2,x3,xchiu,xg]
+    y = [yh,yh2,yh3,yh4,yh_exp,yh_phasta]#,y2,y3,ychiu,yg]
         
-    plotnow('horizontal_yplus','$t^*$','$x/L$',x,y,labels,linestyles=lines,markers=marks)
+    plotnow('horizontal_N','$t^*$','$x/L$',x,y,labels,linestyles=lines,markers=marks)
 
-    x = [xv,xv2,xv3,xv4,xv_exp]#,x2,x3,xchiu,xg]
-    y = [yv,yv2,yv3,yv4,yv_exp]#,y2,y3,ychiu,yg]    
+    x = [xv,xv2,xv3,xv4,xv_exp,xv_phasta]#,x2,x3,xchiu,xg]
+    y = [yv,yv2,yv3,yv4,yv_exp,yv_phasta]#,y2,y3,ychiu,yg]    
     
-    plotnow('vertical_yplus','$t^*$','$y/L$',x,y,labels,linestyles=lines,markers=marks)
+    plotnow('vertical_N','$t^*$','$y/L$',x,y,labels,linestyles=lines,markers=marks)
 
     #plot different N
-    hfiles = np.arange(0,270,2)
-    vfiles = np.arange(1,270,2)
-    tol = [1e-3,1e-3,1e-4]
-
-    hwall, time1 = getloc('40X160/y30/3',hfiles,tol[0],'h')
-    vwall, time2 = getloc('40X160/y30/3',vfiles,tol[0],'v')
+    hwall, time1 = getloc('40X160/5_P1',hfiles,tol[0],'h')
+    vwall, time2 = getloc('40X160/5_P1',vfiles,tol[0],'v')
     xh = time1
     yh = hwall
     xv = time2
     yv = vwall
 
-    hwall, time1 = getloc('40X160/y30',hfiles,tol[0],'h')
-    vwall, time2 = getloc('40X160/y30',vfiles,tol[0],'v')
+    hwall, time1 = getloc('40X160/5',hfiles,tol[0],'h')
+    vwall, time2 = getloc('40X160/5',vfiles,tol[0],'v')
     xh2 = time1
     yh2 = hwall
     xv2 = time2
     yv2 = vwall
     #print(yh)
     
-    hwall, time1 = getloc('40X160/y30/7',hfiles,tol[2],'h')
-    vwall, time2 = getloc('40X160/y30/7',vfiles,tol[0],'v')
-    xh3 = time1
-    yh3 = hwall
-    xv3 = time2
-    yv3 = vwall
-
-    hwall, time1 = getloc('../damBreak3D',hfiles,tol[0],'h',if3d=True)
-    vwall, time2 = getloc('../damBreak3D',vfiles,tol[0],'v',if3d=True)
-    xh4 = time1
-    yh4 = hwall
-    xv4 = time2
-    yv4 = vwall
     #print(yh)
 
-    labels = ['$N=3; 2D$','$N=5; 2D$','$N=7; 2D$','$N=5;3D$','Martin et al (1952)']
-    lines = [':','-.','--','--','']
-    marks = ['','','','','v']
+    labels = ['P1','P2','Martin et al (1952)','Rodriguez et al (2013)']
+    lines = ['--','--','','','']
+    marks = ['','','v','*','v']
 
-    x = [xh,xh2,xh3,xh4,xh_exp]#,x2,x3,xchiu,xg]
-    y = [yh,yh2,yh3,yh4,yh_exp]#,y2,y3,ychiu,yg]
+    x = [xh,xh2,xh_exp,xh_phasta]#,x2,x3,xchiu,xg]
+    y = [yh,yh2,yh_exp,yh_phasta]#,y2,y3,ychiu,yg]
         
-    plotnow('horizontal_N','$t^*$','$x/L$',x,y,labels,linestyles=lines,markers=marks)
+    plotnow('horizontal_p','$t^*$','$x/L$',x,y,labels,linestyles=lines,markers=marks)
 
-    x = [xv,xv2,xv3,xv4,xv_exp]#,x2,x3,xchiu,xg]
-    y = [yv,yv2,yv3,yv4,yv_exp]#,y2,y3,ychiu,yg]    
+    x = [xv,xv2,xv_exp,xv_phasta]#,x2,x3,xchiu,xg]
+    y = [yv,yv2,yv_exp,yv_phasta]#,y2,y3,ychiu,yg]    
     
-    plotnow('vertical_N','$t^*$','$y/L$',x,y,labels,linestyles=lines,markers=marks)    
-    
+    plotnow('vertical_p','$t^*$','$y/L$',x,y,labels,linestyles=lines,markers=marks)    
 
     #VOl err plot
-    t,Ev,d1,d2 = getEvdata('40X160/y30/4')
+    t,Ev,d1,d2 = getEvdata('40X160/3')
     xdata = [t]
     ydata = [Ev]
     div = [d2]
     div1 = [d1]
-    t,Ev,d1,d2 = getEvdata('40X160/y30')
+    t,Ev,d1,d2 = getEvdata('40X160/5')
     xdata.append(t)
     ydata.append(Ev)
     div.append(d2)
     div1.append(d1)
-    t,Ev,d1,d2 = getEvdata('40X160/y30/6')
+    t,Ev,d1,d2 = getEvdata('40X160/7')
     xdata.append(t)
     ydata.append(Ev)
     div.append(d2)
     div1.append(d1)
-    t,Ev,d1,d2 = getEvdata('../damBreak3D')
+    t,Ev,d1,d2 = getEvdata('40X160/9')
     xdata.append(t)
     ydata.append(Ev)
     div.append(d2)
     div1.append(d1)
-    labels = ['$N=3$','$N=5$','$N=7$','$3D$']
+    labels = ['$N=3$','$N=5$','$N=7$','$N=9$']
     lines = [':','-.','--','--']
     marks = ['','','','']
 

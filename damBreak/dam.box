@@ -9,7 +9,7 @@ Box
 -160 -40                            Nelx  Nely
 0 5 1.                        x0 x1 ratio
 0 1.25 1.			      y0 y1 ratio
-shl,shl,shl,shl                     BC's
+W  ,W  ,W  ,W                     BC's
 I  ,I  ,I  ,I   
 I  ,I  ,I  ,I   
 I  ,I  ,I  ,I   
