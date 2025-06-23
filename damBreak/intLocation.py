@@ -125,7 +125,7 @@ def getEvdata(fname):
 
 def main():
     hfiles = np.arange(0,70,2)
-    vfiles = np.arange(1,80,2)
+    vfiles = np.arange(1,78,2)
     tol = [1e-2,1e-3,1e-3]
 
     hwall, time1 = getloc('40X160/3',hfiles,tol[0],'h')
@@ -218,7 +218,41 @@ def main():
     x = [xv,xv2,xv_exp,xv_phasta]#,x2,x3,xchiu,xg]
     y = [yv,yv2,yv_exp,yv_phasta]#,y2,y3,ychiu,yg]    
     
-    plotnow('vertical_p','$t^*$','$y/L$',x,y,labels,linestyles=lines,markers=marks)    
+    plotnow('vertical_p','$t^*$','$y/L$',x,y,labels,linestyles=lines,markers=marks)
+
+    #2D vs 3D
+    hfiles = np.arange(0,36,2)
+    vfiles = np.arange(1,36,2)
+    hwall, time1 = getloc('40X160/5',hfiles,tol[0],'h')
+    vwall, time2 = getloc('40X160/5',vfiles,tol[0],'v')
+    xh = time1
+    yh = hwall
+    xv = time2
+    yv = vwall
+
+    hwall, time1 = getloc('../damBreak3D',hfiles,tol[0],'h',if3d=True)
+    vwall, time2 = getloc('../damBreak3D',vfiles,tol[0],'v',if3d=True)
+    xh2 = time1
+    yh2 = hwall
+    xv2 = time2
+    yv2 = vwall
+    #print(yh)
+    
+    #print(yh)
+
+    labels = ['2D','3D','Martin et al (1952)','Rodriguez et al (2013)']
+    lines = [':','--','','','']
+    marks = ['','','v','*','v']
+
+    x = [xh,xh2,xh_exp,xh_phasta]#,x2,x3,xchiu,xg]
+    y = [yh,yh2,yh_exp,yh_phasta]#,y2,y3,ychiu,yg]
+        
+    plotnow('horizontal_23','$t^*$','$x/L$',x,y,labels,linestyles=lines,markers=marks)
+
+    x = [xv,xv2,xv_exp,xv_phasta]#,x2,x3,xchiu,xg]
+    y = [yv,yv2,yv_exp,yv_phasta]#,y2,y3,ychiu,yg]    
+    
+    plotnow('vertical_23','$t^*$','$y/L$',x,y,labels,linestyles=lines,markers=marks)
 
     #VOl err plot
     t,Ev,d1,d2 = getEvdata('40X160/3')
