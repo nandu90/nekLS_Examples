@@ -11,7 +11,7 @@ endTime = 4 #10e-4
 dt = 1.25e-04
 timeStepper = bdf2 #With bdf2 SF does not work well
 variabledt = yes
-targetCFL = 0.5
+targetCFL = 0.1
 #extrapolation = OIFS
 
 writeControl = runTime
