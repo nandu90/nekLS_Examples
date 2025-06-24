@@ -21,7 +21,7 @@ c-----------------------------------------------------------------------
       save icalld
       data icalld /0/
 
-      common /dimen/ Re,We,Fr
+      common /dimen/ Re,We,Fr,rhoratio
 
       e = gllel(eg)
 
@@ -97,7 +97,17 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      dpdz = (1./Fr)/vtrans(ix,iy,iz,e,1)
+      if(icalld.eq.0)then
+        volg = enclosedVol(t(1,1,1,1,ifld_cls-1),-1)
+        voll = enclosedVol(t(1,1,1,1,ifld_cls-1),1)
+        rhol = 1.0
+        rhog = rhoratio
+        fh = (rhol*voll + rhog*volg)/(voll+volg)
+        icalld = 1
+      endif
+
+      ! dpdz = (1./Fr)/vtrans(ix,iy,iz,e,1)
+      dpdz = (1./Fr)*fh/vtrans(ix,iy,iz,e,1)
 
       call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
       
@@ -231,7 +241,6 @@ c-----------------------------------------------------------------------
       real delta, sfmag
       real delsum, sfsum
       real pmin, pmax
-      integer pord
       
 
       ntot = lx1*ly1*lz1*nelv
@@ -252,8 +261,7 @@ c-----------------------------------------------------------------------
         open(unit=200,file='pr.dat',status='unknown')
       endif
 
-      pord = 2
-      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
