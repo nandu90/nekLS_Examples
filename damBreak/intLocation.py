@@ -221,8 +221,8 @@ def main():
     plotnow('vertical_p','$t^*$','$y/L$',x,y,labels,linestyles=lines,markers=marks)
 
     #2D vs 3D
-    hfiles = np.arange(0,36,2)
-    vfiles = np.arange(1,36,2)
+    hfiles = np.arange(0,70,2)
+    vfiles = np.arange(1,80,2)
     hwall, time1 = getloc('40X160/5',hfiles,tol[0],'h')
     vwall, time2 = getloc('40X160/5',vfiles,tol[0],'v')
     xh = time1
@@ -230,8 +230,10 @@ def main():
     xv = time2
     yv = vwall
 
-    hwall, time1 = getloc('../damBreak3D',hfiles,tol[0],'h',if3d=True)
-    vwall, time2 = getloc('../damBreak3D',vfiles,tol[0],'v',if3d=True)
+    vfiles = np.arange(1,82,2)
+    hwall, time1 = getloc('damBreak3D',hfiles,tol[0],'h',if3d=True)
+    hwall [hwall>5] = 5
+    vwall, time2 = getloc('damBreak3D',vfiles,tol[0],'v',if3d=True)
     xh2 = time1
     yh2 = hwall
     xv2 = time2
