@@ -70,7 +70,12 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
 
-      common /dimen/ Re,We,Fr
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
+
+      common /dimen/ Re,We,Fr,rhoratio
       real Re,We,Fr
       real sfx,sfy,sfz
 
@@ -87,6 +92,7 @@ c-----------------------------------------------------------------------
       real fh
       save fh
       real dpdz
+      real enclosedVol
 
       e = gllel(eg)
 
@@ -241,6 +247,7 @@ c-----------------------------------------------------------------------
       real delta, sfmag
       real delsum, sfsum
       real pmin, pmax
+      integer pord
       
 
       ntot = lx1*ly1*lz1*nelv
@@ -261,7 +268,8 @@ c-----------------------------------------------------------------------
         open(unit=200,file='pr.dat',status='unknown')
       endif
 
-      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
+      pord = uparam(3)
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
