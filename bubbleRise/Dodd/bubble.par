@@ -15,7 +15,7 @@ timeStepper = bdf2 #With bdf2 SF does not work well
 #extrapolation = OIFS
 
 writeControl = runTime
-writeInterval = 0.1
+writeInterval = 0.5
 
 userParam01 = 0.01     #Freq of TLSR
 userParam02 = 0.001     #Freq of CLSR

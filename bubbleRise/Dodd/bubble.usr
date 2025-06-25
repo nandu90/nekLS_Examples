@@ -359,7 +359,7 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
 
-      eps = 1.5/(lx1-1.0)
+      eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       call ls_init(ifld_cls, ifld_clsr,
