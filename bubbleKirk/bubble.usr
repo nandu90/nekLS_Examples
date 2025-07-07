@@ -39,9 +39,9 @@ c-----------------------------------------------------------------------
       mug = 3.73e-5
       muratio = mug/mul
 
-      Re = 590.0
+      Re = 584.0
       Fr = 1.0
-      We = 3.5
+      We = 3.283
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
@@ -51,7 +51,11 @@ c-----------------------------------------------------------------------
         !in non-dimensional form you must have kinematic 
         !viscosity here
         udiff = ((1.0-psi)*muratio + psi)/Re
-        vtrans0(ix,iy,iz,e) = rhoratio
+        if(istep.le.2)then
+          vtrans0(ix,iy,iz,e) = utrans
+        else
+          vtrans0(ix,iy,iz,e) = rhoratio
+        endif
       else
         utrans = 1.0
         udiff = 1e-10
@@ -98,13 +102,9 @@ c-----------------------------------------------------------------------
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      ffx = -sfx + svvx
-      ffy = -sfy + svvy - 1./Fr 
-
-
-      sffx = sfx * vtrans(ix,iy,iz,e,1)
-      sffy = sfy * vtrans(ix,iy,iz,e,1)
-      t(ix,iy,iz,e,5) = sqrt(sffx*sffx+sffy*sffy)
+      ffx = sfx + svvx
+      ffy = sfy + svvy - 1./Fr 
+      ffz = sfz + svvz 
 
       return
       end
@@ -153,8 +153,8 @@ c-----------------------------------------------------------------------
       uz   = 0.0
       temp = 0.0
 
-      if(ifield.eq.ifld_clsr)then
-        temp = t(ix,iy,iz,e,ifld_cls-1)
+      if(ifield.eq.ifld_clsr.or.ifield.eq.ifld_cls)then
+        temp = 1.0
       endif
 
       return
@@ -185,7 +185,7 @@ c-----------------------------------------------------------------------
       uy = 0.0
       uz = 0.0
 
-      temp = sqrt(xx**2.0+(yy-2.0)**2.0)-0.7/2.0
+      temp = sqrt(xx**2.0+(yy-2.0)**2.0+zz**2.0)-0.5
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
       elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
@@ -214,29 +214,26 @@ c-----------------------------------------------------------------------
       save exact
       real psiini(lx1,ly1,lz1,lelv)
       save psiini
-      real err
       
       real ls_volerr
-      real rhol,ymax,glmax
+      integer pord
+      real vel,vol,err
+      real enclosedVolInt,enclosedVol
+      integer ncut
 
       ntot = lx1*ly1*lz1*nelv
 
       if(istep.eq.0)then
-        call copy(psiini,t(1,1,1,1,ifld_cls-1),ntot)
-        call copy(exact,t(1,1,1,1,ifld_tls-1),ntot)
-        do i=1,ntot
-          if(exact(i).ge.0.0)then
-            exact(i) = 1.0
-          else
-            exact(i) = 0.0
-          endif
-        enddo
+        call getexact(psiini,exact)
       endif
       if(istep.eq.0 .and. nio.eq.0)then
-        open(unit=100,file='vol.dat',status='unknown')
+        open(unit=100,file='stats.dat',status='unknown')
       endif
 
-      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
+      pord = 2
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
+      ncut = lx1-1
+      call cut_off_filter(prext,ncut,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
@@ -244,25 +241,18 @@ c-----------------------------------------------------------------------
       call LS_default_driver(ntlsr,nclsr)
 
       err = ls_volerr(ifld_cls,exact,psiini)
+      vol = enclosedVol(t(1,1,1,1,ifld_cls-1),-1)
+      vel = enclosedVolInt(t(1,1,1,1,ifld_cls-1),vy,-1)
+      vel = vel/vol
 
       if(nio.eq.0)then 
         write(*,*)"Volume error",err
-        write(100,*)time,err
+        write(*,*)"Rise velocity",vel
+        write(*,*)"Dimensional velocity (m/s)",vel*sqrt(9.81*0.005)
+        write(100,*)time,err,vel
       endif
 
       if(istep.eq.nsteps .and. nio.eq.0) close(100)
-
-      if(istep.eq.0 .and. time.eq.0.0)then
-        rhol = 1.0
-        ymax = glmax(ym1,ntot)
-        do i=1,ntot
-            pr(i,1,1,1) = rhol*(ymax-ym1(i,1,1,1))
-        enddo
-      endif
-
-      ! call col2(vx,t(1,1,1,1,ifld_cls-1),ntot)
-      ! call col2(vy,t(1,1,1,1,ifld_cls-1),ntot)
-      
 
       return
       end
@@ -292,10 +282,18 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
+      integer ntot
+
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
+
+      !non-dimensionalize by bubble dia = 5mm
+      ntot = lx1*ly1*lz1*nelv
+      call cmult(xm1,1./5.,ntot)
+      call cmult(ym1,1./5.,ntot)
+      call cmult(zm1,1./5.,ntot)
 
       return
       end
@@ -316,13 +314,17 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
+      integer ntlsr_max,nclsr_max
 
-      eps = 2.0/(lx1-1.0)
+      eps = 1.5/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
+      ntlsr_max = 200
+      nclsr_max = 20
       call ls_init(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
-     $             eps, ifdebug, ifixCLSbdry)
+     $             eps, ifdebug, ifixCLSbdry,
+     $             ntlsr_max,nclsr_max)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -363,15 +365,34 @@ c     scalar 3
 c     scalar 3      
       svv_c0(ifld_tlsr) = 1.0                  !ifld_tlsr
       svvcut(ifld_tlsr) = (lx1-1.0)/3.0
-      ! svv_k0(4) = 1.5
-      ! svv_k1(4) = 1.5
-      ! ifnlsvv(4) = .false.
-      ! ifupwindsvv(ifld_tlsr) = .true.
-
-      ! avm_ncut(ifld_tlsr) = 2
-      ! avm_c1(ifld_tlsr) = 2.0
-      ! ifcont(ifld_tlsr) = .true.
 
       return
       end
 c---------------------------------------------------------------------
+      subroutine getexact(psi,exact)
+      include 'SIZE'
+      include 'TOTAL'
+
+      real psi(1),exact(1)
+      integer ntot
+      real xx,yy,zz
+      real temp
+
+      ntot = lx1*ly1*lz1*nelv
+
+      do i=1,ntot
+        xx = xm1(i,1,1,1)
+        yy = ym1(i,1,1,1)
+        zz = zm1(i,1,1,1)
+
+        temp = sqrt(xx**2.0+(yy-2.0)**2.0+zz**2.0)-0.5
+        psi(i) = heaviside(i,1,1,1,temp,0.0)
+        if(psi(i).ge.0.0)then
+          exact(i) = 1.0
+        else
+          exact(i) = 0.0
+        endif
+      enddo
+
+      return
+      end
