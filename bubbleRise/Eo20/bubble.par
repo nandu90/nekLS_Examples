@@ -2,11 +2,11 @@
 # nek parameter file
 #
 [GENERAL]
-startFrom = bubble.fld
+#startFrom = bubble.fld
 #stopAt = numSteps
 stopAt = endTime
 #numSteps = 0 #400 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
-endTime = 10.0 #10e-4
+endTime = 5.0 #10e-4
 
 dt = 25.0e-05
 timeStepper = bdf2 

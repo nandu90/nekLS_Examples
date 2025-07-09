@@ -2,27 +2,28 @@
 # nek parameter file
 #
 [GENERAL]
-#startFrom = bubble.fld
+startFrom = bubble.fld
 #stopAt = numSteps
 stopAt = endTime
 #numSteps = 0 #400 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
 endTime = 5.0 #10e-4
 
 dt = 25.0e-05
-timeStepper = bdf2 #With bdf2 SF does not work well
+timeStepper = bdf2 
 #variabledt = yes
 #targetCFL = 0.2
 #extrapolation = OIFS
 
 writeControl = runTime
-writeInterval = 0.1
+writeInterval = 0.5
 
-userParam01 = 0.05     #Freq of TLSR
-userParam02 = 0.005     #Freq of CLSR
+userParam01 = 0.025     #Freq of TLSR
+userParam02 = 0.0025     #Freq of CLSR
 
-#filtering = hpfrt
-#filterModes = 1
-#filterWeight = 10.0
+
+[MESH]
+numberOfBCFields = 1
+
 
 [PROBLEMTYPE]
 equation = lowMachNS
@@ -30,12 +31,12 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-6
+residualTol = 1e-4
 residualProj = yes
-#preconditioner = semg_amg_hypre
+preconditioner = semg_amg_hypre
 
 [VELOCITY]
-#residualProj = yes
+residualProj = yes
 residualTol = 1e-6
 density = 1
 viscosity = -1.0 #dummy
@@ -61,13 +62,5 @@ regularization = svv
 [SCALAR03] #tls re-distancing field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-12
+residualTol = 1e-8
 regularization = svv
-
-[SCALAR04] #curvature
-solver=none
-density = 1.0
-diffusivity = 1e-8 
-residualTol = 1e-6
-regularization = svv
-

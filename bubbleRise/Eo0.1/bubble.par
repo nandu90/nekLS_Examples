@@ -2,23 +2,23 @@
 # nek parameter file
 #
 [GENERAL]
-startFrom = bubble.fld
+#startFrom = bubble.fld
 #stopAt = numSteps
 stopAt = endTime
 #numSteps = 0 #400 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
 endTime = 10.0 #10e-4
 
-dt = 25.0e-05
+dt = 1.0e-05
 timeStepper = bdf2 
 #variabledt = yes
 #targetCFL = 0.2
 #extrapolation = OIFS
 
 writeControl = runTime
-writeInterval = 0.5
+writeInterval = 0.1
 
-userParam01 = 0.025     #Freq of TLSR
-userParam02 = 0.0025     #Freq of CLSR
+userParam01 = 0.1     #Freq of TLSR
+userParam02 = 0.001     #Freq of CLSR
 
 
 [MESH]
@@ -44,13 +44,13 @@ viscosity = -1.0 #dummy
 [TEMPERATURE] #cls field
 rhocp = 1.
 conductivity = 1.
-residualTol = 1e-6
+residualTol = 1e-8
 regularization = svv
 
 [SCALAR01] #tls field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-8
 regularization = svv
 
 [SCALAR02] #cls re-distanacing

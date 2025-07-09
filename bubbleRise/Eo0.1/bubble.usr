@@ -33,9 +33,9 @@ c-----------------------------------------------------------------------
       muratio = 1e-2
       nuratio = muratio/rhoratio
 
-      Ga = 2.316
+      Ga = 0.1
       Fr = 1.0
-      Eo = 29.0
+      Eo = 0.1
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
@@ -214,13 +214,13 @@ c-----------------------------------------------------------------------
       real vel
       real enclosedVol, enclosedVolInt
       real vol
+      integer ncut
 
       ntot = lx1*ly1*lz1*nelv
 
       if(istep.eq.0)then
         call getexact(psiini,exact)
       endif
-
       if(istep.eq.0 .and. nio.eq.0)then
         open(unit=100,file='vol.dat',status='unknown')
         open(unit=200,file='vel.dat',status='unknown')
@@ -228,11 +228,12 @@ c-----------------------------------------------------------------------
 
       pord = 2
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
+      ! ncut = lx1-1
+      ! call cut_off_filter(prext,ncut,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
 
-      call usrclearfarfield
       call LS_default_driver(ntlsr,nclsr)
 
       err = ls_volerr(ifld_cls,exact,psiini)
@@ -331,7 +332,7 @@ c-----------------------------------------------------------------------
       integer ifdebug, ifixCLSbdry
       integer ntlsr_max,nclsr_max
 
-      eps = 1.0/(lx1-1.0)/4.0
+      eps = 1.0/(lx1-1.0)/3.0
       ifdebug = 0
       ifixCLSbdry = 0
       ntlsr_max = 200
@@ -347,8 +348,8 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      ! svv_c0(1) = 1.0
-      ! svvcut(1) = (lx1-1.0)/2.0
+      svv_c0(1) = 0.0
+      svvcut(1) = (lx1-1.0)/2.0
 
       ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0
@@ -392,35 +393,6 @@ c     scalar 3
       return
       end
 c---------------------------------------------------------------------
-      subroutine usrclearfarfield
-      implicit none
-      include 'SIZE'
-      include 'TOTAL'
-
-      common /ls_usr/ ifld_cls,ifld_clsr,
-     $                ifld_tls,ifld_tlsr 
-      integer ifld_cls,ifld_clsr
-      integer ifld_tls,ifld_tlsr
-
-      integer i,ntot
-      real xx,yy,zz
-
-      ntot = lx1*ly1*lz1*nelv
-
-      do i=1,ntot
-        xx = xm1(i,1,1,1)
-        yy = ym1(i,1,1,1)
-        zz = zm1(i,1,1,1)
-        if(abs(xx).gt.2.0 .or. abs(yy).gt.2.0
-     $   .or. zz.lt.7.0)then
-          t(i,1,1,1,ifld_cls-1) = 1.0
-          t(i,1,1,1,ifld_clsr-1) = 1.0
-        endif
-      enddo
-
-      return
-      end
-c---------------------------------------------------------------------
       subroutine getexact(psi,exact)
       include 'SIZE'
       include 'TOTAL'
@@ -448,5 +420,3 @@ c---------------------------------------------------------------------
 
       return
       end
-
-

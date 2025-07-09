@@ -33,9 +33,9 @@ c-----------------------------------------------------------------------
       muratio = 1e-2
       nuratio = muratio/rhoratio
 
-      Ga = 2.316
+      Ga = 70.7
       Fr = 1.0
-      Eo = 29.0
+      Eo = 200.0
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
@@ -220,7 +220,6 @@ c-----------------------------------------------------------------------
       if(istep.eq.0)then
         call getexact(psiini,exact)
       endif
-
       if(istep.eq.0 .and. nio.eq.0)then
         open(unit=100,file='vol.dat',status='unknown')
         open(unit=200,file='vel.dat',status='unknown')
@@ -448,5 +447,3 @@ c---------------------------------------------------------------------
 
       return
       end
-
-

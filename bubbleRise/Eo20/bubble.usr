@@ -14,14 +14,14 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      real Re, We, Fr, rhoratio, muratio
+      real Ga, Eo, Fr, rhoratio, muratio
       real nuratio
       real psi
       integer icalld
       save icalld
       data icalld /0/
 
-      common /dimen/ Re,We,Fr
+      common /dimen/ Ga,Eo,Fr
 
       e = gllel(eg)
 
@@ -33,9 +33,9 @@ c-----------------------------------------------------------------------
       muratio = 1e-2
       nuratio = muratio/rhoratio
 
-      Re = 70.7
+      Ga = 70.7
       Fr = 1.0
-      We = 20.0
+      Eo = 20.0
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
@@ -44,8 +44,12 @@ c-----------------------------------------------------------------------
         utrans = (1.0-psi)*rhoratio + psi
         !in non-dimensional form you must have kinematic 
         !viscosity here
-        udiff = ((1.0-psi)*muratio + psi)/Re
-        vtrans0(ix,iy,iz,e) = rhoratio
+        udiff = ((1.0-psi)*muratio + psi)/Ga
+        if(istep.le.2)then
+          vtrans0(ix,iy,iz,e) = utrans
+        else
+          vtrans0(ix,iy,iz,e) = rhoratio
+        endif
       else
         utrans = 1.0
         udiff = 1e-10
@@ -67,15 +71,15 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'NEKUSE'
 
-      common /dimen/ Re,We,Fr
-      real Re,We,Fr
+      common /dimen/ Ga,Eo,Fr
+      real Ga,Eo,Fr
       real sfx,sfy,sfz
 
       real svvx,svvy,svvz
 
       real dpdz,rhol
 
-      real sffx,sffy
+      real sffx,sffy,sffz
 
       e = gllel(eg)
 
@@ -86,20 +90,13 @@ c-----------------------------------------------------------------------
       svvy = 0.0
       svvz = 0.0
 
-      call surfacetension(ix,iy,iz,e,1./We,sfx,sfy,sfz)
+      call surfacetension(ix,iy,iz,e,1./Eo,sfx,sfy,sfz)
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      rhol = 1.0
-      dpdz = (1./Fr)*rhol/vtrans(ix,iy,iz,e,1)
-
-      ffx = -sfx + svvx
-      ffy = -sfy + svvy - 1.0/Fr !+ dpdz
-
-
-      sffx = sfx * vtrans(ix,iy,iz,e,1)
-      sffy = sfy * vtrans(ix,iy,iz,e,1)
-      t(ix,iy,iz,e,5) = sqrt(sffx*sffx+sffy*sffy)
+      ffx = sfx + svvx
+      ffy = sfy + svvy 
+      ffz = sfz + svvz - 1.0/Fr
 
       return
       end
@@ -148,8 +145,8 @@ c-----------------------------------------------------------------------
       uz   = 0.0
       temp = 0.0
 
-      if(ifield.eq.ifld_clsr)then
-        temp = t(ix,iy,iz,e,ifld_cls-1)
+      if(ifield.eq.ifld_clsr.or.ifield.eq.ifld_cls)then
+        temp = 1.0
       endif
 
       return
@@ -180,7 +177,7 @@ c-----------------------------------------------------------------------
       uy = 0.0
       uz = 0.0
 
-      temp = sqrt(xx**2.0+(yy-8.0)**2.0)-1.0
+      temp = sqrt(xx**2.0+(yy)**2.0+(zz-8.0)**2.0)-1.0
       if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
         continue
       elseif(ifield.eq.ifld_cls .or. ifield.eq.ifld_clsr)then
@@ -212,57 +209,46 @@ c-----------------------------------------------------------------------
       real err
       
       real ls_volerr
-      real sfx,sfy,sfz
       real rhol,ymax,glmax
+      integer pord
+      real vel
+      real enclosedVol, enclosedVolInt
+      real vol
 
       ntot = lx1*ly1*lz1*nelv
 
       if(istep.eq.0)then
-        call copy(psiini,t(1,1,1,1,ifld_cls-1),ntot)
-        call copy(exact,t(1,1,1,1,ifld_tls-1),ntot)
-        do i=1,ntot
-          if(exact(i).ge.0.0)then
-            exact(i) = 1.0
-          else
-            exact(i) = 0.0
-          endif
-        enddo
+        call getexact(psiini,exact)
       endif
       if(istep.eq.0 .and. nio.eq.0)then
         open(unit=100,file='vol.dat',status='unknown')
+        open(unit=200,file='vel.dat',status='unknown')
       endif
 
-      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
+      pord = 2
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
 
+      call usrclearfarfield
       call LS_default_driver(ntlsr,nclsr)
 
       err = ls_volerr(ifld_cls,exact,psiini)
+      vol = enclosedVol(t(1,1,1,1,ifld_cls-1),-1)
+      vel = enclosedVolInt(t(1,1,1,1,ifld_cls-1),vz,-1)
+      vel = vel/vol
 
       if(nio.eq.0)then 
         write(*,*)"Volume error",err
+        write(*,*)"Rise velocity",vel
+        write(*,*)"Enclosed Vol",vol
         write(100,*)time,err
+        write(200,*)time,vel
       endif
 
       if(istep.eq.nsteps .and. nio.eq.0) close(100)
-
-      if(istep.eq.0 .and. time.eq.0.0)then
-        rhol = 1.0
-        ymax = glmax(ym1,ntot)
-        do i=1,ntot
-            pr(i,1,1,1) = rhol*(ymax-ym1(i,1,1,1))
-        enddo
-      endif
-
-      ! call col2(vx,t(1,1,1,1,ifld_cls-1),ntot)
-      ! call col2(vy,t(1,1,1,1,ifld_cls-1),ntot)
-      
-      do i=1,ntot
-        call mysurfacetension(i,1,1,1,1.0,sfx,sfy,sfz)
-        t(i,1,1,1,5) = sqrt(sfx*sfx+sfy*sfy)
-      enddo
+      if(istep.eq.nsteps .and. nio.eq.0) close(200)
 
       return
       end
@@ -292,10 +278,36 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
+      integer ie,ifc
+
       ifld_cls = 2
       ifld_tls = 3
       ifld_clsr = 4
       ifld_tlsr = 5
+
+      do ie=1,nelt
+        do ifc=1,2*ndim
+          if(bc(5,ifc,ie,1).eq.1346)then
+            cbc(ifc,ie,1) = 'SYM'
+            cbc(ifc,ie,ifld_cls) = 't  '
+            cbc(ifc,ie,ifld_tls) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 't  '
+            cbc(ifc,ie,ifld_tlsr) = 'I  '
+          elseif(bc(5,ifc,ie,1).eq.1345)then
+            cbc(ifc,ie,1) = 'W  '
+            cbc(ifc,ie,ifld_cls) = 't  '
+            cbc(ifc,ie,ifld_tls) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 't  '
+            cbc(ifc,ie,ifld_tlsr) = 'I  '
+          elseif(bc(5,ifc,ie,1).eq.1344)then
+            cbc(ifc,ie,1) = 'O  '
+            cbc(ifc,ie,ifld_cls) = 't  '
+            cbc(ifc,ie,ifld_tls) = 'I  '
+            cbc(ifc,ie,ifld_clsr) = 't  '
+            cbc(ifc,ie,ifld_tlsr) = 'I  '
+          endif
+        enddo
+      enddo
 
       return
       end
@@ -316,13 +328,17 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
+      integer ntlsr_max,nclsr_max
 
-      eps = 1.5/(lx1-1.0)
+      eps = 1.0/(lx1-1.0)/4.0
       ifdebug = 0
       ifixCLSbdry = 0
-      call ls_init(ifld_cls, ifld_clsr,
+      ntlsr_max = 200
+      nclsr_max = 20
+      call ls_init_maxiter(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
-     $             eps, ifdebug, ifixCLSbdry)
+     $             eps, ifdebug, ifixCLSbdry,
+     $             ntlsr_max,nclsr_max)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -330,8 +346,8 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      svv_c0(1) = 1.0
-      svvcut(1) = (lx1-1.0)/2.0
+      ! svv_c0(1) = 1.0
+      ! svvcut(1) = (lx1-1.0)/2.0
 
       ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0
@@ -374,82 +390,60 @@ c     scalar 3
 
       return
       end
-c-----------------------------------------------------------------------
-      subroutine mysurfacetension(ix,iy,iz,e,gamm,sfx,sfy,sfz)
+c---------------------------------------------------------------------
+      subroutine usrclearfarfield
       implicit none
       include 'SIZE'
       include 'TOTAL'
-      include 'LVLSET'
 
-      integer ix,iy,iz,e
-      real sfx,sfy,sfz
-      common /sforce/ stx(lx1,ly1,lz1,lelv),
-     $                sty(lx1,ly1,lz1,lelv), 
-     $                stz(lx1,ly1,lz1,lelv), 
-     $                curv(lx1,ly1,lz1,lelv),
-     $                delta(lx1,ly1,lz1,lelv)
+      common /ls_usr/ ifld_cls,ifld_clsr,
+     $                ifld_tls,ifld_tlsr 
+      integer ifld_cls,ifld_clsr
+      integer ifld_tls,ifld_tlsr
 
-      real stx,sty,stz,curv,delta
-      real gamm
-
-      integer ntot,i
+      integer i,ntot
+      real xx,yy,zz
 
       ntot = lx1*ly1*lz1*nelv
 
-      if(ix*iy*iz*e.eq.1)then
-
-        call deltals(t(1,1,1,1,ifld_cls-1),delta)
-        call col2(delta,bm1,ntot)
-        call dssum(delta,lx1,ly1,lz1)
-        call col2(delta,binvm1,ntot)
-
-        call cls_normals(clsnx,clsny,clsnz,ifld_tls)
-
-        call rzero(curv,ntot)
-        if (if3d) then
-          call cdtp    (stx,clsnx,rxm1,sxm1,txm1,1)
-          call cdtp    (sty,clsny,rym1,sym1,tym1,1)
-          call cdtp    (stz,clsnz,rzm1,szm1,tzm1,1)
-          do i=1,ntot
-            curv(i,1,1,1) = curv(i,1,1,1)+
-     $                    stx(i,1,1,1) +
-     $                    sty(i,1,1,1) +
-     $                    stz(i,1,1,1)
-          enddo
-        else
-          call cdtp    (stx,clsnx,rxm1,sxm1,txm1,1)
-          call cdtp    (sty,clsny,rym1,sym1,tym1,1)
-          do i=1,ntot
-            curv(i,1,1,1) = curv(i,1,1,1)+
-     $                    stx(i,1,1,1) +
-     $                    sty(i,1,1,1)
-          enddo
+      do i=1,ntot
+        xx = xm1(i,1,1,1)
+        yy = ym1(i,1,1,1)
+        zz = zm1(i,1,1,1)
+        if(abs(xx).gt.2.0 .or. abs(yy).gt.2.0
+     $   .or. zz.lt.7.0)then
+          t(i,1,1,1,ifld_cls-1) = 1.0
+          t(i,1,1,1,ifld_clsr-1) = 1.0
         endif
+      enddo
 
-        ! call opdiv(curv,clsnx,clsny,clsnz)
-        ! call dssum(curv,lx1,ly1,lz1)
-        ! call col2(curv,binvm1,ntot)
+      return
+      end
+c---------------------------------------------------------------------
+      subroutine getexact(psi,exact)
+      include 'SIZE'
+      include 'TOTAL'
 
-        ! call col4(stx,curv,delta,clsnx,ntot)
-        ! call col4(sty,curv,delta,clsny,ntot)
-        ! if(if3d) call col4(stz,curv,delta,clsnz,ntot)
+      real psi(1),exact(1)
+      integer ntot
+      real xx,yy,zz
+      real temp
 
-        ! call cmult(stx,gamm,ntot)
-        ! call cmult(sty,gamm,ntot)
-        ! if(if3d)call cmult(stz,gamm,ntot)
+      ntot = lx1*ly1*lz1*nelv
 
-        call col3(stx,curv,delta,ntot)
-        call rzero(sty,ntot)
-        call copy(vx,clsnx,ntot)
-        call copy(vy,clsny,ntot)
-      endif
+      do i=1,ntot
+        xx = xm1(i,1,1,1)
+        yy = ym1(i,1,1,1)
+        zz = zm1(i,1,1,1)
 
-      !BEWARE: forces are internally multiplied by density
-      !So you need to account for that here. 
-      !sfx,sfy,sfz MUST be accelerations
-      sfx = stx(ix,iy,iz,e) !/ vtrans(ix,iy,iz,e,1)
-      sfy = sty(ix,iy,iz,e) !/ vtrans(ix,iy,iz,e,1)
-      if(if3d) sfz = stz(ix,iy,iz,e) !/ vtrans(ix,iy,iz,e,1)
+        temp = sqrt(xx**2.0+(yy)**2.0+(zz-8.0)**2.0)-1.0
+        psi(i) = heaviside(i,1,1,1,temp,0.0)
+        if(psi(i).ge.0.0)then
+          exact(i) = 1.0
+        else
+          exact(i) = 0.0
+        endif
+      enddo
 
       return
       end
