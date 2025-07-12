@@ -6,7 +6,7 @@ startFrom = bubble.fld
 #stopAt = numSteps
 stopAt = endTime
 #numSteps = 1 #400 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
-endTime = 5.0 #10e-4
+endTime = 15.0 #10e-4
 
 dt = 10.0e-05
 timeStepper = bdf2 #With bdf2 SF does not work well
@@ -26,26 +26,26 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-4
+residualTol = 1e-6
 residualProj = yes
 preconditioner = semg_amg_hypre
 
 [VELOCITY]
 residualProj = yes
-residualTol = 1e-6
+residualTol = 1e-8
 density = 1
 viscosity = -1.0 #dummy
 
 [TEMPERATURE] #cls field
 rhocp = 1.
 conductivity = 1.
-residualTol = 1e-6
+residualTol = 1e-8
 regularization = svv
 
 [SCALAR01] #tls field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-8
 regularization = svv
 
 [SCALAR02] #cls re-distanacing

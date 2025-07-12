@@ -232,8 +232,8 @@ c-----------------------------------------------------------------------
 
       pord = 2
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
-      ncut = lx1-1
-      call cut_off_filter(prext,ncut,1)
+      ! ncut = lx1-1
+      ! call cut_off_filter(prext,ncut,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
@@ -332,8 +332,8 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      svv_c0(1) = 1.0
-      svvcut(1) = (lx1-1.0)/2.0
+      ! svv_c0(1) = 1.0
+      ! svvcut(1) = (lx1-1.0)/2.0
 
       ! svv_c0(ifld_cls) = 2.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
