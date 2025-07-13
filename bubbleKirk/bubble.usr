@@ -315,16 +315,18 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
       integer ntlsr_max,nclsr_max
+      real farfield
 
       eps = 1.5/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       ntlsr_max = 200
       nclsr_max = 20
+      farfield = 1.0
       call ls_init(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
      $             eps, ifdebug, ifixCLSbdry,
-     $             ntlsr_max,nclsr_max)
+     $             ntlsr_max,nclsr_max,farfield)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -332,8 +334,8 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      ! svv_c0(1) = 1.0
-      ! svvcut(1) = (lx1-1.0)/2.0
+      svv_c0(1) = 1.0
+      svvcut(1) = (lx1-1.0)/2.0
 
       ! svv_c0(ifld_cls) = 2.0                 !ifld_cls
       ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
