@@ -14,7 +14,7 @@ from scipy import optimize
 import scipy.interpolate as interpolate
 
 def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],ylim=[],xlim=[]):
-    default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
+    default_cycler = (cycler(color=['#0072B2','#D55E00','#D55E00','#D55E00','#990099'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
     plt.rc('axes',prop_cycle=default_cycler)
@@ -61,18 +61,22 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
 
 def getVeldata(files):
     alldata = []
-    for f in files:
+    for i,f in enumerate(files):
         data = np.loadtxt(f)
+
+        if(i > 0):
+            t_start = data[0,0]
+
+            prev = alldata[-1]
+            alldata[-1] = prev[prev[:,0] < t_start]
+            
         alldata.append(data)
 
     alldata = np.vstack(alldata)
 
-    _, unique_indices = np.unique(alldata[:, 0], return_index=True)
-    unique_data = alldata[np.sort(unique_indices)]
-
-    t = unique_data[:,0]
-    Ev = np.abs(unique_data[:,1])
-    vel = unique_data[:,2]
+    t = alldata[:,0]
+    Ev = np.abs(alldata[:,1])
+    vel = alldata[:,2]
     
     return t,Ev,vel
 
@@ -81,15 +85,23 @@ def main():
     g = 9.81  #(m/s^2)
     U = math.sqrt(g*L)
     
-    files = ['stats.dat','stats2.dat','stats3.dat']
+    files = ['stats1.dat','stats2.dat','stats3.dat','stats4.dat','stats5.dat','stats6.dat','stats7.dat']
     
     t1,Ev1,vel1 = getVeldata(files)
+    t1 = t1 * L/U
+    vel1 = vel1 * U *1000
 
-    t = [t1 * L/U]
-    vel = [vel1 * U * 1000]
+    texp = t1
+    velexp = np.ones(t1.shape) * 228.69 #mm/s
+    velexp1 = velexp + 42.10 #mm/s
+    velexp2 = velexp - 42.10 #mm/s
     
-    labels = ['']
-    lines = ['--','-.','--','--']
+    
+    t = [t1, texp, texp, texp]
+    vel = [vel1, velexp, velexp1, velexp2]
+    
+    labels = ['Nek5k','TAMU exp ($228.69 \\pm 42.10$)','','']
+    lines = ['--','-.',':',':']
     marks = ['','','','']
 
     #plotnow('vel','$t$','$v_y$',t,vel,labels,linestyles=lines,markers=marks)
