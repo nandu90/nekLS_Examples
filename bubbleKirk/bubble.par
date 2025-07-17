@@ -11,7 +11,7 @@ endTime = 15.0 #10e-4
 dt = 10.0e-05
 timeStepper = bdf2 #With bdf2 SF does not work well
 #variabledt = yes
-#targetCFL = 2.0
+#targetCFL = 0.1
 #extrapolation = OIFS
 
 writeControl = runTime
@@ -26,7 +26,7 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-8
+residualTol = 1e-6
 residualProj = yes
 preconditioner = semg_amg_hypre
 
