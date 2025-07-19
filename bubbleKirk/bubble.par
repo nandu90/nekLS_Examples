@@ -26,7 +26,7 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-6
+residualTol = 1e-8
 residualProj = yes
 preconditioner = semg_amg_hypre
 
