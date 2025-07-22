@@ -85,10 +85,10 @@ def main():
     g = 9.81  #(m/s^2)
     U = math.sqrt(g*L)
     
-    files = ['stats1.dat','stats2.dat','stats3.dat','stats4.dat','stats5.dat','stats6.dat','stats7.dat']
+    files = ['stats1.dat','stats2.dat','stats3.dat','stats4.dat','stats5.dat','stats6.dat','stats7.dat','stats8.dat','stats9.dat','stats10.dat','stats11.dat','stats12.dat','stats13.dat']
     
     t1,Ev1,vel1 = getVeldata(files)
-    t1 = t1 * L/U
+    t1 = t1 
     vel1 = vel1 * U *1000
 
     texp = t1
@@ -104,8 +104,14 @@ def main():
     lines = ['--','-.',':',':']
     marks = ['','','','']
 
-    #plotnow('vel','$t$','$v_y$',t,vel,labels,linestyles=lines,markers=marks)
     plotnow('vel','$t (s)$','$v_y (mm/s)$',t,vel,labels,linestyles=lines,markers=marks)
+
+    t = [t1 * U/L] #non-dimensional
+    Ev = [np.abs(Ev1)]
+    labels=['']
+
+    plotnow('Ev','$t*$','$\|E_v\|$',t,Ev,labels,linestyles=lines,markers=marks,ptype='semilogy')
+    
     
     return
 
