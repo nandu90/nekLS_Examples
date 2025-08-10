@@ -232,8 +232,8 @@ c-----------------------------------------------------------------------
 
       pord = 2
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
-      ncut = lx1-1
-      call cut_off_filter(prext,ncut,1)
+      ! ncut = lx1-1
+      ! call cut_off_filter(prext,ncut,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
@@ -315,16 +315,18 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
       integer ntlsr_max,nclsr_max
+      real farfield
 
-      eps = 1.5/(lx1-1.0)
+      eps = 1.6/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       ntlsr_max = 200
       nclsr_max = 20
+      farfield = 1.0
       call ls_init(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
      $             eps, ifdebug, ifixCLSbdry,
-     $             ntlsr_max,nclsr_max)
+     $             ntlsr_max,nclsr_max,farfield)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
@@ -335,8 +337,8 @@ c     parameters.
       svv_c0(1) = 1.0
       svvcut(1) = (lx1-1.0)/2.0
 
-      ! svv_c0(ifld_cls) = 2.0                 !ifld_cls
-      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
+      ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      ! svvcut(ifld_cls) = (lx1-1.0)/2.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
       ! ifnlsvv(1) = .true.
@@ -347,8 +349,8 @@ c     parameters.
       ! ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      ! svv_c0(ifld_tls) = 2.0                  !ifld_tls
-      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
+      ! svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      ! svvcut(ifld_tls) = (lx1-1.0)/2.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
       ! ifnlsvv(2) = .false.
