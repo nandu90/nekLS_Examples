@@ -7,8 +7,9 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
+from matplotlib.ticker import MaxNLocator
 
-def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]):
+def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],xint = False):
     default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
@@ -37,7 +38,8 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
         else:
             ax.loglog(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
     
-            
+    if(xint):
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     ax.grid()
     ax.legend(loc='best',fontsize=12)
     fig.savefig(fname+'.pdf',\
@@ -86,7 +88,7 @@ def main():
     xdata = [N,N,N]
     
     ydata = [Er20,Er40,Er80]
-    plotnow('relErr','$N$','$E_r(\\phi)$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy')
+    plotnow('relErr','$N$','$E_r(\\phi)$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
     
     return
 
