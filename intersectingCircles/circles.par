@@ -7,13 +7,13 @@ stopAt = numSteps
 numSteps = 0 #2000 #200000
 #endTime = 1.0
 
-dt = 10e-04
+dt = 5e-04
 timeStepper = bdf2
 
 #writeControl = runTime
 writeInterval = 100
 
-userParam01 = 6000    #Freq of TLSR
+userParam01 = 12000    #Freq of TLSR
 
 [PROBLEMTYPE]
 variableProperties = yes

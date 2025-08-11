@@ -33,7 +33,7 @@ C----------------------------------------------------------------------
       dxave = deltael(1,1,1,1)
 
       !Based on unit velocity and shortest element
-      dt_tls_in = 10e-4 !dxmin / lx1 / 20.0
+      dt_tls_in = 5e-4 !dxmin / lx1 / 20.0
 
       !Characteristics must travel nfac times largest element
       nfac = 100.0

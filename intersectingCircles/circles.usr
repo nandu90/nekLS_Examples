@@ -243,7 +243,7 @@ c-----------------------------------------------------------------------
      $             ntls_max,ncls_max)
       
       svv_c0(ifld_tlsr) = 2.0
-      svvcut(ifld_tlsr) = (lx1-1.0)/2.0
+      svvcut(ifld_tlsr) = (lx1-1.0)/3.0
       ! svv_k0(ifld_tlsr-1) = 1.5
       ! svv_k1(ifld_tlsr-1) = 1.5
       ! ifnlsvv(ifld_tlsr-1) = .true.
