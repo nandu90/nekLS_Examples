@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 from matplotlib.ticker import MaxNLocator
 
-def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],ylim=[],xlim=[]):
+def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],ylim=[],xlim=[],xint=False):
     default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
@@ -45,7 +45,8 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
             ax.loglog(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
     
 
-    #ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    if(xint):
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     ax.grid()
     ax.legend(loc='best',fontsize=12)
@@ -87,17 +88,17 @@ def getLineData(fname):
 
 def main():
     N = np.array((4,5,6))
-    Er_128 = np.array((9.0121430053904573E-009,4.7573261079374876E-009,2.9125131521457678E-009))
-    Es_128 = np.array((4.8170952421264479E-004,2.4951990365227537E-004,1.4472237085229599E-004))
-    Ev_128 = np.array((1.8639063125270838E-008,4.9469422876139218E-009,5.7849675525883943E-009))
+    Er_128 = np.array((8.7769329283669381E-009,4.7423302294376554E-009,2.9479452796370447E-009))
+    Es_128 = np.array((3.5249995053713375E-004,2.4097717249581824E-004,1.4962677002915682E-004))
+    Ev_128 = np.array((4.2868897061620243E-009,2.5060440029688482E-009,4.7702495642924611E-010))
 
-    Er_64 = np.array((8.5201681940413822E-008,4.3788294347666601E-008,2.6348497535847811E-008))
-    Es_64 = np.array((2.9877655209546300E-003,1.6103351667657384E-003,1.0848257634261406E-003))
-    Ev_64 = np.array((6.1842269765526696E-007,5.4557613089345600E-009,7.2716413122847481E-008))
+    Er_64 = np.array((8.5876557641958333E-008,4.4462492512397774E-008,2.8885071966793394E-008))
+    Es_64 = np.array((3.0213114116032862E-003,1.6153760004603223E-003,1.3645774844588490E-003))
+    Ev_64 = np.array((2.5884522223026723E-007,3.9422789419883107E-007,6.8912272345514569E-008))
 
-    Er_32 = np.array((1.0030471134678740E-006,4.9284616208161504E-007,2.9803326075091964E-007))
-    Es_32 = np.array((1.2155240362058421E-002,8.9270407813271807E-003,6.6675553538042146E-003))
-    Ev_32 = np.array((1.4096861216194850E-005,2.2878931738791608E-006,1.2639558339703356E-006))
+    Er_32 = np.array((1.0530922893464049E-006,5.0744552814151018E-007,3.8717101656700176E-007))
+    Es_32 = np.array((1.4106612138485590E-002,7.6611509723752318E-003,7.9830726548595302E-003))
+    Ev_32 = np.array((1.4347943853203036E-005,4.8379391817553345E-006,1.1175368061744553E-006))
 
     labels=['$H=1/32$','$H=1/64$','$H=1/128$']
     lines = [':','-.','--','--','-']
@@ -105,13 +106,13 @@ def main():
     xdata = [N,N,N]
     
     ydata = [Er_32,Er_64,Er_128]
-    plotnow('Er','$N$','$E_r$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy')
+    plotnow('Er','$N$','$E_r$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
 
     ydata = [Es_32,Es_64,Es_128]
-    plotnow('Es','$N$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy')
+    plotnow('Es','$N$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
     
     ydata = [Ev_32,Ev_64,Ev_128]
-    plotnow('Ev','$N$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy')
+    plotnow('Ev','$N$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
 
     #plot Ev v/s time error
     t32, E32 = getdata('32/6',8e-4)

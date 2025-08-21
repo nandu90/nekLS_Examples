@@ -89,27 +89,27 @@ def main():
     t11,vol1 = getdata('Eo29/'+ item for item in files)
     
     #Eo200
-    files = ['vel1.dat','vel2.dat']
-    t2,vel2 = getdata('Eo200/'+ item for item in files)
-    files = ['vol1.dat','vol2.dat']
-    t21,vol2 = getdata('Eo200/'+ item for item in files)
+    # files = ['vel1.dat','vel2.dat']
+    # t2,vel2 = getdata('Eo200/'+ item for item in files)
+    # files = ['vol1.dat','vol2.dat']
+    # t21,vol2 = getdata('Eo200/'+ item for item in files)
 
     #Dodd
-    files = ['Dodd/vol.dat']
-    t3, vol3 = getdata(files)
-    vol3 = np.abs(vol3)
+    # files = ['Dodd/vol.dat']
+    # t3, vol3 = getdata(files)
+    # vol3 = np.abs(vol3)
 
     labels = ['Ga=2.316; Eo=29','Ga=70.7;   Eo=200','Dodd']
     lines = ['--','--','-.','--']
     marks = ['','','','']
 
-    t = [t1,t2]
-    vel = [vel1,vel2]
+    t = [t1]
+    vel = [vel1]
 
     plotnow('vel','$t$','$w$',t,vel,labels,linestyles=lines,markers=marks)
 
-    t = [t11,t21]#,t3]
-    vol = [vol1,vol2]#,vol3]
+    t = [t11]#,t3]
+    vol = [vol1]#,vol3]
 
     plotnow('vol','$t$','$|E_v|$',t,vol,labels,linestyles=lines,markers=marks,ptype='semilogy')
     
