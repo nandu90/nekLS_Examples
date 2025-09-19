@@ -331,16 +331,18 @@ c-----------------------------------------------------------------------
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
       integer ntlsr_max,nclsr_max
+      real farfield
 
       eps = 1.0/(lx1-1.0)/3.0
       ifdebug = 0
       ifixCLSbdry = 0
       ntlsr_max = 200
       nclsr_max = 20
+      farfield = 1.0
       call ls_init_maxiter(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
      $             eps, ifdebug, ifixCLSbdry,
-     $             ntlsr_max,nclsr_max)
+     $             ntlsr_max,nclsr_max,farfield)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
