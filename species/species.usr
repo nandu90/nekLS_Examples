@@ -50,6 +50,9 @@ c-----------------------------------------------------------------------
       Sc = mul/rhol/diffl  !Schmidt number
       He = 3.0             !Henry law He=cg/cl
 
+      diffg = diffg/diffl
+      diffl = diffl/diffl
+
       Re = rhol*udim*charl/mul
       Pe = Re * Sc
       Fr = udim**2.0/(gdim*charl)
@@ -69,7 +72,7 @@ c-----------------------------------------------------------------------
         endif
       elseif(ifield.eq.6)then
         utrans = 1.0
-        udiff = ((1.0-psi)*diffg + psi*diffl)/diffl/Pe
+        udiff = ((1.0-psi)*diffg + psi*diffl)/Pe
       else
         utrans = 1.0
         udiff = 1e-10
@@ -292,7 +295,7 @@ c-----------------------------------------------------------------------
       integer ifdebug, ifixCLSbdry
       real farfield
 
-      eps = 1.5/(lx1-1.0)
+      eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       farfield = 0.0
@@ -387,7 +390,7 @@ c---------------------------------------------------------------------
           term2 = (diffl - He*diffg)/(psi + He*(1.0-psi))
           stmp(i,1,1,1) = term1 - term2
         enddo
-        call col2(stmp, t(i,1,1,1,5),ntot)
+        call col2(stmp, t(1,1,1,1,5),ntot)
 
         call deltals(t(1,1,1,1,ifld_cls-1),delta)
         call cls_normals(spx,spy,spz,ifld_tls)
