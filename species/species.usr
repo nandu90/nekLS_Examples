@@ -231,6 +231,11 @@ c-----------------------------------------------------------------------
 
       integer pord
 
+      real plttime(4)
+      integer plti
+      save plti 
+      data plti /1/
+
       ntot = lx1*ly1*lz1*nelv
 
       pord = uparam(3)
@@ -240,6 +245,24 @@ c-----------------------------------------------------------------------
       nclsr = uparam(2) !freq of CLS re-distancing
 
       call LS_default_driver(ntlsr,nclsr)
+
+      plttime(1) = 0.0
+      plttime(2) = 0.05
+      plttime(3) = 0.2
+      plttime(4) = 0.8
+
+      if(time * 5.0 .ge. plttime(plti) .and. plti.le.4)then
+        pta(1) = 0.5
+        pta(2) = 0.0
+        pta(3) = 0.0
+        ptb(1) = 0.5
+        ptb(2) = 1.0
+        ptb(3) = 0.0
+
+        call lineplot(pta,ptb,1001)
+
+        plti = plti+1
+      endif
 
       return
       end
