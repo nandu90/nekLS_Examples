@@ -14,7 +14,7 @@ from scipy import optimize
 import scipy.interpolate as interpolate
 
 def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],ylim=[],xlim=[]):
-    default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
+    default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
     plt.rc('axes',prop_cycle=default_cycler)
@@ -52,7 +52,7 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     #ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     ax.grid()
-    ax.legend(loc='best',fontsize=12)
+    #ax.legend(loc='best',fontsize=12)
     # fig.savefig(fname+'.pdf',\
     #             bbox_inches='tight',dpi=100)
     fig.savefig(fname+'.png',\
@@ -77,10 +77,31 @@ def main():
         data = np.loadtxt(fname,skiprows=1)
         xdata.append(data[:,1])
         ydata.append(data[:,-1])
+
+    data = np.loadtxt('t0.csv',delimiter=',')
+    xdata.append(data[:,0])
+    ydata.append(data[:,1])
         
+    data = np.loadtxt('t05.csv',delimiter=',')
+    xdata.append(data[:,0])
+    ydata.append(data[:,1])
+
+    data = np.loadtxt('t2.csv',delimiter=',')
+    xdata.append(data[:,0])
+    ydata.append(data[:,1])
+
+    data = np.loadtxt('t8.csv',delimiter=',')
+    xdata.append(data[:,0])
+    ydata.append(data[:,1])
+
     labels = [f"t={x:.3f}s" for x in t]
-    lines = ['-','-','-','-']
-    marks = ['','','','']
+    labels.append('OF')
+    labels.append('OF')
+    labels.append('OF')
+    labels.append('OF')
+
+    lines = ['-','-','-','-','','','','']
+    marks = ['','','','','o','s','^','D']
 
     plotnow('c','$y (cm)$','$c$',xdata,ydata,labels,linestyles=lines,markers=marks)
 
