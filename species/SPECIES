@@ -1,5 +1,5 @@
-      real diffg, diffl, He
-      common /species_r/ diffg, diffl, He
+      real diffg, diffl, He, Pe
+      common /species_r/ diffg, diffl, He, Pe
 
       common /species_a/ spdiv(lx1,ly1,lz1,lelv)
       real spdiv

@@ -27,7 +27,7 @@ c-----------------------------------------------------------------------
       data icalld /0/
 
       common /dimen/ Re,We,Fr
-      real Sc, Pe
+      real Sc
 
       common /scales/ t0
       real t0
@@ -131,6 +131,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'TOTAL'
       include 'NEKUSE'
+      include 'SPECIES'
       common /ls_usr/ ifld_cls,ifld_clsr,
      $                ifld_tls,ifld_tlsr 
       integer ifld_cls,ifld_clsr
@@ -146,7 +147,7 @@ c-----------------------------------------------------------------------
       call limit_cls(ix,iy,iz,e)
 
       if(ifield.eq.6)then
-        qvol = speciesSrc(ix,iy,iz,e)
+        qvol = speciesSrc(ix,iy,iz,e)/Pe
       endif
 
       return
