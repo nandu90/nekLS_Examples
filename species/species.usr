@@ -29,6 +29,9 @@ c-----------------------------------------------------------------------
       common /dimen/ Re,We,Fr
       real Sc, Pe
 
+      common /scales/ t0
+      real t0
+
       e = gllel(eg)
 
 !     These routine is not called by external solver
@@ -46,6 +49,7 @@ c-----------------------------------------------------------------------
       diffg = 1.0 * 1e-4
 
       udim = diffl / charl !diffusive scaling
+      t0 = charl/udim
 
       Sc = mul/rhol/diffl  !Schmidt number
       He = 3.0             !Henry law He=cg/cl
@@ -236,6 +240,9 @@ c-----------------------------------------------------------------------
       save plti 
       data plti /1/
 
+      common /scales/ t0
+      real t0
+
       ntot = lx1*ly1*lz1*nelv
 
       pord = uparam(3)
@@ -247,11 +254,11 @@ c-----------------------------------------------------------------------
       call LS_default_driver(ntlsr,nclsr)
 
       plttime(1) = 0.0
-      plttime(2) = 0.05
-      plttime(3) = 0.2
-      plttime(4) = 0.8
+      plttime(2) = 0.05 !* 0.75
+      plttime(3) = 0.2 !* 0.75
+      plttime(4) = 0.8 !* 0.75
 
-      if(time * 5.0 .ge. plttime(plti) .and. plti.le.4)then
+      if(time * t0 .ge. plttime(plti) .and. plti.le.4)then
         pta(1) = 0.5
         pta(2) = 0.0
         pta(3) = 0.0

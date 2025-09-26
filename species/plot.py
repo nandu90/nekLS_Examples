@@ -78,7 +78,7 @@ def main():
         xdata.append(data[:,1])
         ydata.append(data[:,-1])
         
-    labels = [f"t={x:.2f}s" for x in t]
+    labels = [f"t={x:.3f}s" for x in t]
     lines = ['-','-','-','-']
     marks = ['','','','']
 
