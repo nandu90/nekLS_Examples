@@ -76,7 +76,8 @@ c-----------------------------------------------------------------------
         endif
       elseif(ifield.eq.6)then
         utrans = 1.0
-        udiff = ((1.0-psi)*diffg + psi*diffl)/Pe
+        udiff = (diffl*psi+He*diffg*(1.0-psi))/(psi+He*(1.0-psi))
+        udiff = udiff/Pe
       else
         utrans = 1.0
         udiff = 1e-10
@@ -416,7 +417,7 @@ c---------------------------------------------------------------------
           psi = t(i,1,1,1,ifld_cls-1)
           psi = max(0.0,psi)
           psi = min(1.0,psi)
-          term1 = diffl - diffg
+          term1 = He*(diffl-diffg)/(psi+He*(1.0-psi))**2.0
   
           term2 = (diffl - He*diffg)/(psi + He*(1.0-psi))
           stmp(i,1,1,1) = term1 - term2
