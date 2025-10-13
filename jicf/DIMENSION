@@ -1,0 +1,7 @@
+      real rhoratio, muratio, nuratio
+      real rhol, rhog, mul, mug, nul, nug
+      real Re, We, vell, velg
+      real qratio
+      common /dimen_r/ rhoratio, muratio, nuratio,
+     $                 rhol, rhog, mul, mug, nul, nug,
+     $                 Re, We, vell, velg, qratio
