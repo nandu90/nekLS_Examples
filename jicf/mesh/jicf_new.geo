@@ -9,8 +9,8 @@ N_ring_outer = 7; p_ring_outer = 0.95;
 N_ring_middle = 20; p_ring_middle = 0.95;
 N_ring_inner = 15; 
 
-N_injector_layers = 10;
-N_domain_layers = 50;
+N_injector_layers = 20;
+N_domain_layers = 100;
 
 Point(1) = {0, 0, 0, 1.0};
 //+
