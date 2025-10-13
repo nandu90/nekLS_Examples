@@ -1,4 +1,4 @@
       integer ifld_cls, ifld_clsr
       integer ifld_tls, ifld_tlsr
-      common /ls_usr/ ifld_cls, ifld_clsr
+      common /ls_usr/ ifld_cls, ifld_clsr,
      $                ifld_tls, ifld_tlsr

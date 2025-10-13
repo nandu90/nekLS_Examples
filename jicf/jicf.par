@@ -3,19 +3,19 @@
 #
 [GENERAL]
 #startFrom = dam.fld
-#stopAt = numSteps
-stopAt = endTime
-#numSteps = 500000 #12000 #1000 #16000 #4000 #400 #400 #200000
-endTime = 5 #10e-4
+stopAt = numSteps
+#stopAt = endTime
+numSteps = 1000 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
+#endTime = 1 #10e-4
 
-dt = 1.0e-04
+dt = 5.0e-05
 timeStepper = bdf2 #With bdf2 SF does not work well
 #variabledt = yes
 #targetCFL = 0.1
 #extrapolation = OIFS
 
-writeControl = runTime
-writeInterval = 0.5
+#writeControl = runTime
+writeInterval = 50
 
 userParam01 = 0.01     #Freq of TLSR
 userParam02 = 0.001      #Freq of CLSR
@@ -24,6 +24,9 @@ userParam03 = 2    #Pressure extrapolation order
 #filtering = hpfrt
 #filterModes = 1
 #filterWeight = 10.0
+#
+[MESH]
+numberOfBCFields = 1
 
 [PROBLEMTYPE]
 equation = lowMachNS
@@ -31,7 +34,7 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-8
+residualTol = 1e-5
 residualProj = yes
 preconditioner = semg_amg_hypre
 
@@ -44,19 +47,19 @@ viscosity = -1.0 #dummy
 [TEMPERATURE] #cls field
 rhocp = 1.
 conductivity = 1.
-residualTol = 1e-8
+residualTol = 1e-6
 regularization = svv
 
 [SCALAR01] #tls field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-8
+residualTol = 1e-6
 regularization = svv
 
 [SCALAR02] #cls re-distanacing
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-8
+residualTol = 1e-6
 regularization = svv
 
 [SCALAR03] #tls re-distancing field
