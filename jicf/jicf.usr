@@ -134,7 +134,7 @@ c-----------------------------------------------------------------------
       if(ifield.eq.1)then
         if(boundaryID(iside,e) .eq. 1) then !injector
           rad = sqrt(xx**2.0 + yy**2.0)
-          uy = 1.0/0.817 * (1.0 - 2.0 * rad / 1.0)**(1.0/7.0)
+          uz = 1.0/0.817 * (1.0 - 2.0 * rad / 1.0)**(1.0/7.0)
         elseif(boundaryID(iside,e) .eq. 2) then !cross inlet
           ux = 1.414 * 0.5 * (1.0 + tanh((y-0.5)/0.3))
         endif
