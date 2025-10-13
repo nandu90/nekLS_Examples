@@ -1,5 +1,4 @@
       include "experimental/lvlSet.f"
-      include "lineplot.f"
       include "experimental/lserrors.f"
 c-----------------------------------------------------------------------
       subroutine uservp(ix,iy,iz,eg) ! set variable properties
@@ -327,7 +326,7 @@ c-----------------------------------------------------------------------
       integer ifdebug, ifixCLSbdry
       real farfield
 
-      eps = 1.0/(lx1-1.0)
+      eps = 1.5/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       farfield = 0.0

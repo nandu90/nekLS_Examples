@@ -3,10 +3,10 @@
 #
 [GENERAL]
 #startFrom = dam.fld
-#stopAt = numSteps
-stopAt = endTime
-#numSteps = 500000 #12000 #1000 #16000 #4000 #400 #400 #200000
-endTime = 5 #10e-4
+stopAt = numSteps
+#stopAt = endTime
+numSteps = 1 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
+#endTime = 5 #10e-4
 
 dt = 1.0e-04
 timeStepper = bdf2 #With bdf2 SF does not work well
@@ -24,6 +24,9 @@ userParam03 = 2    #Pressure extrapolation order
 #filtering = hpfrt
 #filterModes = 1
 #filterWeight = 10.0
+#
+[MESH]
+numberOfBCFields = 1
 
 [PROBLEMTYPE]
 equation = lowMachNS
