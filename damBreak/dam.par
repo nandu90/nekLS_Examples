@@ -46,22 +46,26 @@ rhocp = 1.
 conductivity = 1.
 residualTol = 1e-6
 regularization = svv
+residualProj = yes
 
 [SCALAR01] #tls field
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-6
 regularization = svv
+residualProj = yes
 
 [SCALAR02] #cls re-distanacing
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-6
 regularization = svv
+residualProj = yes
 
 [SCALAR03] #tls re-distancing field
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-6
 regularization = svv
+residualProj = yes
 
