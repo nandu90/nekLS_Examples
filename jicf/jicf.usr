@@ -19,18 +19,39 @@ c-----------------------------------------------------------------------
 !     To Do: change the flow, so that this routine is called
 !     similar to RANS. Will avoid confusion
 
+      charl = 1.0
+      vell = 1.0
+      qratio = 5.0
+
       Re = 5000.0
       We = 500.0
 
-      rhoratio = 0.1
+      rhoratio = 10.0
       rhol = 1.0
-      rhog = rhoratio * rhol
+      rhog = rhol / rhoratio
 
-      nul = 1.0/Re
+      nul = charl * vell/Re
       mul = rhol * nul
-      nuratio = 1.0/0.7
+      nuratio = 0.07
       muratio = nuratio * rhoratio
-      mug = muratio * mul
+      mug = mul / muratio
+
+      velg = sqrt(rhoratio * vell**2.0 / qratio)
+
+      if(istep.eq.0 .and. nio.eq.0 .and. ix*iy*iz*e.eq.1)then
+        write(*,*)"Reynolds number",Re
+        write(*,*)"Weber number",We
+        write(*,*)"rhol/rhog",rhoratio
+        write(*,*)"mul/mug",muratio
+        write(*,*)"nul/nug",nuratio
+        write(*,*)"rhol,rhog",rhol,rhog
+        write(*,*)"mul,mug",mul,mug
+        write(*,*)"Mean injector vel",vell
+        write(*,*)"Mean cross-flow vel",velg
+        write(*,*)"q ratio",qratio
+        write(*,*)"We crossflow",rhog*velg**2*charl*We
+        write(*,*)"Re crossflow",rhog*velg*charl/mug
+      endif
 
       if(ifield.eq.1)then
         psi = t(ix,iy,iz,e,ifld_cls-1)
@@ -134,9 +155,9 @@ c-----------------------------------------------------------------------
       if(ifield.eq.1)then
         if(boundaryID(iside,e) .eq. 1) then !injector
           rad = sqrt(xx**2.0 + yy**2.0)
-          uz = 1.0/0.817 * (1.0 - 2.0 * rad / 1.0)**(1.0/7.0)
+          uz = vell/0.817 * (1.0 - 2.0 * rad / 1.0)**(1.0/7.0)
         elseif(boundaryID(iside,e) .eq. 2) then !cross inlet
-          ux = 1.414 * 0.5 * (1.0 + tanh((zz-0.5)/0.3))
+          ux = min(velg * time, velg)
         endif
       endif
 
@@ -167,6 +188,7 @@ c-----------------------------------------------------------------------
 
       real xx,yy,zz,heaviside
       real phix,phiy
+      real rad
 
       e = gllel(eg)
 
@@ -178,6 +200,20 @@ c-----------------------------------------------------------------------
       uy = 0.0
       uz = 0.0
       temp = 0.0
+
+      rad = sqrt(xx**2.0 + yy**2.0 + zz**2.0)
+
+      if(zz.lt.0.0)then
+        temp = 1.0
+      elseif(zz.ge.0.0)then
+        temp = 0.5 - rad
+        temp = heaviside(ix,iy,iz,e,temp,0.0)
+      endif
+
+      ! if(zz.lt.0.0)then
+      !   temp = -(zz + 1.0)
+      !   temp = heaviside(ix,iy,iz,e,temp,0.0)
+      ! endif
 
       ! if(ifield.eq.ifld_tls .or. ifield.eq.ifld_tlsr)then
       !   continue
@@ -195,11 +231,12 @@ c-----------------------------------------------------------------------
       include 'USRLS'
 
       real ntlsr, nclsr
-      real pord
+      integer pord
+      integer ncut
 
       pord = uparam(3)
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
-      ! ncut = lx1-1
+      ! ncut = lx1-2
       ! if(pord.ne.1) call cut_off_filter(prext,ncut,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
@@ -281,7 +318,7 @@ c-----------------------------------------------------------------------
             boundaryID(ifc,ie) = 3
             boundaryIDt(ifc,ie) = 3
           elseif(bc(5,ifc,ie,1).eq.255)then !top
-            cbc(ifc,ie,1) = 'O  '
+            cbc(ifc,ie,1) = 'SYM'
             cbc(ifc,ie,ifld_cls) = 'I  '
             cbc(ifc,ie,ifld_tls) = 'I  '
             cbc(ifc,ie,ifld_clsr) = 'I  '
@@ -326,7 +363,7 @@ c-----------------------------------------------------------------------
       integer ifdebug, ifixCLSbdry
       real farfield
 
-      eps = 1.5/(lx1-1.0)
+      eps = 2.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
       farfield = 0.0
@@ -340,11 +377,11 @@ c     for AVM/SVV. Leave commented to use default parameters
 c     parameters. 
 
       !fluid
-      ! svv_c0(1) = 1.0
-      ! svvcut(1) = (lx1-1.0)/2.0
+      svv_c0(1) = 1.0
+      svvcut(1) = (lx1-1.0)/2.0
 
-      ! svv_c0(ifld_cls) = 1.0                 !ifld_cls
-      ! svvcut(ifld_cls) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_cls) = 1.0                 !ifld_cls
+      svvcut(ifld_cls) = (lx1-1.0)/2.0
       ! svv_k0(1) = 1.5
       ! svv_k1(1) = 1.5
       ! ifnlsvv(1) = .true.
@@ -355,8 +392,8 @@ c     parameters.
       ! ifupwindsvv(ifld_cls) = .true.
 
 c     scalar 2      
-      ! svv_c0(ifld_tls) = 1.0                  !ifld_tls
-      ! svvcut(ifld_tls) = (lx1-1.0)/2.0-1.0
+      svv_c0(ifld_tls) = 1.0                  !ifld_tls
+      svvcut(ifld_tls) = (lx1-1.0)/2.0
       ! svv_k0(2) = 1.5
       ! svv_k1(2) = 1.5
       ! ifnlsvv(2) = .false.

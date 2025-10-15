@@ -2,23 +2,23 @@
 # nek parameter file
 #
 [GENERAL]
-#startFrom = dam.fld
+startFrom = jicf.fld
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 1000 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
+numSteps = 20000 #500000 #12000 #1000 #16000 #4000 #400 #400 #200000
 #endTime = 1 #10e-4
 
-dt = 5.0e-05
+dt = 5.0e-04
 timeStepper = bdf2 #With bdf2 SF does not work well
 #variabledt = yes
 #targetCFL = 0.1
 #extrapolation = OIFS
 
 #writeControl = runTime
-writeInterval = 50
+writeInterval = 1000
 
-userParam01 = 0.01     #Freq of TLSR
-userParam02 = 0.001      #Freq of CLSR
+userParam01 = 0.05     #Freq of TLSR
+userParam02 = 0.005      #Freq of CLSR
 userParam03 = 2    #Pressure extrapolation order
 
 #filtering = hpfrt
@@ -34,35 +34,39 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-5
+residualTol = 1e-8
 residualProj = yes
 preconditioner = semg_amg_hypre
 
 [VELOCITY]
-#residualProj = yes
+residualProj = yes
 residualTol = 1e-8
 density = 1
 viscosity = -1.0 #dummy
 
 [TEMPERATURE] #cls field
+residualProj = yes
 rhocp = 1.
 conductivity = 1.
 residualTol = 1e-6
 regularization = svv
 
 [SCALAR01] #tls field
+residualProj = yes
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-6
 regularization = svv
 
 [SCALAR02] #cls re-distanacing
+residualProj = yes
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-6
 regularization = svv
 
 [SCALAR03] #tls re-distancing field
+residualProj = yes
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
