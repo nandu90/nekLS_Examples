@@ -10,15 +10,15 @@ endTime = 4 #10e-4
 
 dt = 1.25e-04
 timeStepper = bdf2 #With bdf2 SF does not work well
-variabledt = yes
-targetCFL = 0.1
+#variabledt = yes
+#targetCFL = 1.0
 #extrapolation = OIFS
 
 writeControl = runTime
 writeInterval = 0.5
 
-userParam01 = 0.025     #Freq of TLSR
-userParam02 = 0.0025      #Freq of CLSR
+userParam01 = 0.0125     #Freq of TLSR
+userParam02 = 0.00125      #Freq of CLSR
 userParam03 = 2      #Pressure extrapolation order
 
 #filtering = hpfrt
@@ -31,41 +31,41 @@ variableProperties = yes
 stressFormulation = yes
 
 [PRESSURE]
-residualTol = 1e-4
+residualTol = 1e-6
 residualProj = yes
 #preconditioner = semg_amg_hypre
 
 [VELOCITY]
-# residualProj = yes
-residualTol = 1e-6
+residualProj = yes
+residualTol = 1e-8
 density = 1
 viscosity = -1.0 #dummy
 
 [TEMPERATURE] #cls field
 rhocp = 1.
 conductivity = 1.
-residualTol = 1e-6
+residualTol = 1e-8
 regularization = svv
-residualProj = yes
+#residualProj = yes
 
 [SCALAR01] #tls field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-8
 regularization = svv
-residualProj = yes
+#residualProj = yes
 
 [SCALAR02] #cls re-distanacing
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-8
 regularization = svv
 residualProj = yes
 
 [SCALAR03] #tls re-distancing field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-6
+residualTol = 1e-8
 regularization = svv
 residualProj = yes
 

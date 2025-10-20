@@ -102,7 +102,7 @@ c-----------------------------------------------------------------------
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      ffx = 0.0 
+      ffx = 0.0
       ffy = 0.0 
       ffz = 0.0 
 
@@ -256,6 +256,8 @@ c-----------------------------------------------------------------------
 
       pord = uparam(3)
       call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
+      ! ncut = lx1-1
+      ! if(pord.ne.1) call cut_off_filter(prext,ncut,1)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
