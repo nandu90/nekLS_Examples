@@ -102,13 +102,13 @@ c-----------------------------------------------------------------------
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      ffx = 0.0
-      ffy = 0.0 
-      ffz = 0.0 
+      ffx = svvx
+      ffy = svvy
+      ffz = svvz 
 
-      abfx(ix,iy,iz,e) = sfx + svvx
-      abfy(ix,iy,iz,e) = sfy + svvy - vtrans(ix,iy,iz,e,1)/Fr
-      abfz(ix,iy,iz,e) = sfz + svvz
+      abfx(ix,iy,iz,e) = sfx
+      abfy(ix,iy,iz,e) = sfy - vtrans(ix,iy,iz,e,1)/Fr
+      abfz(ix,iy,iz,e) = sfz
 
       return
       end
