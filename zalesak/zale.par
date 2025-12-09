@@ -4,7 +4,7 @@
 [GENERAL]
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 200000 #4000 #200000
+numSteps = 20000 #4000 #200000
 #endTime = 20.0
 
 dt = 1.0e-04
