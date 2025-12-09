@@ -145,7 +145,7 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
 
-      integer ntlsr, nclsr
+      real ntlsr, nclsr
       real err
 
       integer ntot
@@ -159,6 +159,7 @@ c-----------------------------------------------------------------------
       real vol
       real enclosedVol
       real ls_shapeerr,ls_volerr,ls_relerr
+      real ls_l1norm
 
       real pta(3),ptb(3)
 
@@ -190,6 +191,9 @@ c-----------------------------------------------------------------------
       endif
 
       if(istep.eq.nsteps)then 
+        err = ls_l1norm(ifld_cls,exact)
+        if(nio.eq.0) write(*,*)"L1 error",err
+
         err = ls_shapeerr(ifld_cls,exact)
         if(nio.eq.0) write(*,*)"Shape error",err
 
@@ -263,13 +267,15 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
+      real farfield
 
       eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
+      farfield = 1.0
       call ls_init(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
-     $             eps, ifdebug, ifixCLSbdry)
+     $             eps, ifdebug, ifixCLSbdry, farfield)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters

@@ -52,6 +52,9 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     ax.legend(loc='best',fontsize=12)
     fig.savefig(fname+'.pdf',\
                 bbox_inches='tight',dpi=100)
+    fig.savefig(fname+'.png',\
+                bbox_inches='tight',dpi=100)
+
     plt.close()
     return
 
@@ -88,31 +91,90 @@ def getLineData(fname):
 
 def main():
     N = np.array((4,5,6))
-    Er_128 = np.array((8.7769329283669381E-009,4.7423302294376554E-009,2.9479452796370447E-009))
-    Es_128 = np.array((3.5249995053713375E-004,2.4097717249581824E-004,1.4962677002915682E-004))
-    Ev_128 = np.array((4.2868897061620243E-009,2.5060440029688482E-009,4.7702495642924611E-010))
+    E1_128 = np.array((3.4973664109247179E-003,2.7353058105014636E-003,2.2753839592227045E-003))
+    Er_128 = np.array((9.1881452266445588E-009,4.9906052288788767E-009,3.0500675716882824E-009))
+    Es_128 = np.array((3.3918146579391757E-004,2.3724319588755286E-004,1.2934452098195266E-004))
+    Ev_128 = np.array((1.4289965520301566E-008,1.8191496372769275E-009,1.8752644581514245E-010))
 
-    Er_64 = np.array((8.5876557641958333E-008,4.4462492512397774E-008,2.8885071966793394E-008))
-    Es_64 = np.array((3.0213114116032862E-003,1.6153760004603223E-003,1.3645774844588490E-003))
-    Ev_64 = np.array((2.5884522223026723E-007,3.9422789419883107E-007,6.8912272345514569E-008))
+    E1_64 = np.array((8.3160647181998119E-003,6.4891829748837671E-003,5.4095683269066840E-003))
+    Er_64 = np.array((8.7409629260343270E-008,4.7363879034529375E-008,2.9009616983009505E-008))
+    Es_64 = np.array((2.3257916570713095E-003,1.7416216307658387E-003,1.1894996964210906E-003))
+    Ev_64 = np.array((3.6222280459454887E-007,4.3471158529305004E-007,6.5791595603375606E-008))
 
-    Er_32 = np.array((1.0530922893464049E-006,5.0744552814151018E-007,3.8717101656700176E-007))
-    Es_32 = np.array((1.4106612138485590E-002,7.6611509723752318E-003,7.9830726548595302E-003))
-    Ev_32 = np.array((1.4347943853203036E-005,4.8379391817553345E-006,1.1175368061744553E-006))
+    E1_32 = np.array((2.6204994042541275E-002,1.8314957454482944E-002,1.9083500639948937E-002))
+    Er_32 = np.array((1.0998024947555822E-006,5.3447799499468713E-007,4.0896428947879292E-007))
+    Es_32 = np.array((1.2722918046146130E-002,7.1881650346862537E-003,7.4791870068928916E-003))
+    Ev_32 = np.array((3.2924414880027399E-005,2.1497539642158136E-005,2.0018750009341009E-006))
 
-    labels=['$H=1/32$','$H=1/64$','$H=1/128$']
-    lines = [':','-.','--','--','-']
-    marks = ['.','.','.','','']
-    xdata = [N,N,N]
+    labels=['$H=1/32$','$H=1/64$','$H=1/128$','$H=1/32$ (Salami)','$H=1/64$ (Salami)','$H=1/128$ (Salami)']
+    lines = ['-','-','-','--','--','--']
+    marks = ['.','.','.','.','.','.']
+
+    N_Salami = np.array((2,3,4,5))
+		#Table 7 from Salami et al
+    E1_32Salami = np.array((7.96e-3,7.91e-3,5.50e-3,3.22e-3))
+    E1_64Salami = np.array((2.51e-3,1.29e-3,1.05e-3,7.46e-4))
+    E1_128Salami = np.array((8.10e-4,6.72e-4,3.75e-4,2.64e-4))
     
+    xdata = [N,N,N,N_Salami,N_Salami,N_Salami]
+    ydata = [E1_32,E1_64,E1_128,E1_32Salami,E1_64Salami,E1_128Salami]
+    plotnow('E1','$N$','$E_1$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
+
+    xdata = [N,N,N]
     ydata = [Er_32,Er_64,Er_128]
     plotnow('Er','$N$','$E_r$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
 
-    ydata = [Es_32,Es_64,Es_128]
+    N_Salami = np.array((2,3,4))
+    r = 0.15
+    fac = 2 * 2 * math.pi * r
+    Es_64Salami = np.array((1e-2,4.82e-3,3.72e-3)) * fac
+    Es_128Salami = np.array((3.04e-3,2.33e-3,1.21e-3)) * fac
+    
+    labels=['$H=1/32$','$H=1/64$','$H=1/128$','$H=1/64$ (Salami)','$H=1/128$ (Salami)']
+    xdata = [N,N,N,N_Salami,N_Salami]
+    ydata = [Es_32,Es_64,Es_128,Es_64Salami,Es_128Salami]
     plotnow('Es','$N$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
     
-    ydata = [Ev_32,Ev_64,Ev_128]
+    Ev_64Salami = np.array((3.41e-6,3.16e-5,8.03e-6))
+    Ev_128Salami = np.array((6.12e-7,1.62e-6,1.39e-6))
+    xdata = [N,N,N,N_Salami,N_Salami]
+    ydata = [Ev_32,Ev_64,Ev_128,Ev_64Salami,Ev_128Salami]
     plotnow('Ev','$N$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
+
+    #h-convergence plots
+    H = np.array((1/32, 1/64, 1/128))
+    Er_4 = np.array((Er_32[0], Er_64[0], Er_128[0]))
+    Es_4 = np.array((Es_32[0], Es_64[0], Es_128[0]))
+    Ev_4 = np.array((Ev_32[0], Ev_64[0], Ev_128[0]))
+
+    Er_5 = np.array((Er_32[1], Er_64[1], Er_128[1]))
+    Es_5 = np.array((Es_32[1], Es_64[1], Es_128[1]))
+    Ev_5 = np.array((Ev_32[1], Ev_64[1], Ev_128[1]))
+    
+    Er_6 = np.array((Er_32[2], Er_64[2], Er_128[2]))
+    Es_6 = np.array((Es_32[2], Es_64[2], Es_128[2]))
+    Ev_6 = np.array((Ev_32[2], Ev_64[2], Ev_128[2]))
+
+    #Salami et al: https://doi.org/10.1016/j.jcp.2021.110376 (Table 6)
+    H_salami = np.array((1/64, 1/128))
+    Es4_salami = np.array((3.72e-3, 1.21e-3))
+    Ev4_salami = np.array((8.03e-6, 1.39e-6))
+
+
+    labels=['$N=4$','$N=5$','$N=6$','Salami et al (N=4)']
+    lines = [':','-.','--','--','-']
+    marks = ['.','.','.','','']
+    xdata = [H,H,H]
+    
+    ydata = [Er_4,Er_5,Er_6]
+    plotnow('h-Er','$H$','$E_r$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='loglog')
+
+    xdata.append(H_salami)
+    ydata = [Es_4,Es_5,Es_6,Es4_salami]
+    plotnow('h-Es','$H$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='loglog')
+    
+    ydata = [Ev_4,Ev_5,Ev_6,Ev4_salami]
+    plotnow('h-Ev','$H$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='loglog')
 
     #plot Ev v/s time error
     t32, E32 = getdata('32/6',8e-4)
@@ -144,8 +206,10 @@ def main():
     marks = ['','','','','']
     
     plotnow('Ev_4','$t$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',ylim=[1e-14,1e-4])
+
     
     #Line plot across y=0.75
+		#128 mesh
     x4,psi4,phi4 = getLineData('128/4') 
     x5,psi5,phi5 = getLineData('128/5') 
     x6,psi6,phi6 = getLineData('128/6') 
@@ -169,6 +233,56 @@ def main():
     labels=['$N=4$','$N=5$','$N=6$','Exact']
     lines = ['-.','-.','-.',':','-']
     plotnow('phi','$x$','$\\phi$',xdata,ydata,labels,linestyles=lines,markers=marks,ylim=[-0.1,0.1],xlim=[0.25,0.75])
+
+		#64 mesh
+    x4,psi4,phi4 = getLineData('64/4') 
+    x5,psi5,phi5 = getLineData('64/5') 
+    x6,psi6,phi6 = getLineData('64/6') 
+
+    data = np.loadtxt('64/6/cv.00001.dat',skiprows=1)
+    xini = data[:,0]
+    yini = data[:,4]
+
+    xdata = [x4,x5,x6,xini]
+    ydata = [psi4,psi5,psi6,yini]
+    marks = ['','','','']
+    labels=['$N=4$','$N=5$','$N=6$','Initial']
+    lines = ['-.','-.','-.',':','-']
+    plotnow('psi64','$x$','$\\psi$',xdata,ydata,labels,linestyles=lines,markers=marks,xlim=[0.25,0.75])
+
+    xdata = [x4,x5,x6,xini]
+    exact = np.sqrt((xini-0.5)**2) - 0.15
+    ydata = [phi4,phi5,phi6,exact]
+    marks = ['','','','']
+    
+    labels=['$N=4$','$N=5$','$N=6$','Exact']
+    lines = ['-.','-.','-.',':','-']
+    plotnow('phi64','$x$','$\\phi$',xdata,ydata,labels,linestyles=lines,markers=marks,ylim=[-0.1,0.1],xlim=[0.25,0.75])
+
+		#32 mesh
+    x4,psi4,phi4 = getLineData('32/4') 
+    x5,psi5,phi5 = getLineData('32/5') 
+    x6,psi6,phi6 = getLineData('32/6') 
+
+    data = np.loadtxt('32/6/cv.00001.dat',skiprows=1)
+    xini = data[:,0]
+    yini = data[:,4]
+
+    xdata = [x4,x5,x6,xini]
+    ydata = [psi4,psi5,psi6,yini]
+    marks = ['','','','']
+    labels=['$N=4$','$N=5$','$N=6$','Initial']
+    lines = ['-.','-.','-.',':','-']
+    plotnow('psi32','$x$','$\\psi$',xdata,ydata,labels,linestyles=lines,markers=marks,xlim=[0.25,0.75])
+
+    xdata = [x4,x5,x6,xini]
+    exact = np.sqrt((xini-0.5)**2) - 0.15
+    ydata = [phi4,phi5,phi6,exact]
+    marks = ['','','','']
+    
+    labels=['$N=4$','$N=5$','$N=6$','Exact']
+    lines = ['-.','-.','-.',':','-']
+    plotnow('phi32','$x$','$\\phi$',xdata,ydata,labels,linestyles=lines,markers=marks,ylim=[-0.1,0.1],xlim=[0.25,0.75])
     return
 
 if __name__=="__main__":
