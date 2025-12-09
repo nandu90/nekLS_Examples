@@ -142,6 +142,7 @@ c-----------------------------------------------------------------------
       real exact(lx1,ly1,lz1,lelv)
 
       real ls_shapeerr,ls_volerr,ls_relerr
+      real ls_l1norm
       real enclosedVol
       integer ifld
 
@@ -157,6 +158,9 @@ c-----------------------------------------------------------------------
         call getexact(exact)
 
         do ifld = 3,4
+          err = ls_l1norm(ifld,exact)
+          if(nio.eq.0) write(*,*)"ifield, L1 error",ifld,err
+
           err = ls_shapeerr(ifld,exact)
           if(nio.eq.0) write(*,*)"ifield, Shape error",ifld,err
 

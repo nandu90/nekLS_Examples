@@ -8,7 +8,9 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
 
-def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]):
+from matplotlib.ticker import MaxNLocator
+
+def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],xint=False):
     default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
                       cycler(linestyle=['-'])*cycler(marker=['']))
     plt.rc('lines',linewidth=1)
@@ -38,9 +40,14 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
             ax.loglog(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
     
             
+    if(xint):
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
     ax.grid()
     ax.legend(loc='best',fontsize=12)
     fig.savefig(fname+'.pdf',\
+                bbox_inches='tight',dpi=100)
+    fig.savefig(fname+'.png',\
                 bbox_inches='tight',dpi=100)
     plt.close()
     return
@@ -73,6 +80,18 @@ def getdata(case,t=1):
     return x,exact,svv
 
 def main():
+    #Calculate the perimeter of the disk
+    r = 0.15
+    circum = 2*math.pi*r
+    
+    theta = math.asin(0.025/r)
+    sector_angle = 2*math.pi - 2*theta
+    sector = (sector_angle/(2*math.pi)) * circum
+
+    side = abs(math.sqrt(r**2 - 0.025**2)) + 0.85-0.75
+
+    total = side*2 + 0.025*2 + sector
+    
     N = 'N7'
     xdata = []
     ydata = []
@@ -140,7 +159,43 @@ def main():
 
     ydata = [Es1,Es10]
     plotnow('shapeErr','$N$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy')
+
+    #Errors for 100X100 grid
+    N = np.array((3,5,7))
+    E1 = np.array((2.5369850951812534E-003,5.4849372152960261E-004,3.4295830899636932E-004))
+    Er = np.array((2.7181066102553975E-007,2.6157880892233524E-008,9.2060738105127991E-009))
+    Es = np.array((2.6514427670552149E-003,5.4690823212134127E-004,2.2355172995992169E-004))
+    Ev = np.array((4.4163459978518276E-008,2.1877970432902536E-010,4.9315388800980264E-012))
     
+    N_Salami = np.array((3,4,5))
+    Er_Salami = np.array((3.49e-3,2.82e-3,1.63e-3))
+    Es_Salami = np.array((2.63e-3,6.02e-4,4.38e-4)) * 2*total
+    Ev_Salami = np.array((1.19e-6,4.52e-6,3.77e-6))
+
+    #Errors for 200X200 grid
+    E1_200 = np.array((1.6712143979209565E-003,3.6717942417054399E-004,2.0859093652415367E-004))
+    Er_200 = np.array((4.4830501514900598E-008,4.3792925924269163E-009,1.3996334236849234E-009))
+    Es_200 = np.array((4.8950217093914356E-003,1.6874006621748646E-003,9.3422172833321606E-004))
+    Ev_200 = np.array((5.4366149295908998E-009,1.7851449082439910E-011,1.0907037700355258E-011))
+    
+    Er_Salami200 = np.array((1.54e-3,9.12e-4,8.08e-4))
+    Es_Salami200 = np.array((8.45e-4,2.88e-4,2.12e-4)) * 2*total
+    Ev_Salami200 = np.array((9.92e-8,1.71e-7,1.75e-7))
+
+    lines = ['-','-','--','--','--','--']
+    labels = ['$100\\times100$','$200\\times200$','$100\\times100$ Salami','$200\\times200$ Salami']
+    marks = ['.','.','.','.','.']
+    xdata = [N,N,N_Salami,N_Salami]
+
+    ydata = [Er,Er_200,Er_Salami,Er_Salami200]
+    plotnow('Er','$N$','$E_r$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
+
+    ydata = [Ev,Ev_200,Ev_Salami,Ev_Salami200]
+    plotnow('Ev','$N$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
+
+    ydata = [Es,Es_200,Es_Salami,Es_Salami200]
+    plotnow('Es','$N$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
+
     return
 
 if __name__=="__main__":
