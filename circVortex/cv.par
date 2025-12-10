@@ -14,8 +14,8 @@ timeStepper = bdf2
 #writeControl = runTime
 writeInterval = 5000
 
-userParam01 = 2500    #Freq of TLSR
-userParam02 = 250     #Freq of CLSR
+userParam01 = 0.5    #Freq of TLSR
+userParam02 = 0.05     #Freq of CLSR
 
 [PROBLEMTYPE]
 variableProperties = yes
