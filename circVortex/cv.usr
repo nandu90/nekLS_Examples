@@ -163,6 +163,11 @@ c-----------------------------------------------------------------------
 
       real pta(3),ptb(3)
 
+      real meanIntThickness,clsmin,clsmax
+      real glmin,glmax,thickness,deltael
+      real thicknessini
+      save thicknessini
+
       ntot = lx1*ly1*lz1*nelv
 
       if(istep.eq.0 .and. nio.eq.0)then
@@ -184,10 +189,15 @@ c-----------------------------------------------------------------------
 
       vol = enclosedVol(t(1,1,1,1,ifld_cls-1),-1)
       err = ls_volerr(ifld_cls,exact,psiini)
+      thickness = meanIntThickness(ifld_cls)
+      if(istep.eq.0)thicknessini = thickness
+      clsmin = glmin(t(1,1,1,1,ifld_cls-1),ntot)
+      clsmax = glmax(t(1,1,1,1,ifld_cls-1),ntot)
       if(nio.eq.0)then 
         write(*,*)"V/V0",istep,vol/volini
         write(*,*)"Volume error",err
-        write(100,*)istep,vol/volini,err
+        write(100,*)istep,vol/volini,err,thickness/thicknessini,
+     $   clsmin,clsmax
       endif
 
       if(istep.eq.nsteps)then 
@@ -272,7 +282,7 @@ c-----------------------------------------------------------------------
       eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
-      farfield = 1.0
+      farfield = -1.0  !turn off
       call ls_init(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
      $             eps, ifdebug, ifixCLSbdry, farfield)
@@ -358,6 +368,7 @@ c---------------------------------------------------------------------
       real dist,distx,disty
       logical in_slot, below_slot, in_disk
       real exact(1)
+      real heaviside
 
       ntot = lx1*ly1*lz1*nelv
 
@@ -370,8 +381,7 @@ c---------------------------------------------------------------------
 
         dist = sqrt((xx-x1)**2.+(yy-y1)**2.)-0.3/2.0
 
-        exact(i) = 0.0
-        if(dist.ge.0.0)exact(i) = 1.0
+        exact(i) = heaviside(i,1,1,1,dist,0.0)
       enddo
 
       return
