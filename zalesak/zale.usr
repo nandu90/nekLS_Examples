@@ -254,7 +254,7 @@ c---------------------------------------------------------------------
 
         dist = -max(dist,min(distx,disty))
 
-        exact(i) = heaviside(i,1,1,1,dist,0.0)
+        exact(i) = heaviside(i,1,1,1,dist,1.0/(lx1-1))
       enddo
 
       return
