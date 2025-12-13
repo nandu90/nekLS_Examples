@@ -107,19 +107,19 @@ c-----------------------------------------------------------------------
       uy = (PI)*(xm1(ix,iy,iz,e)-ucx)
       uz = 0.0
 
-      x1 = 0.5
-      y1 = 0.75
+      x1 = 0.5d0
+      y1 = 0.75d0
 
       x = xm1(ix,iy,iz,e)
       y = ym1(ix,iy,iz,e)
 
-      dist = sqrt((x-x1)**2.+(y-y1)**2.)-0.15
+      dist = sqrt((x-x1)**2.+(y-y1)**2.)-0.15d0
 
-      in_slot = (abs(x-x1) < 0.025)
-      below_slot = (y < 0.85)
-      in_disk = (dist < 0.0)
-      distx = 0.025 - abs(x - 0.5d0)
-      disty = 0.85 - y
+      in_slot = (abs(x-x1) < 0.025d0)
+      below_slot = (y < 0.85d0)
+      in_disk = (dist < 0.0d0)
+      distx = 0.025d0 - abs(x - 0.5d0)
+      disty = 0.85d0 - y
       
       temp = dist
 
@@ -139,12 +139,12 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       real pta(3),ptb(3)
       real err
-      real exact(lx1,ly1,lz1,lelv)
 
       real ls_shapeerr,ls_volerr,ls_relerr
       real ls_l1norm
       real enclosedVol
       integer ifld
+      real ls_rel2err
 
       if(istep.eq.nsteps .or. istep.eq.20000)then
         pta(1) = 0.0
@@ -155,20 +155,21 @@ c-----------------------------------------------------------------------
         ptb(3) = 0.0
         call lineplot(pta,ptb,1001)
 
-        call getexact(exact)
-
         do ifld = 3,4
-          err = ls_l1norm(ifld,exact)
+          err = ls_l1norm(ifld,t(1,1,1,1,1))
           if(nio.eq.0) write(*,*)"ifield, L1 error",ifld,err
 
-          err = ls_shapeerr(ifld,exact)
+          err = ls_shapeerr(ifld,t(1,1,1,1,1))
           if(nio.eq.0) write(*,*)"ifield, Shape error",ifld,err
 
-          err = ls_volerr(ifld,exact,t(1,1,1,1,1))
+          err = ls_volerr(ifld,t(1,1,1,1,1),t(1,1,1,1,1))
           if(nio.eq.0) write(*,*)"ifield, Volume error",ifld,err
 
-          err = ls_relerr(ifld,exact) 
+          err = ls_relerr(ifld,t(1,1,1,1,1)) 
           if(nio.eq.0) write(*,*)"ifield, Relative error",ifld,err
+
+          err = ls_rel2err(ifld,t(1,1,1,1,1)) 
+          if(nio.eq.0) write(*,*)"ifield, Relative L2 error",ifld,err
         enddo
       endif
 
@@ -206,6 +207,17 @@ c-----------------------------------------------------------------------
       include 'AVM'
       include 'SVV'
 
+      real eps,farfield
+      integer ifdebug, ifixCLSbdry
+      
+      eps = 1.0/(lx1-1.0)
+      ifdebug = 0
+      ifixCLSbdry = 0
+      farfield = -1.0  !turn off
+      call ls_init(2, 2,
+     $             2, 2,
+     $             eps, ifdebug, ifixCLSbdry, farfield)
+
 c---------------------------------------------------      
 c     This section to specify user defined parameters
 c     for AVM/SVV. Leave commented to use default parameters
@@ -218,45 +230,9 @@ c     scalar 1
       ! avm_c1(2) = 1.0
 
 c     scalar 2
-      ! svv_c0(3) = 0.01
-      svvcut(3) = (lx1-1.0)
+      svv_c0(4) = 1.0
+      svvcut(4) = (lx1-1.0)
       
-      return
-      end
-c---------------------------------------------------------------------
-      subroutine getexact(exact)
-      include 'SIZE'
-      include 'TOTAL'
-
-      integer ntot,i
-      real xx,yy
-      real x1,y1
-      real dist,distx,disty
-      logical in_slot, below_slot, in_disk
-      real exact(1)
-
-      ntot = lx1*ly1*lz1*nelv
-
-      do i=1,ntot
-        xx = xm1(i,1,1,1)
-        yy = ym1(i,1,1,1)
-
-        x1 = 0.5
-        y1 = 0.75
-
-        dist = sqrt((xx-x1)**2.+(yy-y1)**2.)-0.15
-
-        in_slot = (abs(xx-x1) < 0.025)
-        below_slot = (yy < 0.85)
-        in_disk = (dist < 0.0)
-        distx = 0.025 - abs(xx - 0.5d0)
-        disty = 0.85 - yy
-
-        dist = -max(dist,min(distx,disty))
-
-        exact(i) = heaviside(i,1,1,1,dist,1.0/(lx1-1))
-      enddo
-
       return
       end
 c---------------------------------------------------------------------

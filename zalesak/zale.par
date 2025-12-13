@@ -4,11 +4,11 @@
 [GENERAL]
 stopAt = numSteps
 #stopAt = endTime
-numSteps = 20000 #4000 #200000
+numSteps = 200000 #4000 #200000
 #endTime = 20.0
 
 dt = 1.0e-04
-timeStepper = bdf2
+timeStepper = bdf2 #run highest resolution cases with bdf3
 
 writeControl = runTime
 writeInterval = 2.0
@@ -33,7 +33,7 @@ residualTol = 1e-8
 regularization = none
 
 [SCALAR01]
-#solver = none
+solver = none
 density = 1.0
 diffusivity = 1e-8 
 residualTol = 1e-8
