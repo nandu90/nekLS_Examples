@@ -108,18 +108,18 @@ def main():
     neckfiles = np.arange(1,50,2)
     tol = [1e-1,1e-1,1e-2]
 
-    nose, time1 = getloc('coarse/',nosefiles,tol[0])
-    neck, time2 = getloc('coarse/',neckfiles,tol[0])
+    nose, time1 = getloc('coarse/4/',nosefiles,tol[0])
+    neck, time2 = getloc('coarse/4/',neckfiles,tol[0])
     x1 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
     y1 = np.concatenate((nose,np.array([np.nan]),neck))
 
-    nose, time1 = getloc('fine/',nosefiles,tol[1])
-    neck, time2 = getloc('fine/',neckfiles,tol[1])
+    nose, time1 = getloc('fine/4/',nosefiles,tol[1])
+    neck, time2 = getloc('fine/4/',neckfiles,tol[1])
     x2 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
     y2 = np.concatenate((nose,np.array([np.nan]),neck))
 
-    nose, time1 = getloc('finest/',nosefiles,tol[2])
-    neck, time2 = getloc('finest/',neckfiles,tol[2])
+    nose, time1 = getloc('finest/4/',nosefiles,tol[2])
+    neck, time2 = getloc('finest/4/',neckfiles,tol[2])
     x3 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
     y3 = np.concatenate((nose,np.array([np.nan]),neck))
 
@@ -146,8 +146,8 @@ def main():
     x1 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
     y1 = np.concatenate((nose,np.array([np.nan]),neck))
 
-    nose, time1 = getloc('fine/',nosefiles,tol[1])
-    neck, time2 = getloc('fine/',neckfiles,tol[1])
+    nose, time1 = getloc('fine/4/',nosefiles,tol[1])
+    neck, time2 = getloc('fine/4/',neckfiles,tol[1])
     x2 = np.concatenate((time1,np.array([np.amax(time1)]),time2))
     y2 = np.concatenate((nose,np.array([np.nan]),neck))
 
@@ -157,7 +157,7 @@ def main():
     y3 = np.concatenate((nose,np.array([np.nan]),neck))
     x = [x1,x2,x3,xchiu,xg]
     y = [y1,y2,y3,ychiu,yg]
-    labels = ['$N3$','$N4$','$N5$','Chiu et al','Guermond et al']
+    labels = ['$N=3$','$N=4$','$N=5$','Chiu et al','Guermond et al']
     lines = [':','-.','--','','']
     marks = ['','','','v','o']
     
@@ -166,9 +166,9 @@ def main():
     
 
     #plot vol err
-    t1,e1 = geterr('coarse/')
-    t2,e2 = geterr('fine/')
-    t3,e3 = geterr('finest/')
+    t1,e1 = geterr('coarse/4/')
+    t2,e2 = geterr('fine/4/')
+    t3,e3 = geterr('finest/4/')
     labels = ['$H=1/25$','$H=1/50$','$H=1/100$']
     lines = [':','-.','--','','']
     marks = ['','','']
@@ -177,9 +177,9 @@ def main():
     plotnow('Ev','$t$','$|E_v|$',x,y,labels,linestyles=lines,markers=marks,ptype='semilogy')
 
     t1,e1 = geterr('fine/3/')
-    t2,e2 = geterr('fine/')
+    t2,e2 = geterr('fine/4/')
     t3,e3 = geterr('fine/5/')
-    labels = ['$N3$','$N4$','$N5$']
+    labels = ['$N=3$','$N=4$','$N=5$']
     lines = [':','-.','--','','']
     marks = ['','','']
     x = [t1,t2,t3]
