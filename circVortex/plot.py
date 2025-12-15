@@ -9,9 +9,20 @@ import matplotlib.pyplot as plt
 from scipy.stats import linregress
 from matplotlib.ticker import MaxNLocator
 
-def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],ylim=[],xlim=[],xint=False):
-    default_cycler = (cycler(color=['#0072B2','#D55E00','#009E73','#CC0000','#990099'])*\
-                      cycler(linestyle=['-'])*cycler(marker=['']))
+COLORS=['#0072B2','#D55E00','#009E73','#CC0000','#990099']
+
+C2 = '#990099'
+C3 = '#0072B2'
+C4 = '#D55E00'
+C5 = '#009E73'
+C6 = '#CC0000'
+
+def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[],xint=False,colors=[],leg=True,xticks=[],yticks=[],grid=True,printleg=False,ylim=[],xlim=[]):
+    if(colors==[]):
+        default_cycler = (cycler(color=COLORS)*cycler(linestyle=['-'])*cycler(marker=['']))
+    else:
+        default_cycler = (cycler(color=colors)*cycler(linestyle=['-'])*cycler(marker=['']))
+
     plt.rc('lines',linewidth=1)
     plt.rc('axes',prop_cycle=default_cycler)
     fig = plt.figure(figsize=(8,5))
@@ -20,12 +31,6 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
     ax.set_xlabel(xlabel,fontsize=15)
     ax.set_ylabel(ylabel,fontsize=15)
     ax.tick_params(axis='both',labelsize=12)
-
-    if(ylim != []):
-        ax.set_ylim(ylim[0],ylim[1])
-
-    if(xlim != []):
-        ax.set_xlim(xlim[0],xlim[1])
 
     # if(len(linestyles) == 0):
     #     linestyles = ['-']*len(x)
@@ -44,18 +49,54 @@ def plotnow(fname,xlabel,ylabel,x,y,labels,ptype='line',linestyles=[],markers=[]
         else:
             ax.loglog(x[i],y[i],label=labels[i],linestyle=linestyles[i],marker=markers[i],linewidth=2.0)
     
-
+            
     if(xint):
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
-    ax.grid()
-    ax.legend(loc='best',fontsize=12)
+    if(grid):
+        ax.grid()
+    if(leg):
+        legend = ax.legend(loc='best',fontsize=12)
+
+    # if(xticks !=[]):
+    #     ax.set_xticks(xticks)
+    #     ax.set_xticklabels(str(v) for v in xticks)
+
+    if(yticks!=[]):
+        ax.set_yscale('log')
+        ax.set_yticks(yticks)
+        ax.yaxis.set_minor_locator(LogLocator(base=10.0, subs=range(2,9)))
+        ax.yaxis.set_minor_formatter(NullFormatter())
+        ax.tick_params(axis='both', which='minor', length=4, width=0.8)
+
+    if(ylim!=[]):
+        ax.set_ylim(ylim)
+
+    if(xlim!=[]):
+        ax.set_xlim(xlim)
+
     fig.savefig(fname+'.pdf',\
                 bbox_inches='tight',dpi=100)
     fig.savefig(fname+'.png',\
                 bbox_inches='tight',dpi=100)
+    plt.close(fig)
 
-    plt.close()
+    if(printleg):
+        fig_legend = plt.figure(figsize=(4, 5))
+
+        fig_legend.legend(
+            handles=legend.legendHandles,
+            labels=[t.get_text() for t in legend.get_texts()],
+            loc='center'
+        )
+        
+        fig_legend.gca().axis('off')
+        
+
+        fig_legend.savefig("legend_only.png", dpi=100, bbox_inches='tight')
+        fig_legend.savefig("legend_only.pdf", dpi=100, bbox_inches='tight')
+        plt.close(fig_legend)
+    
     return
 
 def getexact(x,exact):
@@ -90,93 +131,123 @@ def getLineData(fname):
     return x,y,phi
 
 def main():
-    N = np.array((4,5,6))
-    E1_128 = np.array((3.4973664109247179E-003,2.7353058105014636E-003,2.2753839592227045E-003))
-    Er_128 = np.array((9.1881452266445588E-009,4.9906052288788767E-009,3.0500675716882824E-009))
-    Es_128 = np.array((3.3918146579391757E-004,2.3724319588755286E-004,1.2934452098195266E-004))
-    Ev_128 = np.array((1.4289965520301566E-008,1.8191496372769275E-009,1.8752644581514245E-010))
+    N = np.array((3,4,5,6))
+    Er_128 = np.array((1.9644083817968675E-003,1.2505462043959949E-003,9.0074804500609969E-004,7.5801378427325797E-004))
+    E1_128 = np.array((1.8254146844088545E-003,1.1621009937442339E-003,8.3705519982045300E-004,7.0352560441701425E-004))
+    Es_128 = np.array((3.6506660941431284E-004,1.8843727028095889E-004,1.2337203716325268E-004,8.0736765497260273E-005))
+    Ev_128 = np.array((1.6900277217981905E-008,3.2202974948058349E-009,2.9858006055035767E-009,1.3824220209486620E-009))
 
-    E1_64 = np.array((8.3160647181998119E-003,6.4891829748837671E-003,5.4095683269066840E-003))
-    Er_64 = np.array((8.7409629260343270E-008,4.7363879034529375E-008,2.9009616983009505E-008))
-    Es_64 = np.array((2.3257916570713095E-003,1.7416216307658387E-003,1.1894996964210906E-003))
-    Ev_64 = np.array((3.6222280459454887E-007,4.3471158529305004E-007,6.5791595603375606E-008))
+    Er_64 = np.array((1.0193065884140861E-002,4.2000679346736181E-003,3.2726916086903927E-003,2.4654990246460750E-003))
+    E1_64 = np.array((9.4697022275516650E-003,3.9025201829118888E-003,3.0410284438296938E-003,2.2910503037710389E-003))
+    Es_64 = np.array((3.0315880961756998E-003,1.1797094041241895E-003,1.0004653370184796E-003,6.0951393037267376E-004))
+    Ev_64 = np.array((3.2104170740309537E-006,1.2453082221275868E-006,9.2859093688488435E-008,2.2735482543591080E-007))
 
-    E1_32 = np.array((2.6204994042541275E-002,1.8314957454482944E-002,1.9083500639948937E-002))
-    Er_32 = np.array((1.0998024947555822E-006,5.3447799499468713E-007,4.0896428947879292E-007))
-    Es_32 = np.array((1.2722918046146130E-002,7.1881650346862537E-003,7.4791870068928916E-003))
-    Ev_32 = np.array((3.2924414880027399E-005,2.1497539642158136E-005,2.0018750009341009E-006))
+    Er_32 = np.array((3.1294708518886778E-002,2.0885617144906263E-002,1.3688639528156177E-002,1.5031589347505449E-002))
+    E1_32 = np.array((2.9047565786994224E-002,1.9396119671401313E-002,1.2715520074301899E-002,1.3964855054418860E-002))
+    Es_32 = np.array((1.1022049939580498E-002,7.3391989192228922E-003,4.3399399372452624E-003,4.0363397147625815E-003))
+    Ev_32 = np.array((3.4494303871338423E-005,2.9297602751318913E-005,6.6520582508711100E-006,7.6671200282072673E-006))
 
-    labels=['$H=1/32$','$H=1/64$','$H=1/128$','$H=1/32$ (Salami)','$H=1/64$ (Salami)','$H=1/128$ (Salami)']
+    labels=['$H=1/32$','$H=1/64$','$H=1/128$']
     lines = ['-','-','-','--','--','--']
     marks = ['.','.','.','.','.','.']
-
-    N_Salami = np.array((2,3,4,5))
-		#Table 7 from Salami et al
-    E1_32Salami = np.array((7.96e-3,7.91e-3,5.50e-3,3.22e-3))
-    E1_64Salami = np.array((2.51e-3,1.29e-3,1.05e-3,7.46e-4))
-    E1_128Salami = np.array((8.10e-4,6.72e-4,3.75e-4,2.64e-4))
-    
-    xdata = [N,N,N,N_Salami,N_Salami,N_Salami]
-    ydata = [E1_32,E1_64,E1_128,E1_32Salami,E1_64Salami,E1_128Salami]
-    plotnow('E1','$N$','$E_1$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
 
     xdata = [N,N,N]
     ydata = [Er_32,Er_64,Er_128]
     plotnow('Er','$N$','$E_r$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
 
-    N_Salami = np.array((2,3,4))
-    r = 0.15
-    fac = 2 * 2 * math.pi * r
-    Es_64Salami = np.array((1e-2,4.82e-3,3.72e-3)) * fac
-    Es_128Salami = np.array((3.04e-3,2.33e-3,1.21e-3)) * fac
-    
-    labels=['$H=1/32$','$H=1/64$','$H=1/128$','$H=1/64$ (Salami)','$H=1/128$ (Salami)']
-    xdata = [N,N,N,N_Salami,N_Salami]
-    ydata = [Es_32,Es_64,Es_128,Es_64Salami,Es_128Salami]
+
+    labels=['$H=1/32$','$H=1/64$','$H=1/128$']
+    xdata = [N,N,N]
+    ydata = [Es_32,Es_64,Es_128]
     plotnow('Es','$N$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
     
-    Ev_64Salami = np.array((3.41e-6,3.16e-5,8.03e-6))
-    Ev_128Salami = np.array((6.12e-7,1.62e-6,1.39e-6))
-    xdata = [N,N,N,N_Salami,N_Salami]
-    ydata = [Ev_32,Ev_64,Ev_128,Ev_64Salami,Ev_128Salami]
+    xdata = [N,N,N]
+    ydata = [Ev_32,Ev_64,Ev_128]
     plotnow('Ev','$N$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='semilogy',xint=True)
 
     #h-convergence plots
-    H = np.array((1/32, 1/64, 1/128))
-    Er_4 = np.array((Er_32[0], Er_64[0], Er_128[0]))
-    Es_4 = np.array((Es_32[0], Es_64[0], Es_128[0]))
-    Ev_4 = np.array((Ev_32[0], Ev_64[0], Ev_128[0]))
+    H = np.array((32,64,128))
+    E1_3 = np.array((E1_32[0],E1_64[0],E1_128[0]))
+    E1_4 = np.array((E1_32[1],E1_64[1],E1_128[1]))
+    E1_5 = np.array((E1_32[2],E1_64[2],E1_128[2]))
+    E1_6 = np.array((E1_32[3],E1_64[3],E1_128[3]))
 
-    Er_5 = np.array((Er_32[1], Er_64[1], Er_128[1]))
-    Es_5 = np.array((Es_32[1], Es_64[1], Es_128[1]))
-    Ev_5 = np.array((Ev_32[1], Ev_64[1], Ev_128[1]))
+    Es_3 = np.array((Es_32[0],Es_64[0],Es_128[0]))
+    Es_4 = np.array((Es_32[1],Es_64[1],Es_128[1]))
+    Es_5 = np.array((Es_32[2],Es_64[2],Es_128[2]))
+    Es_6 = np.array((Es_32[3],Es_64[3],Es_128[3]))
+
+    Ev_3 = np.array((Ev_32[0],Ev_64[0],Ev_128[0]))
+    Ev_4 = np.array((Ev_32[1],Ev_64[1],Ev_128[1]))
+    Ev_5 = np.array((Ev_32[2],Ev_64[2],Ev_128[2]))
+    Ev_6 = np.array((Ev_32[3],Ev_64[3],Ev_128[3]))
+
+    H_Salami = np.array((32,64,128))
+    E1_3Salami = np.array((6.11e-3,2.14e-3,6.67e-4))
+    E1_4Salami = np.array((5.51e-3,1.25e-3,3.79e-4))
+    E1_5Salami = np.array((3.97e-3,7.64e-4,2.60e-4))
+
+    Hsv_Salami = np.array((64,128))
+    Es_2Salami = np.array((1e-2,3.04e-3))
+    Es_3Salami = np.array((4.82e-3,2.33e-3))
+    Es_4Salami = np.array((3.72e-3,1.21e-3))
+
+    Ev_2Salami = np.array((3.41e-6,6.12e-7))
+    Ev_3Salami = np.array((3.16e-5,1.62e-6))
+    Ev_4Salami = np.array((8.03e-6,1.39e-6))
+
+    H_Qian = np.array((32,64,128))
+    E1_2Qian = np.array((1e-1,1.22e-2,1.2e-3))
+    E1_4Qian = np.array((2.85e-2,3.39e-3,6.79e-4))
     
-    Er_6 = np.array((Er_32[2], Er_64[2], Er_128[2]))
-    Es_6 = np.array((Es_32[2], Es_64[2], Es_128[2]))
-    Ev_6 = np.array((Ev_32[2], Ev_64[2], Ev_128[2]))
+    H_Jibben = np.array((64,128))
+    Es_2Jibben=np.array((2.69e-2,5.56e-3))
+    Es_3Jibben=np.array((7.81e-3,1.47e-3))
+    Es_4Jibben=np.array((3.43e-3,7.06e-4))
 
-    #Salami et al: https://doi.org/10.1016/j.jcp.2021.110376 (Table 6)
-    H_salami = np.array((1/64, 1/128))
-    Es4_salami = np.array((3.72e-3, 1.21e-3))
-    Ev4_salami = np.array((8.03e-6, 1.39e-6))
+    Ev_2Jibben=np.array((6e-3,4.81e-3))
+    Ev_3Jibben=np.array((8.25e-3,2.58e-3))
+    Ev_4Jibben=np.array((5.36e-3,1.65e-3))
+
+    labels=['$N=3$','$N=4$','$N=5$','$N=6$','$N=3$ Salami','$N=4$ Salami','$N=5$ Salami','$N=2$ Qian', '$N=4$ Qian']
+    lines = ['-','-','-','-','--','--','--',':',':']
+    marks = ['o','o','o','o','^','^','^','*','*']
+    colors = [C3,C4,C5,C6,C3,C4,C5,C2,C4]
+    xdata = [H,H,H,H,H_Salami,H_Salami,H_Salami,H_Qian,H_Qian]
+    ydata = [E1_3,E1_4,E1_5,E1_6,E1_3Salami,E1_4Salami,E1_5Salami,E1_2Qian,E1_4Qian]
+    plotnow('E1_H','$1/H$','$E_{L1}$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='loglog',colors=colors,leg=False)
 
 
-    labels=['$N=4$','$N=5$','$N=6$','Salami et al (N=4)']
-    lines = [':','-.','--','--','-']
-    marks = ['.','.','.','','']
-    xdata = [H,H,H]
-    
-    ydata = [Er_4,Er_5,Er_6]
-    plotnow('h-Er','$H$','$E_r$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='loglog')
+    labels=['$N=3$','$N=4$','$N=5$','$N=6$','$N=2$ Salami','$N=3$ Salami','$N=4$ Salami','$N=2$ Jibben', '$N=3$ Jibben', '$N=4$ Jibben']
+    lines = ['-','-','-','-','--','--','--','-.','-.','-.']
+    marks = ['o','o','o','o','^','^','^','s','s','s']
+    colors = [C3,C4,C5,C6,C2,C3,C4,C2,C3,C4]
+    xdata = [H,H,H,H,Hsv_Salami,Hsv_Salami,Hsv_Salami,H_Jibben,H_Jibben,H_Jibben]
+    ydata = [Es_3,Es_4,Es_5,Es_6,Es_2Salami,Es_3Salami,Es_4Salami,Es_2Jibben,Es_3Jibben,Es_4Jibben]
+    plotnow('Es_H','$1/H$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='loglog',colors=colors,leg=False)
 
-    xdata.append(H_salami)
-    ydata = [Es_4,Es_5,Es_6,Es4_salami]
-    plotnow('h-Es','$H$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='loglog')
-    
-    ydata = [Ev_4,Ev_5,Ev_6,Ev4_salami]
-    plotnow('h-Ev','$H$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='loglog')
+    labels=['$N=3$','$N=4$','$N=5$','$N=6$','$N=2$ Salami','$N=3$ Salami','$N=4$ Salami','$N=2$ Jibben', '$N=3$ Jibben', '$N=4$ Jibben']
+    lines = ['-','-','-','-','--','--','--','-.','-.','-.']
+    marks = ['o','o','o','o','^','^','^','s','s','s']
+    colors = [C3,C4,C5,C6,C2,C3,C4,C2,C3,C4]
+    xdata = [H,H,H,H,Hsv_Salami,Hsv_Salami,Hsv_Salami,H_Jibben,H_Jibben,H_Jibben]
+    ydata = [Ev_3,Ev_4,Ev_5,Ev_6,Ev_2Salami,Ev_3Salami,Ev_4Salami,Ev_2Jibben,Ev_3Jibben,Ev_4Jibben]
+    plotnow('Ev_H','$1/H$','$|E_v|$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='loglog',colors=colors,leg=False)
+
+    #faux plot for legend
+    labels = ['$N=3$','$N=4$','$N=5$','$N=6$','$N=2$ Al-Salami(2021)','$N=3$ Al-Salami(2021)','$N=4$ Al-Salami(2021)','$N=5$ Al-Salami(2021)','$N=2$ Qian(2018)','$N=4$ Qian(2018)','$N=2$ Jibben(2017)','$N=3$ Jibben(2017)','$N=4$ Jibben(2017)']
+    lines = ['-','-','-','-','--','--','--','--',':',':','-.','-.','-.']
+    marks = ['o','o','o','o','^','^','^','^','*','*','s','s','s']
+    colors=[C3,C4,C5,C6,C2,C3,C4,C5,C2,C4,C2,C3,C4]
+    x = np.linspace(0,1,50)
+    y = np.ones(50)
+    xdata = [x,x,x,x,x,x,x,x,x,x,x,x,x,x]
+    ydata = [y,y,y,y,y,y,y,y,y,y,y,y,y]
+    plotnow('legend','$H$','$E_s$',xdata,ydata,labels,linestyles=lines,markers=marks,ptype='line',colors=colors,leg=True,grid=False,printleg=True)
 
     #plot Ev v/s time error
+    lines = [':','-.','--']
+    marks = ['','','']
     t32, E32 = getdata('32/6',8e-4)
     t64, E64 = getdata('64/6',4e-4)
     t128, E128 = getdata('128/6',2e-4)
