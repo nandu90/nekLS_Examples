@@ -294,13 +294,15 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
+      real farfield
 
       eps = 1.0/(lx1-1.0)
       ifdebug = 0
       ifixCLSbdry = 0
+      farfield = -1.0   !turn off
       call ls_init(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
-     $             eps, ifdebug, ifixCLSbdry)
+     $             eps, ifdebug, ifixCLSbdry, farfield)
 
 c---------------------------------------------------      
 c     This section to specify user defined parameters
