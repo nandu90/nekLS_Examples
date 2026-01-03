@@ -119,13 +119,13 @@ c-----------------------------------------------------------------------
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      ffx = sfx + svvx
-      ffy = sfy + svvy
-      ffz = sfz + svvz - 1.0/Fr + dpdz
+      ffx = sfx/vtrans(ix,iy,iz,e,1) + svvx
+      ffy = sfy/vtrans(ix,iy,iz,e,1) + svvy
+      ffz = sfz/vtrans(ix,iy,iz,e,1) + svvz - 1.0/Fr + dpdz
 
       !only for visualization
-      sffx = sfx * vtrans(ix,iy,iz,e,1)*We
-      sffy = sfy * vtrans(ix,iy,iz,e,1)*We
+      sffx = sfx * We
+      sffy = sfy * We
       t(ix,iy,iz,e,5) = sqrt(sffx*sffx+sffy*sffy)
 
       return
