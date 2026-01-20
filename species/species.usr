@@ -274,11 +274,11 @@ c-----------------------------------------------------------------------
       endif
 
       block
+        integer ltott, ntott
         real psi(lx1,ly1,lz1,lelt)
         real one_minus_psi(lx1,ly1,lz1,lelt)
-        real c_liquid, c_gas, V_liquid, V_gas
+        real V_liquid, V_gas, c_liquid, c_gas
         real, external :: glsc2, glsc3
-        integer ltott, ntott
 
         ltott = lx1*ly1*lz1*lelt
         ntott = lx1*ly1*lz1*nelt
@@ -292,14 +292,13 @@ c-----------------------------------------------------------------------
         c_gas = glsc3(one_minus_psi, t(1,1,1,1,5), bm1, ntott)/V_gas
 
         if (nio.eq.0) then
-        write(*,*) V_liquid, V_gas
         block
           integer, save :: fd
           if (istep.eq.0) then
-            open(newunit=fd, file="timeseries.dat")
-            write(fd,*) "time,c_liquid,c_gas"
+            open(newunit=fd, file="timeseries.csv")
+            write(fd,'(a)') "t,c_liquid,c_gas"
           endif
-          write(fd,'(*(G0.7,:,","))') time, c_liquid, c_gas
+          write(fd,'(*(G0.7,:,","))') time*t0, c_liquid, c_gas
         endblock
         endif
       endblock
