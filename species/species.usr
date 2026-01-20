@@ -273,6 +273,37 @@ c-----------------------------------------------------------------------
         plti = plti+1
       endif
 
+      block
+        real psi(lx1,ly1,lz1,lelt)
+        real one_minus_psi(lx1,ly1,lz1,lelt)
+        real c_liquid, c_gas, V_liquid, V_gas
+        real, external :: glsc2, glsc3
+        integer ltott, ntott
+
+        ltott = lx1*ly1*lz1*lelt
+        ntott = lx1*ly1*lz1*nelt
+        psi = t(:,:,:,:,ifld_cls-1)
+        one_minus_psi = t(:,:,:,:,ifld_cls-1)
+        call chsign(one_minus_psi, ltott)
+        call cadd(one_minus_psi, 1.0, ltott)
+        V_liquid = glsc2(psi, bm1, ntott)
+        c_liquid = glsc3(psi, t(1,1,1,1,5), bm1, ntott)/V_liquid
+        V_gas = glsc2(one_minus_psi, bm1, ntott)
+        c_gas = glsc3(one_minus_psi, t(1,1,1,1,5), bm1, ntott)/V_gas
+
+        if (nio.eq.0) then
+        write(*,*) V_liquid, V_gas
+        block
+          integer, save :: fd
+          if (istep.eq.0) then
+            open(newunit=fd, file="timeseries.dat")
+            write(fd,*) "time,c_liquid,c_gas"
+          endif
+          write(fd,'(*(G0.7,:,","))') time, c_liquid, c_gas
+        endblock
+        endif
+      endblock
+
       return
       end
 c-----------------------------------------------------------------------
