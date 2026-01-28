@@ -17,8 +17,9 @@ extrapolation = OIFS
 writeControl = runTime
 writeInterval = 0.005
 
-userParam01 = 200     #Freq of TLSR
-userParam02 = 20      #Freq of CLSR
+userParam01 = 1e-3     #Freq of TLSR
+userParam02 = 1e-4      #Freq of CLSR
+userParam03 = 2      #Pressure order
 
 [MESH]
 numberOfBCFields = 1
@@ -42,24 +43,24 @@ viscosity = -1.0 #dummy
 [TEMPERATURE] #cls field
 rhocp = 1.
 conductivity = 1.
-residualTol = 1e-4
+residualTol = 1e-8
 regularization = svv
 
 [SCALAR01] #tls field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-4
+residualTol = 1e-8
 regularization = svv
 
 [SCALAR02] #cls re-distanacing
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-4
+residualTol = 1e-8
 regularization = svv
 
 [SCALAR03] #tls re-distancing field
 density = 1.0
 diffusivity = 1e-8 
-residualTol = 1e-4
+residualTol = 1e-8
 regularization = svv
 

@@ -96,9 +96,9 @@ c-----------------------------------------------------------------------
       
       call svv_fluid(ix,iy,iz,e,svvx,svvy,svvz)
 
-      ffx = -sfx + gvec(1) + svvx
-      ffy = -sfy + gvec(2) + svvy
-      ffz = -sfz + gvec(3) + svvz
+      ffx = -sfx/vtrans(ix,iy,iz,e,1) + gvec(1) + svvx
+      ffy = -sfy/vtrans(ix,iy,iz,e,1) + gvec(2) + svvy
+      ffz = -sfz/vtrans(ix,iy,iz,e,1) + gvec(3) + svvz
 
       return
       end
@@ -208,7 +208,7 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
       include 'LVLSET'
 
-      integer ntlsr, nclsr
+      real ntlsr, nclsr
       common /myoutflow/ d(lx1,ly1,lz1,lelt),m1(lx1*ly1*lz1,lelt)
       real d, m1
       real rq,uin
@@ -216,10 +216,12 @@ c-----------------------------------------------------------------------
 
       integer i
       real zz
+      integer pord
 
       ! if(istep.eq.0) call gfldr('sg.fld')
 
-      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2))
+      pord = uparam(3)
+      call extrappr(prext,pr,prlag(1,1,1,1,1),prlag(1,1,1,1,2),pord)
 
       ntlsr = uparam(1) !freq of TLS re-distancing
       nclsr = uparam(2) !freq of CLS re-distancing
@@ -319,6 +321,7 @@ c-----------------------------------------------------------------------
       integer ifld_cls,ifld_clsr
       integer ifld_tls,ifld_tlsr
       integer ifdebug, ifixCLSbdry
+      real farfield
 
       real eps
       integer ntls_max, ncls_max
@@ -328,10 +331,11 @@ c-----------------------------------------------------------------------
       ifixCLSbdry = 0
       ntls_max = 100
       ncls_max = 10
+      farfield = -1.0
 
       call ls_init(ifld_cls, ifld_clsr,
      $             ifld_tls, ifld_tlsr,
-     $             eps, ifdebug, ifixCLSbdry)
+     $             eps, ifdebug, ifixCLSbdry, farfield)
 
       ! call ls_init_maxiter(ifld_cls, ifld_clsr,
       ! $             ifld_tls, ifld_tlsr,
